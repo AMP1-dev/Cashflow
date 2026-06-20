@@ -1,17 +1,17 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { supabase } from './lib/supabase';
 import { ADMIN_CREDENCIAIS } from './utils/constants';
-import { somenteDigitos, daysInMonth } from './utils/formatters';
+import { daysInMonth, somenteDigitos } from './utils/formatters';
 
-import { TopBar, BottomNav } from './components/Navigation';
+import { BottomNav, TopBar } from './components/Navigation';
 import { NovoLancamentoModal } from './components/NovoLancamentoModal';
 
-import { LoginScreen, AssinaturaScreen, RecuperarSenhaScreen, RedefinirSenhaScreen } from './screens/AuthScreens';
 import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
-import { Dashboard } from './screens/DashboardScreen';
-import { FluxoCaixa } from './screens/FluxoCaixaScreen';
-import { DREScreen } from './screens/DREScreen';
 import { AnualScreen } from './screens/AnualScreen';
+import { AssinaturaScreen, LoginScreen, RecuperarSenhaScreen, RedefinirSenhaScreen } from './screens/AuthScreens';
+import { Dashboard } from './screens/DashboardScreen';
+import { DREScreen } from './screens/DREScreen';
+import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 
 export default function CashFlowApp() {
@@ -62,7 +62,7 @@ export default function CashFlowApp() {
     const { data: vinculadas } = await supabase.from('empresa_usuarios')
       .select('empresa_id, empresas (*)')
       .eq('usuario_id', userId);
-    
+
     if (vinculadas && vinculadas.length > 0) {
       const empresa = vinculadas[0].empresas;
       setSessao({ tipo: 'cliente', empresaId: empresa.id });
@@ -74,14 +74,14 @@ export default function CashFlowApp() {
   async function carregarLancamentos(empresaId) {
     const dataInicio = new Date(anoAtual, 0, 1).toISOString().split('T')[0];
     const dataFim = new Date(anoAtual, 11, 31).toISOString().split('T')[0];
-    
+
     const { data } = await supabase
       .from('lancamentos')
       .select('*')
       .eq('empresa_id', empresaId)
       .gte('data_lancamento', dataInicio)
       .lte('data_lancamento', dataFim);
-      
+
     if (data) {
       const mapeados = data.map(l => {
         const dateObj = new Date(l.data_lancamento + 'T12:00:00');
@@ -195,7 +195,7 @@ export default function CashFlowApp() {
 
   async function criarAssinatura(dados) {
     const cpfLimpo = somenteDigitos(dados.cpf);
-    
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: dados.email,
       password: dados.senha,
@@ -205,7 +205,7 @@ export default function CashFlowApp() {
     });
 
     if (authError) return { ok: false, erro: authError.message };
-    
+
     // Se a conta já existir ou por algum motivo a sessão vier vazia:
     if (!authData.session) {
       return { ok: false, erro: 'Conta criada, mas não foi possível fazer login automático. Tente usar um e-mail diferente (este pode já estar em uso).' };
@@ -276,7 +276,7 @@ export default function CashFlowApp() {
       return <RecuperarSenhaScreen onEnviar={(email) => { redefinirSenha(email); setTelaAuth('login'); }} onVoltarLogin={() => setTelaAuth('login')} />;
     }
     if (telaAuth === 'redefinir') {
-      return <RedefinirSenhaScreen email={emailRecuperacao} onRedefinir={() => {}} />;
+      return <RedefinirSenhaScreen email={emailRecuperacao} onRedefinir={() => { }} />;
     }
     if (telaAuth === 'admin-login') {
       return <AdminLoginScreen onLogin={fazerLoginAdmin} onVoltar={() => setTelaAuth('login')} />;
@@ -288,7 +288,7 @@ export default function CashFlowApp() {
     return <AdminPanel assinantes={assinantesAdmin} onAtualizarStatus={atualizarStatusAssinante} onSair={sair} />;
   }
 
-  if (!empresaAtualObj) { return <div style={{padding: 20, color: '#1C2421'}}>Carregando empresa...</div>; }
+  if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
 
   return (
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
@@ -300,6 +300,7 @@ export default function CashFlowApp() {
         {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} />}
         {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
         {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} />}
+        {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
       </div>
 
       <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} />

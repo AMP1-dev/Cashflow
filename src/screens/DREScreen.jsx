@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { formatBRL, formatCompactoBRL } from '../utils/formatters';
-import { MESES } from '../utils/constants';
+import { useMemo, useState } from 'react';
 import { EmptyState } from '../components/UIComponents';
+import { MESES } from '../utils/constants';
+import { formatBRL, formatCompactoBRL } from '../utils/formatters';
 
 export function DREScreen({ lancamentos, mesAtual }) {
   const calc = useMemo(() => {

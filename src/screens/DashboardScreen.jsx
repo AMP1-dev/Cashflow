@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { ArrowUpCircle, ArrowDownCircle, ChevronRight, X } from 'lucide-react';
-import { formatBRL } from '../utils/formatters';
-import { CATEGORIAS } from '../utils/constants';
+import { ArrowDownCircle, ArrowUpCircle, ChevronRight, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { EmptyState } from '../components/UIComponents';
+import { CATEGORIAS } from '../utils/constants';
+import { formatBRL } from '../utils/formatters';
 
 export function Dashboard({ lancamentos, onNovo, onEditar }) {
   const totalReceita = lancamentos.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
@@ -79,15 +79,16 @@ export function Dashboard({ lancamentos, onNovo, onEditar }) {
         <EmptyState text="Nenhum lançamento neste mês ainda. Toque no + para começar." />
       ) : recentesAbertos && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {recentes.map(l => <LancamentoRow key={l.id} l={l} onEditar={onEditar} />)}
+          {recentes.map(l => <LancamentoRow key={l.id} l={l} onEditar={onEditar} corPorCategoria={false} />)}
         </div>
       )}
     </div>
   );
 }
 
-export function LancamentoRow({ l, onRemove, onEditar }) {
+export function LancamentoRow({ l, onRemove, onEditar, corPorCategoria = true }) {
   const cat = l.categoria ? CATEGORIAS[l.categoria] : null;
+  const corDespesa = corPorCategoria && cat ? cat.color : '#B05A2E';
   return (
     <div
       onClick={() => onEditar && onEditar(l)}
@@ -95,14 +96,14 @@ export function LancamentoRow({ l, onRemove, onEditar }) {
       tabIndex={onEditar ? 0 : undefined}
       style={{ background: '#fff', borderRadius: 10, padding: '10px 12px', border: '1px solid #EFEBE0', display: 'flex', alignItems: 'center', gap: 10, cursor: onEditar ? 'pointer' : 'default' }}
     >
-      <div style={{ width: 30, height: 30, borderRadius: 8, background: l.tipo === 'receita' ? '#D9EBE6' : (cat ? cat.bg : '#F0EDE3'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        {l.tipo === 'receita' ? <ArrowUpCircle size={15} color="#1F5C52" /> : <ArrowDownCircle size={15} color={cat ? cat.color : '#9C9A8F'} />}
+      <div style={{ width: 30, height: 30, borderRadius: 8, background: l.tipo === 'receita' ? '#D9EBE6' : (corPorCategoria && cat ? cat.bg : '#F5E4D8'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        {l.tipo === 'receita' ? <ArrowUpCircle size={15} color="#1F5C52" /> : <ArrowDownCircle size={15} color={corDespesa} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13.5, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.descricao}</div>
         <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Dia {l.dia}{cat ? ` · ${cat.short}` : (l.formaRecebimento ? ` · ${l.formaRecebimento}` : '')}</div>
       </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: l.tipo === 'receita' ? '#1F5C52' : '#1C2421' }}>
+      <div style={{ fontSize: 14, fontWeight: 600, color: l.tipo === 'receita' ? '#1F5C52' : corDespesa }}>
         {l.tipo === 'receita' ? '+' : '-'}{formatBRL(l.valor)}
       </div>
       {onRemove && (
