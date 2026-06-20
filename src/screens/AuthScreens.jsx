@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { ChevronLeft, Check } from 'lucide-react';
-import { somenteDigitos, formatarCpfInput } from '../utils/formatters';
+import { Check, ChevronLeft } from 'lucide-react';
+import { useState } from 'react';
+import { formatarCpfInput, somenteDigitos } from '../utils/formatters';
 
 export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, onIrParaAdmin }) {
   const [email, setEmail] = useState('');
@@ -18,7 +18,7 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
           <div style={{ width: 56, height: 56, borderRadius: 16, background: '#E8A33D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontFamily: 'Georgia, serif', fontSize: 26, color: '#0F2B27', fontWeight: 700 }}>R$</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#FAF8F3', letterSpacing: 0.2 }}>AMP Flow</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#FAF8F3', letterSpacing: 0.2 }}>AMP flow</div>
           <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Fluxo de caixa e DRE sem mistério</div>
         </div>
 
