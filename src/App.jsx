@@ -206,6 +206,11 @@ export default function CashFlowApp() {
 
     if (authError) return { ok: false, erro: authError.message };
     
+    // Se a conta já existir ou por algum motivo a sessão vier vazia:
+    if (!authData.session) {
+      return { ok: false, erro: 'Conta criada, mas não foi possível fazer login automático. Tente usar um e-mail diferente (este pode já estar em uso).' };
+    }
+
     const { data: empData, error: empError } = await supabase.from('empresas').insert({
       razao_social: dados.empresa,
       nome_fantasia: dados.fantasia || dados.empresa,
@@ -215,7 +220,7 @@ export default function CashFlowApp() {
       status: 'teste'
     }).select('id').single();
 
-    if (empError) return { ok: false, erro: 'Erro ao criar empresa: ' + empError.message };
+    if (empError) return { ok: false, erro: 'Erro banco de dados (Empresa): ' + empError.message };
 
     const { error: vincError } = await supabase.from('empresa_usuarios').insert({
       empresa_id: empData.id,
