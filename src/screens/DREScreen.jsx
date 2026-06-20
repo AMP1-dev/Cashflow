@@ -104,8 +104,12 @@ export function GraficoComposicaoDRE({ calc }) {
           const h = b.valor !== 0 ? Math.max((Math.abs(b.valor) / maiorValor) * 100, 3) : 0;
           return (
             <div key={b.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', height: '100%', justifyContent: 'flex-end' }}>
-              <div style={{ fontSize: 9, color: '#9C9A8F', marginBottom: 3, textAlign: 'center' }}>{formatCompactoBRL(b.valor)}</div>
-              <div style={{ width: '100%', maxWidth: 26, height: `${h}%`, background: b.cor, borderRadius: '3px 3px 0 0' }} />
+              <div style={{ fontSize: 9.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 3, textAlign: 'center' }}>{pct(b.valor).toFixed(1)}%</div>
+              <div style={{ width: '100%', maxWidth: 30, height: `${h}%`, background: b.cor, borderRadius: '3px 3px 0 0', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: 4, boxSizing: 'border-box' }}>
+                <span style={{ fontSize: 7.5, color: '#fff', fontWeight: 600, writingMode: 'vertical-rl', transform: 'rotate(180deg)', whiteSpace: 'nowrap' }}>
+                  {formatCompactoBRL(b.valor)}
+                </span>
+              </div>
             </div>
           );
         })}

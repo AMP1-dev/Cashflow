@@ -11,6 +11,7 @@ import { AnualScreen } from './screens/AnualScreen';
 import { AssinaturaScreen, LoginScreen, RecuperarSenhaScreen, RedefinirSenhaScreen } from './screens/AuthScreens';
 import { Dashboard } from './screens/DashboardScreen';
 import { DREScreen } from './screens/DREScreen';
+import { FichasTecnicasScreen } from './screens/FichasTecnicasScreen';
 import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 
