@@ -211,19 +211,22 @@ export default function CashFlowApp() {
       return { ok: false, erro: 'Conta criada, mas não foi possível fazer login automático. Tente usar um e-mail diferente (este pode já estar em uso).' };
     }
 
-    const { data: empData, error: empError } = await supabase.from('empresas').insert({
+    const novaEmpresaId = crypto.randomUUID();
+
+    const { error: empError } = await supabase.from('empresas').insert({
+      id: novaEmpresaId,
       razao_social: dados.empresa,
       nome_fantasia: dados.fantasia || dados.empresa,
       cpf_titular: cpfLimpo,
       email_contato: dados.email || '',
       telefone_contato: dados.telefone || '',
       status: 'teste'
-    }).select('id').single();
+    });
 
     if (empError) return { ok: false, erro: 'Erro banco de dados (Empresa): ' + empError.message };
 
     const { error: vincError } = await supabase.from('empresa_usuarios').insert({
-      empresa_id: empData.id,
+      empresa_id: novaEmpresaId,
       usuario_id: authData.user.id,
       papel: 'dono'
     });
