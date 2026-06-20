@@ -32,3 +32,5 @@ npm run build      # gera a pasta dist/
 ```
 
 Para publicar na Vercel, basta importar este repositório no painel da Vercel e configurar as Environment Variables (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) nas configurações do projeto.
+
+ 
