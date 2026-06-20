@@ -3,13 +3,13 @@ import { ChevronLeft, Check } from 'lucide-react';
 import { somenteDigitos, formatarCpfInput } from '../utils/formatters';
 
 export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, onIrParaAdmin }) {
-  const [cpf, setCpf] = useState('');
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
 
   async function tentarEntrar() {
-    if (somenteDigitos(cpf).length < 11 || !senha) { setErro('Informe seu CPF completo e a senha.'); return; }
-    const resultado = await onLogin(cpf, senha);
+    if (!email.includes('@') || !senha) { setErro('Informe um e-mail válido e a senha.'); return; }
+    const resultado = await onLogin(email.trim(), senha);
     if (!resultado.ok) setErro(resultado.erro);
   }
 
@@ -23,8 +23,8 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
         </div>
 
         <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
-          <AuthLabel>CPF</AuthLabel>
-          <AuthInput value={cpf} onChange={(v) => { setCpf(formatarCpfInput(v)); setErro(''); }} placeholder="000.000.000-00" inputMode="numeric" />
+          <AuthLabel>E-mail</AuthLabel>
+          <AuthInput value={email} onChange={(v) => { setEmail(v); setErro(''); }} placeholder="seu@email.com.br" inputMode="email" type="email" autoCapitalize="none" />
 
           <AuthLabel>Senha</AuthLabel>
           <AuthInput type="password" value={senha} onChange={(v) => { setSenha(v); setErro(''); }} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && tentarEntrar()} last />
@@ -54,7 +54,7 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
         </div>
 
         <div style={{ textAlign: 'center', fontSize: 11, color: '#4A655E', marginTop: 10 }}>
-          Protótipo — conta de teste: CPF 123.456.789-00 / senha 123456
+          Protótipo — conta de teste: teste@ampflow.com.br / senha 123456
         </div>
       </div>
     </div>
@@ -77,9 +77,9 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
   async function handleCriar() {
     if (!empresa.trim()) { setErro('Informe o nome da empresa.'); return; }
     if (!cpfValido(cpf)) { setErro('Informe um CPF válido (11 dígitos).'); return; }
+    if (!email || !email.includes('@')) { setErro('Informe um e-mail válido, ele será seu login.'); return; }
     if (!senha || senha.length < 6) { setErro('A senha precisa ter ao menos 6 caracteres.'); return; }
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return; }
-    if (email && !email.includes('@')) { setErro('Informe um email válido.'); return; }
 
     const resultado = await onCriar({ empresa: empresa.trim(), cpf, fantasia: fantasia.trim(), nome: nome.trim(), email: email.trim(), telefone: telefone.trim(), senha });
     if (!resultado.ok) setErro(resultado.erro);
@@ -110,8 +110,8 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
           <AuthLabel>Seu nome</AuthLabel>
           <AuthInput value={nome} onChange={setNome} placeholder="Nome do responsável" />
 
-          <AuthLabel>Email</AuthLabel>
-          <AuthInput value={email} onChange={setEmail} placeholder="seuemail@empresa.com.br" />
+          <AuthLabel>E-mail de acesso *</AuthLabel>
+          <AuthInput value={email} onChange={setEmail} placeholder="seuemail@empresa.com.br" inputMode="email" type="email" autoCapitalize="none" />
 
           <AuthLabel>Telefone</AuthLabel>
           <AuthInput value={telefone} onChange={setTelefone} placeholder="(00) 00000-0000" inputMode="tel" />
@@ -137,7 +137,7 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
 }
 
 export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
-  const [cpf, setCpf] = useState('');
+  const [email, setEmail] = useState('');
   const [enviado, setEnviado] = useState(false);
 
   return (
@@ -149,16 +149,16 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Recuperar senha</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Informe o CPF da sua assinatura</div>
+          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Informe o e-mail de acesso da sua assinatura</div>
         </div>
 
         <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
           {!enviado ? (
             <>
-              <AuthLabel>CPF cadastrado</AuthLabel>
-              <AuthInput value={cpf} onChange={(v) => setCpf(formatarCpfInput(v))} placeholder="000.000.000-00" inputMode="numeric" last />
+              <AuthLabel>E-mail cadastrado</AuthLabel>
+              <AuthInput value={email} onChange={setEmail} placeholder="seu@email.com" inputMode="email" type="email" autoCapitalize="none" last />
               <button
-                onClick={() => somenteDigitos(cpf).length === 11 && setEnviado(true)}
+                onClick={() => email.includes('@') && setEnviado(true)}
                 style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
               >
                 Enviar link de recuperação
@@ -167,15 +167,15 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
           ) : (
             <div style={{ textAlign: 'center' }}>
               <Check size={28} color="#9FE0C8" style={{ marginBottom: 10 }} />
-              <div style={{ fontSize: 14, color: '#FAF8F3', marginBottom: 6 }}>Link enviado (simulado)</div>
+              <div style={{ fontSize: 14, color: '#FAF8F3', marginBottom: 6 }}>Recuperação enviada</div>
               <div style={{ fontSize: 12.5, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 18 }}>
-                Em um app publicado, enviaríamos um link de redefinição para o email cadastrado com o CPF <strong style={{ color: '#FAF8F3' }}>{cpf}</strong>. Aqui no protótipo, vamos direto para a próxima tela.
+                Se o e-mail <strong style={{ color: '#FAF8F3' }}>{email}</strong> estiver cadastrado, você receberá um link seguro para redefinir sua senha.
               </div>
               <button
-                onClick={() => onEnviar(cpf)}
+                onClick={() => onEnviar(email)}
                 style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
               >
-                Continuar para redefinir senha
+                Enviar e-mail de recuperação
               </button>
             </div>
           )}
@@ -185,7 +185,7 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
   );
 }
 
-export function RedefinirSenhaScreen({ cpf, onRedefinir }) {
+export function RedefinirSenhaScreen({ email, onRedefinir }) {
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [erro, setErro] = useState('');
@@ -201,7 +201,7 @@ export function RedefinirSenhaScreen({ cpf, onRedefinir }) {
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Nova senha</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Defina uma nova senha para o CPF {cpf}</div>
+          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Defina uma nova senha para sua conta</div>
         </div>
 
         <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>

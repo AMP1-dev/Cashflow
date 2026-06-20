@@ -18,7 +18,7 @@ export default function CashFlowApp() {
   const [sessao, setSessao] = useState(null);
   const [empresaAtualObj, setEmpresaAtualObj] = useState(null);
   const [telaAuth, setTelaAuth] = useState('login');
-  const [cpfRecuperacao, setCpfRecuperacao] = useState('');
+  const [emailRecuperacao, setEmailRecuperacao] = useState('');
 
   const [tela, setTela] = useState('dashboard');
   const [mesAtual, setMesAtual] = useState(new Date().getMonth());
@@ -175,13 +175,10 @@ export default function CashFlowApp() {
     setLancamentoEditando(null);
   }
 
-  async function fazerLogin(cpf, senha) {
-    const cpfLimpo = somenteDigitos(cpf);
-    const emailFalso = `${cpfLimpo}@ampflow.app`;
-    
-    const { data, error } = await supabase.auth.signInWithPassword({ email: emailFalso, password: senha });
+  async function fazerLogin(email, senha) {
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email, password: senha });
     if (error) {
-      if (error.message.includes('Invalid login')) return { ok: false, erro: 'CPF ou senha incorretos.' };
+      if (error.message.includes('Invalid login')) return { ok: false, erro: 'E-mail ou senha incorretos.' };
       return { ok: false, erro: error.message };
     }
     return { ok: true };
@@ -198,10 +195,9 @@ export default function CashFlowApp() {
 
   async function criarAssinatura(dados) {
     const cpfLimpo = somenteDigitos(dados.cpf);
-    const emailFalso = `${cpfLimpo}@ampflow.app`;
     
     const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: emailFalso,
+      email: dados.email,
       password: dados.senha,
       options: {
         data: { nome: dados.nome || '', cpf: cpfLimpo, telefone: dados.telefone || '' }
@@ -231,12 +227,15 @@ export default function CashFlowApp() {
     return { ok: true };
   }
 
-  async function redefinirSenha(cpf, novaSenha) {
-    // Somente admin ou function do supabase consegue atualizar senha de outro user.
-    // Como é um protótipo e o user aceitou a gambiarra, no app ele não vai conseguir redefinir
-    // nativamente sem estar logado. 
-    // Em produção real, o painel do admin que faria isso.
-    alert('A redefinição de senha para login por CPF precisa ser feita pelo suporte (Painel Admin).');
+  async function redefinirSenha(email) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) {
+      alert('Erro ao enviar recuperação: ' + error.message);
+    } else {
+      alert('Um e-mail de recuperação foi enviado para ' + email);
+    }
   }
 
   async function atualizarStatusAssinante(id, novoStatus) {
@@ -266,10 +265,10 @@ export default function CashFlowApp() {
       return <AssinaturaScreen onCriar={criarAssinatura} onVoltarLogin={() => setTelaAuth('login')} />;
     }
     if (telaAuth === 'recuperar') {
-      return <RecuperarSenhaScreen onEnviar={(cpf) => { setCpfRecuperacao(cpf); setTelaAuth('redefinir'); }} onVoltarLogin={() => setTelaAuth('login')} />;
+      return <RecuperarSenhaScreen onEnviar={(email) => { redefinirSenha(email); setTelaAuth('login'); }} onVoltarLogin={() => setTelaAuth('login')} />;
     }
     if (telaAuth === 'redefinir') {
-      return <RedefinirSenhaScreen cpf={cpfRecuperacao} onRedefinir={(novaSenha) => { redefinirSenha(cpfRecuperacao, novaSenha); setTelaAuth('login'); }} />;
+      return <RedefinirSenhaScreen email={emailRecuperacao} onRedefinir={() => {}} />;
     }
     if (telaAuth === 'admin-login') {
       return <AdminLoginScreen onLogin={fazerLoginAdmin} onVoltar={() => setTelaAuth('login')} />;
