@@ -59,7 +59,7 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
   );
 }
 
-export function AdminPanel({ assinantes, onAtualizarStatus, onSair }) {
+export function AdminPanel({ assinantes, onAtualizarDados, onSair }) {
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [selecionado, setSelecionado] = useState(null);
@@ -135,6 +135,7 @@ export function AdminPanel({ assinantes, onAtualizarStatus, onSair }) {
                   <div>
                     <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.fantasia || a.empresa}</div>
                     <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
+                    {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
                   </div>
                   <span style={{ fontSize: 10.5, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 9px', borderRadius: 7, flexShrink: 0, marginLeft: 10 }}>
                     {st.label}
@@ -149,7 +150,7 @@ export function AdminPanel({ assinantes, onAtualizarStatus, onSair }) {
       {assinanteSelecionado && (
         <AdminDetalheAssinante
           assinante={assinanteSelecionado}
-          onAtualizarStatus={onAtualizarStatus}
+          onAtualizarDados={onAtualizarDados}
           onClose={() => setSelecionado(null)}
         />
       )}
@@ -157,7 +158,24 @@ export function AdminPanel({ assinantes, onAtualizarStatus, onSair }) {
   );
 }
 
-export function AdminDetalheAssinante({ assinante, onAtualizarStatus, onClose }) {
+export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose }) {
+  const [status, setStatus] = useState(assinante.status);
+  const [vencimento, setVencimento] = useState(assinante.vencimento || '');
+  const [valor, setValor] = useState(assinante.valor_assinatura || '');
+  const [salvando, setSalvando] = useState(false);
+
+  async function handleSalvar() {
+    setSalvando(true);
+    const resultado = await onAtualizarDados(assinante.id, {
+      status,
+      vencimento: vencimento || null,
+      valor_assinatura: valor ? parseFloat(valor) : null
+    });
+    setSalvando(false);
+    if (!resultado.ok) alert('Erro ao salvar: ' + resultado.erro);
+    else onClose();
+  }
+
   return (
     <ModalShell onClose={onClose} titulo={assinante.fantasia || assinante.empresa}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
@@ -171,23 +189,54 @@ export function AdminDetalheAssinante({ assinante, onAtualizarStatus, onClose })
       </div>
 
       <FieldLabel>Status da assinatura</FieldLabel>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
         {Object.entries(STATUS_ASSINATURA).map(([key, st]) => (
           <button
             key={key}
-            onClick={() => onAtualizarStatus(assinante.id, key)}
+            onClick={() => setStatus(key)}
             style={{
               padding: '9px 14px', borderRadius: 9, fontSize: 13, cursor: 'pointer',
-              border: `1px solid ${assinante.status === key ? st.color : '#E5E0D5'}`,
-              background: assinante.status === key ? st.bg : '#fff',
-              color: assinante.status === key ? st.color : '#5C5A4F',
-              fontWeight: assinante.status === key ? 600 : 400,
+              border: `1px solid ${status === key ? st.color : '#E5E0D5'}`,
+              background: status === key ? st.bg : '#fff',
+              color: status === key ? st.color : '#5C5A4F',
+              fontWeight: status === key ? 600 : 400,
             }}
           >
             {st.label}
           </button>
         ))}
       </div>
+
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+        <div style={{ flex: 1 }}>
+          <FieldLabel>Vencimento do plano</FieldLabel>
+          <input
+            type="date"
+            value={vencimento}
+            onChange={e => setVencimento(e.target.value)}
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #E1E3E6', fontSize: 14, boxSizing: 'border-box' }}
+          />
+        </div>
+        <div style={{ flex: 1 }}>
+          <FieldLabel>Valor (R$)</FieldLabel>
+          <input
+            type="number"
+            step="0.01"
+            value={valor}
+            onChange={e => setValor(e.target.value)}
+            placeholder="0.00"
+            style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #E1E3E6', fontSize: 14, boxSizing: 'border-box' }}
+          />
+        </div>
+      </div>
+
+      <button
+        onClick={handleSalvar}
+        disabled={salvando}
+        style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: salvando ? '#D1D5DB' : '#1F5C52', color: salvando ? '#6B7280' : '#fff', fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}
+      >
+        {salvando ? 'Salvando...' : 'Salvar alterações'}
+      </button>
     </ModalShell>
   );
 }

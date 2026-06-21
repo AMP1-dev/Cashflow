@@ -114,7 +114,8 @@ export default function CashFlowApp() {
     if (data) {
       setAssinantesAdmin(data.map(e => ({
         id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
-        email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR')
+        email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
+        vencimento: e.vencimento, valor_assinatura: e.valor_assinatura
       })));
     }
   }
@@ -252,18 +253,13 @@ export default function CashFlowApp() {
     }
   }
 
-  async function atualizarStatusAssinante(id, novoStatus) {
-    // Como a política RLS restringe isso apenas para "eh_admin()",
-    // Precisaríamos ter um token de admin ou algo assim. 
-    // Por enquanto, tentamos. O Supabase deve recusar se a session não for de profile admin.
-    // Mas no protótipo o AdminLoginScreen bypassa o Supabase (usa ADMIN_CREDENCIAIS).
-    // O ideal é que o admin exista no auth.users também.
-    // Se o admin não estiver autenticado via Supabase, vai dar erro de RLS.
-    const { error } = await supabase.from('empresas').update({ status: novoStatus }).eq('id', id);
+  async function atualizarDadosAssinante(id, dados) {
+    const { error } = await supabase.from('empresas').update(dados).eq('id', id);
     if (!error) {
-      setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, status: novoStatus } : a));
+      setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, ...dados } : a));
+      return { ok: true };
     } else {
-      alert('Erro RLS: O admin precisa estar autenticado via Supabase para alterar o status.');
+      return { ok: false, erro: error.message };
     }
   }
 
@@ -291,7 +287,7 @@ export default function CashFlowApp() {
   }
 
   if (sessao.tipo === 'admin') {
-    return <AdminPanel assinantes={assinantesAdmin} onAtualizarStatus={atualizarStatusAssinante} onSair={sair} />;
+    return <AdminPanel assinantes={assinantesAdmin} onAtualizarDados={atualizarDadosAssinante} onSair={sair} />;
   }
 
   if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
