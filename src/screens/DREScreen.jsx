@@ -86,6 +86,9 @@ export function DREScreen({ lancamentos, mesAtual }) {
 }
 
 export function GraficoComposicaoDRE({ calc }) {
+  const fat = calc.faturamento;
+  const pct = (v) => fat > 0 ? (v / fat) * 100 : 0;
+
   const barras = [
     { label: 'Faturamento', valor: calc.faturamento, cor: '#0F2B27' },
     { label: 'CMV', valor: calc.cmv, cor: '#B05A2E' },
