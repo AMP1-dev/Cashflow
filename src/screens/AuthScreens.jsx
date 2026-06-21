@@ -7,10 +7,16 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
 
+  const [loading, setLoading] = useState(false);
+
   async function tentarEntrar() {
     if (!email.includes('@') || !senha) { setErro('Informe um e-mail válido e a senha.'); return; }
+    setLoading(true);
     const resultado = await onLogin(email.trim(), senha);
-    if (!resultado.ok) setErro(resultado.erro);
+    if (!resultado.ok) {
+      setErro(resultado.erro);
+      setLoading(false);
+    }
   }
 
   return (
@@ -35,8 +41,8 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
 
           {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
 
-          <button onClick={tentarEntrar} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            Entrar
+          <button onClick={tentarEntrar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}>
+            {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </div>
 

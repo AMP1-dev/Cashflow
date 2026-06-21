@@ -53,16 +53,21 @@ export default function CashFlowApp() {
   }, [sessao, empresaAtualObj, mesAtual, anoAtual]);
 
   async function carregarDadosIniciais(userId) {
-    const { data: profile } = await supabase.from('profiles').select('eh_admin, nome, cpf').eq('id', userId).single();
+    // Para ganhar tempo, fazemos as duas buscas (perfil e empresas) ao mesmo tempo!
+    const [reqProfile, reqVinculadas] = await Promise.all([
+      supabase.from('profiles').select('eh_admin, nome, cpf').eq('id', userId).single(),
+      supabase.from('empresa_usuarios').select('empresa_id, empresas (*)').eq('usuario_id', userId)
+    ]);
+
+    const profile = reqProfile.data;
+    
     if (profile?.eh_admin) {
       setSessao({ tipo: 'admin' });
       carregarPainelAdmin();
       return;
     }
 
-    const { data: vinculadas } = await supabase.from('empresa_usuarios')
-      .select('empresa_id, empresas (*)')
-      .eq('usuario_id', userId);
+    const vinculadas = reqVinculadas.data;
 
     if (vinculadas && vinculadas.length > 0) {
       const empresa = vinculadas[0].empresas;
