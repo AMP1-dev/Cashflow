@@ -77,6 +77,7 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
   const [senha, setSenha] = useState('');
   const [confirmarSenha, setConfirmarSenha] = useState('');
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
 
   function cpfValido(v) { return somenteDigitos(v).length === 11; }
 
@@ -87,8 +88,12 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
     if (!senha || senha.length < 6) { setErro('A senha precisa ter ao menos 6 caracteres.'); return; }
     if (senha !== confirmarSenha) { setErro('As senhas não coincidem.'); return; }
 
+    setLoading(true);
     const resultado = await onCriar({ empresa: empresa.trim(), cpf, fantasia: fantasia.trim(), nome: nome.trim(), email: email.trim(), telefone: telefone.trim(), senha });
-    if (!resultado.ok) setErro(resultado.erro);
+    if (!resultado.ok) {
+      setErro(resultado.erro);
+      setLoading(false);
+    }
   }
 
   return (
@@ -130,8 +135,8 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
 
           {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
 
-          <button onClick={handleCriar} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            Criar assinatura
+          <button onClick={handleCriar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}>
+            {loading ? 'Criando conta e estrutura...' : 'Criar assinatura'}
           </button>
         </div>
         <div style={{ textAlign: 'center', fontSize: 11, color: '#4A655E', marginTop: 14 }}>
