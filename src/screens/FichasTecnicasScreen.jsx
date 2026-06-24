@@ -317,14 +317,14 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
             <div style={{ position: 'sticky', top: 0, zIndex: 4, background: '#FAF8F3', padding: '0 16px 12px', borderBottom: '1px solid #EFEBE0' }}>
                 <div style={{ background: '#EAF6EE', border: '1px solid #CFEAD9', borderRadius: 12, padding: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div style={{ fontSize: 11.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 8 }}>Resultado calculado</div>
-                    <div style={{ display: 'flex', gap: 14 }}>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 9.5, color: '#5C8A71' }}>Custo/porção</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoPorcao)}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <div style={{ fontSize: 11.5, color: '#5C8A71' }}>Custo/porção</div>
+                            <div style={{ fontSize: 17, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoPorcao)}</div>
                         </div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 9.5, color: '#5C8A71' }}>Custo da receita</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoReceita)}</div>
+                        <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 11.5, color: '#5C8A71' }}>Custo da receita</div>
+                            <div style={{ fontSize: 17, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoReceita)}</div>
                         </div>
                     </div>
                 </div>
