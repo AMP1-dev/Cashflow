@@ -1,9 +1,9 @@
-import React, { useState, useMemo } from 'react';
 import { HelpCircle } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { CATEGORIAS } from '../utils/constants';
 import { construirSugestoesDescricao } from '../utils/formatters';
-import { ModalShell, FieldLabel, inputStyle, ToggleTipo } from './UIComponents';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
+import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
 
 export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando, historicoCompleto, onClose, onSave, onUpdate, onDelete }) {
   const editando = !!lancamentoEditando;
@@ -67,9 +67,26 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
     return (
       <ClassificacaoWizard
         descricao={descricao}
+        valorTotal={valorNum}
         sugestoesExtras={(historicoCompleto || []).filter(l => l.tipo === 'despesa' && l.subcategoria).map(l => l.subcategoria)}
         onCancel={() => setShowWizard(false)}
-        onConcluir={(cat, sub) => { setCategoria(cat); setSubcategoria(sub); setShowWizard(false); }}
+        onConcluir={(cat, sub) => { setCategoria(cat); setSubcategoria(sub || ''); setShowWizard(false); }}
+        onConcluirFracionado={(partes) => {
+          // Salva cada parte como um lançamento separado
+          partes.forEach(p => {
+            onSave({
+              tipo: 'despesa',
+              descricao: p.descricao || descricao.trim(),
+              valor: p.valor,
+              dia,
+              categoria: p.categoria,
+              subcategoria: p.subcategoria || null,
+              formaRecebimento: null,
+              qtdVendas: null,
+            });
+          });
+          onClose();
+        }}
       />
     );
   }

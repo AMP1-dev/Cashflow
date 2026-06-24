@@ -176,7 +176,7 @@ export function FichasTecnicasScreen({ empresaId }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <div>
                     <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F' }}>Fichas técnicas</div>
-                    <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Custo, preço sugerido e CMV de cada item</div>
+                    <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Custo por porção e custo da receita</div>
                 </div>
                 <button
                     onClick={() => setCriando(true)}
@@ -193,23 +193,23 @@ export function FichasTecnicasScreen({ empresaId }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         {fichas.map(f => {
                             const calc = calcularFicha(f);
-                            const status = classificarCmv(calc.cmvPct);
                             return (
                                 <button
                                     key={f.id}
                                     onClick={() => setEditandoId(f.id)}
                                     style={{ width: '100%', textAlign: 'left', background: '#fff', borderRadius: 12, border: '1px solid #EFEBE0', padding: '12px 14px', cursor: 'pointer' }}
                                 >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
                                             <div style={{ fontSize: 14, fontWeight: 600, color: '#1C2421' }}>{f.nome}</div>
                                             <div style={{ fontSize: 11.5, color: '#9C9A8F', marginTop: 2 }}>
-                                                Custo/porção {formatBRL(calc.custoPorcao)} · Venda {formatBRL(f.precoVenda)}
+                                                Custo/porção {formatBRL(calc.custoPorcao)}
                                             </div>
                                         </div>
-                                        <span style={{ fontSize: 10.5, fontWeight: 600, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 7, flexShrink: 0, marginLeft: 10, whiteSpace: 'nowrap' }}>
-                                            CMV {calc.cmvPct.toFixed(1)}%
-                                        </span>
+                                        <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
+                                            <div style={{ fontSize: 10.5, color: '#9C9A8F' }}>Custo da receita</div>
+                                            <div style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoReceita)}</div>
+                                        </div>
                                     </div>
                                 </button>
                             );
@@ -226,9 +226,7 @@ export function FichasTecnicasScreen({ empresaId }) {
 function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancelar, onExcluir }) {
     const editando = !!ficha;
     const [nome, setNome] = useState(editando ? ficha.nome : '');
-    const [precoVenda, setPrecoVenda] = useState(editando ? String(ficha.precoVenda).replace('.', ',') : '');
     const [rendimentoPorcoes, setRendimentoPorcoes] = useState(editando ? String(ficha.rendimentoPorcoes) : '1');
-    const [margemDesejada, setMargemDesejada] = useState(editando ? String(ficha.margemDesejada) : '30');
     const [pesoPorcao, setPesoPorcao] = useState(editando ? String(ficha.pesoPorcao || '') : '');
     const [ingredientes, setIngredientes] = useState(editando ? (ficha.ingredientes || []) : []);
     const [wizardIngredienteId, setWizardIngredienteId] = useState(null);
@@ -237,9 +235,8 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
     const [salvando, setSalvando] = useState(false);
     const [salvoRecentemente, setSalvoRecentemente] = useState(false);
 
-    const fichaAtual = { precoVenda, rendimentoPorcoes, margemDesejada, ingredientes };
-    const calc = useMemo(() => calcularFicha(fichaAtual), [precoVenda, rendimentoPorcoes, ingredientes]);
-    const status = classificarCmv(calc.cmvPct);
+    const fichaAtual = { rendimentoPorcoes, ingredientes };
+    const calc = useMemo(() => calcularFicha(fichaAtual), [rendimentoPorcoes, ingredientes]);
 
     function addIngrediente() {
         const novo = {
@@ -272,9 +269,7 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
     function montarDados() {
         return {
             nome: nome.trim(),
-            precoVenda: parseFloat((precoVenda || '0').replace(',', '.')) || 0,
             rendimentoPorcoes: parseInt(rendimentoPorcoes) || 1,
-            margemDesejada: parseFloat((margemDesejada || '0').replace(',', '.')) || 0,
             pesoPorcao: parseFloat((pesoPorcao || '0').replace(',', '.')) || null,
             ingredientes,
         };
@@ -310,7 +305,7 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
     }
 
     return (
-        <div style={{ paddingBottom: 24 }}>
+        <div style={{ paddingBottom: 88 }}>
             <div style={{ padding: '16px 16px 0' }}>
                 <button onClick={onCancelar} style={{ background: 'none', border: 'none', color: '#9C9A8F', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14, padding: 0 }}>
                     <ChevronLeft size={15} /> Voltar para fichas técnicas
@@ -321,12 +316,7 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
             {/* Resultado calculado fica fixo no topo, sempre visível em telas de celular */}
             <div style={{ position: 'sticky', top: 0, zIndex: 4, background: '#FAF8F3', padding: '0 16px 12px', borderBottom: '1px solid #EFEBE0' }}>
                 <div style={{ background: '#EAF6EE', border: '1px solid #CFEAD9', borderRadius: 12, padding: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                        <span style={{ fontSize: 11.5, fontWeight: 600, color: '#5C5A4F' }}>Resultado calculado</span>
-                        <span style={{ fontSize: 12.5, fontWeight: 700, color: status.color, background: status.bg, padding: '3px 9px', borderRadius: 7 }}>
-                            CMV {calc.cmvPct.toFixed(1)}% · {status.label}
-                        </span>
-                    </div>
+                    <div style={{ fontSize: 11.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 8 }}>Resultado calculado</div>
                     <div style={{ display: 'flex', gap: 14 }}>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 9.5, color: '#5C8A71' }}>Custo/porção</div>
@@ -335,10 +325,6 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
                         <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 9.5, color: '#5C8A71' }}>Custo da receita</div>
                             <div style={{ fontSize: 14, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoReceita)}</div>
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 9.5, color: '#5C8A71' }}>Preço sugerido</div>
-                            <div style={{ fontSize: 14, fontWeight: 700, color: '#1F5C52' }}>{formatBRL(calc.precoSugerido)}</div>
                         </div>
                     </div>
                 </div>
@@ -350,22 +336,8 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
 
                 <div style={{ display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1 }}>
-                        <FieldLabel>Preço de venda</FieldLabel>
-                        <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9C9A8F' }}>R$</span>
-                            <input value={precoVenda} onChange={e => setPrecoVenda(e.target.value)} placeholder="0,00" inputMode="decimal" style={{ ...inputStyle, paddingLeft: 30, marginTop: 0 }} />
-                        </div>
-                    </div>
-                    <div style={{ flex: 1 }}>
                         <FieldLabel>Rendimento (porções)</FieldLabel>
                         <input value={rendimentoPorcoes} onChange={e => setRendimentoPorcoes(e.target.value.replace(/[^0-9]/g, ''))} placeholder="1" inputMode="numeric" style={{ ...inputStyle, marginTop: 0 }} />
-                    </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <div style={{ flex: 1 }}>
-                        <FieldLabel>Margem desejada (%)</FieldLabel>
-                        <input value={margemDesejada} onChange={e => setMargemDesejada(e.target.value.replace(/[^0-9,.-]/g, ''))} placeholder="30" inputMode="decimal" style={{ ...inputStyle, marginTop: 0 }} />
                     </div>
                     <div style={{ flex: 1 }}>
                         <FieldLabel>Peso da porção (g) — opcional</FieldLabel>
@@ -398,23 +370,6 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
                     </div>
                 )}
 
-                <div style={{ display: 'flex', gap: 8, marginTop: 22 }}>
-                    <button
-                        onClick={handleSalvarEContinuar}
-                        disabled={!podeSalvar}
-                        style={{ flex: 1, padding: '14px', borderRadius: 10, border: '1px solid #0F2B27', background: '#fff', color: podeSalvar ? '#0F2B27' : '#C9C5B6', fontSize: 13.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed' }}
-                    >
-                        {salvoRecentemente ? '✓ Salvo' : (salvando ? 'Salvando...' : 'Salvar e continuar editando')}
-                    </button>
-                    <button
-                        onClick={handleSalvarEFechar}
-                        disabled={!podeSalvar}
-                        style={{ flex: 1, padding: '14px', borderRadius: 10, border: 'none', background: podeSalvar ? '#0F2B27' : '#E5E0D5', color: podeSalvar ? '#FAF8F3' : '#9C9A8F', fontSize: 13.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed' }}
-                    >
-                        {salvando ? 'Salvando...' : 'Salvar e fechar'}
-                    </button>
-                </div>
-
                 {onExcluir && (
                     confirmandoExclusao ? (
                         <div style={{ marginTop: 10, padding: 12, borderRadius: 10, background: '#F2DDE1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -430,6 +385,24 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
                         </button>
                     )
                 )}
+            </div>
+
+            {/* Botões fixos sempre visíveis no fundo */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10, background: '#FAF8F3', borderTop: '1px solid #EFEBE0', padding: '12px 16px', display: 'flex', gap: 8 }}>
+                <button
+                    onClick={handleSalvarEContinuar}
+                    disabled={!podeSalvar}
+                    style={{ flex: 1, padding: '14px', borderRadius: 10, border: `1px solid ${podeSalvar ? '#0F2B27' : '#E5E0D5'}`, background: '#fff', color: podeSalvar ? '#0F2B27' : '#C9C5B6', fontSize: 13.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed' }}
+                >
+                    {salvoRecentemente ? '✓ Salvo' : (salvando ? 'Salvando...' : 'Salvar e continuar')}
+                </button>
+                <button
+                    onClick={handleSalvarEFechar}
+                    disabled={!podeSalvar}
+                    style={{ flex: 1, padding: '14px', borderRadius: 10, border: 'none', background: podeSalvar ? '#0F2B27' : '#E5E0D5', color: podeSalvar ? '#FAF8F3' : '#9C9A8F', fontSize: 13.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed' }}
+                >
+                    {salvando ? 'Salvando...' : 'Salvar e fechar'}
+                </button>
             </div>
         </div>
     );
