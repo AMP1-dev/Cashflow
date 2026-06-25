@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp } from 'lucide-react';
 import { MESES } from '../utils/constants';
 
 export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
@@ -28,20 +28,17 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
 
 export function BottomNav({ tela, setTela, onAdd }) {
   const items = [
-    { id: 'dashboard', label: 'Resumo', icon: LayoutDashboard },
-    { id: 'fluxo', label: 'Fluxo', icon: ListChecks },
-    { id: 'dre', label: 'DRE', icon: FileBarChart },
-    { id: 'anual', label: 'Anual', icon: TrendingUp },
-    { id: 'preco', label: 'Preço', icon: Tag },
-    { id: 'fichas', label: 'Fichas', icon: ClipboardList },
+    { id: 'dashboard',   label: 'Resumo',    icon: LayoutDashboard },
+    { id: 'fluxo',       label: 'Fluxo',     icon: ListChecks },
+    { id: 'dre',         label: 'DRE',       icon: FileBarChart },
+    { id: 'anual',       label: 'Anual',     icon: TrendingUp },
+    { id: 'preco',       label: 'Preço',     icon: Tag },
+    { id: 'fichas',      label: 'Fichas',    icon: ClipboardList },
+    { id: 'diagnostico', label: 'Avaliação', icon: Activity },
   ];
   return (
-    <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', padding: '7px 2px calc(7px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
-      {items.slice(0, 3).map(it => <NavButton key={it.id} item={it} active={tela === it.id} onClick={() => setTela(it.id)} />)}
-      <button onClick={onAdd} aria-label="Novo lançamento" style={{ width: 40, height: 40, borderRadius: '50%', background: '#E8A33D', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 2px', cursor: 'pointer', flexShrink: 0, boxShadow: '0 2px 8px rgba(232,163,61,0.4)' }}>
-        <Plus size={18} color="#0F2B27" />
-      </button>
-      {items.slice(3).map(it => <NavButton key={it.id} item={it} active={tela === it.id} onClick={() => setTela(it.id)} />)}
+    <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 8px calc(7px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
+      {items.map(it => <NavButton key={it.id} item={it} active={tela === it.id} onClick={() => setTela(it.id)} />)}
     </div>
   );
 }
@@ -51,7 +48,7 @@ function NavButton({ item, active, onClick }) {
   return (
     <button onClick={onClick} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, background: 'none', border: 'none', cursor: 'pointer', padding: '5px 0', color: active ? '#1F5C52' : '#9C9A8F', minWidth: 0 }}>
       <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
-      <span style={{ fontSize: 8.5, fontWeight: active ? 600 : 400 }}>{item.label}</span>
+      <span style={{ fontSize: 8.5, fontWeight: active ? 600 : 400, whiteSpace: 'nowrap' }}>{item.label}</span>
     </button>
   );
 }

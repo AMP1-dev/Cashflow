@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from './lib/supabase';
 import { ADMIN_CREDENCIAIS } from './utils/constants';
 import { daysInMonth, somenteDigitos } from './utils/formatters';
@@ -14,12 +14,15 @@ import { DREScreen } from './screens/DREScreen';
 import { FichasTecnicasScreen } from './screens/FichasTecnicasScreen';
 import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
+import { DiagnosticoScreen } from './screens/DiagnosticoScreen';
 
 export default function CashFlowApp() {
   const [sessao, setSessao] = useState(null);
   const [empresaAtualObj, setEmpresaAtualObj] = useState(null);
   const [telaAuth, setTelaAuth] = useState('login');
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
+
+  const isNovoCadastroRef = useRef(false);
 
   const [tela, setTela] = useState('dashboard');
   const [mesAtual, setMesAtual] = useState(new Date().getMonth());
@@ -74,6 +77,11 @@ export default function CashFlowApp() {
       setSessao({ tipo: 'cliente', empresaId: empresa.id });
       // Injetamos o nome do profile na empresa pra TopBar usar
       setEmpresaAtualObj({ ...empresa, nome: profile?.nome });
+
+      if (isNovoCadastroRef.current) {
+        isNovoCadastroRef.current = false;
+        setTela('diagnostico');
+      }
     }
   }
 
@@ -239,6 +247,8 @@ export default function CashFlowApp() {
     });
 
     if (vincError) return { ok: false, erro: 'Erro ao vincular: ' + vincError.message };
+
+    isNovoCadastroRef.current = true;
     return { ok: true };
   }
 
@@ -303,6 +313,7 @@ export default function CashFlowApp() {
         {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
         {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} />}
         {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
+        {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
       </div>
 
       <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} />

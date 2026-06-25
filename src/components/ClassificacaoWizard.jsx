@@ -25,6 +25,7 @@ function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
   const [inputDescricao, setInputDescricao] = useState('');
   const [inputCategoria, setInputCategoria] = useState(null);
   const [inputSubcategoria, setInputSubcategoria] = useState('');
+  const [mostrandoAlertaCmv, setMostrandoAlertaCmv] = useState(false);
 
   const totalDistribuido = partes.reduce((s, p) => s + p.valor, 0);
   const restante = valorTotal - totalDistribuido;
@@ -44,7 +45,53 @@ function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
     setPartes(prev => prev.filter(p => p.id !== id));
   }
 
-  const podeSalvar = partes.length > 0 && Math.abs(restante) < 0.01;
+  const podeSalvar = partes.length > 0 && restante >= -0.005;
+
+  function handleConfirmar() {
+    if (!podeSalvar) return;
+    
+    if (restante > 0.005) {
+      const partesFinais = [...partes, { id: uid(), valor: restante, descricao: 'Restante CMV', categoria: 'cmv', subcategoria: '' }];
+      onConfirmar(partesFinais);
+    } else {
+      const temCmv = partes.some(p => p.categoria === 'cmv');
+      if (!temCmv) {
+        setMostrandoAlertaCmv(true);
+      } else {
+        onConfirmar(partes);
+      }
+    }
+  }
+
+  if (mostrandoAlertaCmv) {
+    return (
+      <ModalShell onClose={onCancelar} titulo="Atenção">
+        <div style={{ background: '#F2DDE1', borderRadius: 14, padding: 18, textAlign: 'center', marginBottom: 16 }}>
+          <AlertCircle size={28} color="#7A2E3D" style={{ margin: '0 auto 8px' }} />
+          <div style={{ fontSize: 13, color: '#7A2E3D', lineHeight: 1.5 }}>
+            <strong>Ops!</strong> No início foi informado que esta despesa era para o seu produto (CMV), mas você distribuiu todo o valor em outras categorias.
+          </div>
+          <div style={{ fontSize: 13, color: '#7A2E3D', marginTop: 12, fontWeight: 500 }}>
+            Tem certeza que nenhuma parte dessa nota foi para a fabricação/produto?
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <button
+            onClick={() => { setMostrandoAlertaCmv(false); onConfirmar(partes); }}
+            style={{ padding: '13px', borderRadius: 10, border: 'none', background: '#7A2E3D', color: '#fff', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Sim, confirmar categorias
+          </button>
+          <button
+            onClick={() => setMostrandoAlertaCmv(false)}
+            style={{ padding: '13px', borderRadius: 10, border: '1px solid #7A2E3D', background: '#fff', color: '#7A2E3D', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Não, quero revisar
+          </button>
+        </div>
+      </ModalShell>
+    );
+  }
 
   return (
     <ModalShell onClose={onCancelar} titulo="Fracionar lançamento">
@@ -168,16 +215,16 @@ function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
           Cancelar
         </button>
         <button
-          onClick={() => podeSalvar && onConfirmar(partes)}
+          onClick={handleConfirmar}
           disabled={!podeSalvar}
           style={{
             flex: 2, padding: '12px', borderRadius: 10, border: 'none',
             background: podeSalvar ? '#0F2B27' : '#E5E0D5',
             color: podeSalvar ? '#FAF8F3' : '#9C9A8F',
-            fontSize: 13.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed',
+            fontSize: 12.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed',
           }}
         >
-          Confirmar fracionamento
+          {restante > 0.005 ? `Confirmar e lançar ${formatBRL(restante)} no CMV` : 'Confirmar fracionamento'}
         </button>
       </div>
     </ModalShell>
