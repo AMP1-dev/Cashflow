@@ -45,16 +45,39 @@ export const WIZARD = {
     ajuda: 'Diferença para o CMV: aqui você não está comprando o produto em si, mas paga um "pedágio" sobre a venda. Quanto mais vende, mais paga.',
     opcoes: [
       { texto: 'Sim, varia com as vendas', proximo: 'fim_variavel' },
-      { texto: 'Não, esse valor é parecido todo mês', proximo: 'fim_fixa' },
+      { texto: 'Não, não tem relação com as vendas', proximo: 'pergunta_fixa_tipo' },
+    ],
+  },
+  pergunta_fixa_tipo: {
+    pergunta: 'Essa despesa acontece todo mês ou foi pontual / esporádica?',
+    ajuda: 'Despesas regulares voltam todo mês com valores parecidos — aluguel, salário, contador. Despesas eventuais são únicas ou esporádicas — um jantar, uma manutenção, uma viagem. As duas entram como Despesa Fixa no DRE, mas vamos sugerir subcategorias diferentes.',
+    opcoes: [
+      { texto: 'Acontece todo mês (regular)', proximo: 'fim_fixa_recorrente' },
+      { texto: 'Foi pontual ou não se repete com frequência', proximo: 'fim_fixa_eventual' },
     ],
   },
   fim_cmv: { categoria: 'cmv' },
   fim_variavel: { categoria: 'variavel' },
-  fim_fixa: { categoria: 'fixa' },
+  fim_fixa_recorrente: {
+    categoria: 'fixa',
+    subcategorias: ['Aluguel', 'Salários', 'Pró-labore', 'Água', 'Energia elétrica', 'Telefone e internet', 'Contador', 'Combustível (uso geral)', 'Manutenção de veículo', 'Material de escritório'],
+  },
+  fim_fixa_eventual: {
+    categoria: 'fixa',
+    subcategorias: ['Despesa eventual', 'Jantar / confraternização', 'Representação comercial', 'Viagem a trabalho', 'Treinamento / capacitação', 'Consultoria pontual', 'Manutenção eventual', 'Brinde / presente'],
+  },
   fim_financeira: { categoria: 'financeira' },
 };
 
 export const DESPESAS_FIXAS_PADRAO = [
   'Simples Nacional', 'Pró-labore', 'Energia Elétrica', 'Material de escritório',
   'Telefonia e Internet', 'Água', 'Manutenção Veículos', 'Combustível', 'Tarifa bancária',
+];
+
+export const BANCOS = [
+  'Nubank', 'Itaú', 'Bradesco', 'Santander', 'Banco do Brasil',
+  'Caixa Econômica Federal', 'BTG Pactual', 'Inter', 'C6 Bank', 'XP',
+  'Sicoob', 'Sicredi', 'Safra', 'BV', 'Banrisul', 'Agibank', 'Neon',
+  'Original', 'PicPay', 'Mercado Pago', 'PagSeguro', 'Cresol',
+  'Daycoval', 'Bmg', 'Modal', 'Sofisa', 'Fibra', 'Pine', 'Outro',
 ];

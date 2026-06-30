@@ -15,6 +15,7 @@ import { FichasTecnicasScreen } from './screens/FichasTecnicasScreen';
 import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 import { DiagnosticoScreen } from './screens/DiagnosticoScreen';
+import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
 
 export default function CashFlowApp() {
   const [sessao, setSessao] = useState(null);
@@ -23,6 +24,7 @@ export default function CashFlowApp() {
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
 
   const isNovoCadastroRef = useRef(false);
+  const [pctCmv, setPctCmv] = useState(0);
 
   const [tela, setTela] = useState('dashboard');
   const [mesAtual, setMesAtual] = useState(new Date().getMonth());
@@ -110,7 +112,8 @@ export default function CashFlowApp() {
           categoria: l.categoria,
           subcategoria: l.subcategoria,
           formaRecebimento: l.forma_recebimento === 'avista' ? 'À vista/PIX' : (l.forma_recebimento === 'aprazo' ? 'À prazo' : null),
-          qtdVendas: l.qtd_vendas
+          qtdVendas: l.qtd_vendas,
+          banco: l.banco || null,
         };
       });
       setLancamentosGeral(mapeados);
@@ -147,7 +150,8 @@ export default function CashFlowApp() {
       categoria: novo.categoria || null,
       subcategoria: novo.subcategoria || null,
       forma_recebimento: novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-      qtd_vendas: novo.qtdVendas || null
+      qtd_vendas: novo.qtdVendas || null,
+      banco: novo.banco || null,
     }).select().single();
 
     if (!error && data) {
@@ -172,7 +176,8 @@ export default function CashFlowApp() {
       categoria: dados.categoria || null,
       subcategoria: dados.subcategoria || null,
       forma_recebimento: dados.formaRecebimento ? (dados.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-      qtd_vendas: dados.qtdVendas || null
+      qtd_vendas: dados.qtdVendas || null,
+      banco: dados.banco || null,
     }).eq('id', id);
 
     if (!error) {
@@ -307,13 +312,14 @@ export default function CashFlowApp() {
       <TopBar empresa={{ nome: empresaAtualObj.fantasia || empresaAtualObj.razao_social }} usuario={empresaAtualObj.nome || empresaAtualObj.email_contato} onLogout={sair} mesAtual={mesAtual} setMesAtual={setMesAtual} />
 
       <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
-        {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} />}
+        {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} onIrGestaoAVista={() => setTela('gestaoavista')} />}
         {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
-        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} />}
+        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} pctCmv={pctCmv} />}
         {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
-        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} />}
+        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} onPctCustoChange={setPctCmv} />}
         {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
         {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
+        {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} onVoltar={() => setTela('dashboard')} />}
       </div>
 
       <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} />

@@ -3,7 +3,7 @@ import { MESES } from '../utils/constants';
 
 export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
   return (
-    <div style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
+    <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: 11, color: '#9FBDB5' }}>{usuario}</div>
@@ -37,7 +37,7 @@ export function BottomNav({ tela, setTela, onAdd }) {
     { id: 'diagnostico', label: 'Avaliação', icon: Activity },
   ];
   return (
-    <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 8px calc(7px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
+    <div className="no-print" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 8px calc(7px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
       {items.map(it => <NavButton key={it.id} item={it} active={tela === it.id} onClick={() => setTela(it.id)} />)}
     </div>
   );

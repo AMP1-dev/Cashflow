@@ -1,6 +1,6 @@
 import { HelpCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { CATEGORIAS } from '../utils/constants';
+import { BANCOS, CATEGORIAS } from '../utils/constants';
 import { construirSugestoesDescricao } from '../utils/formatters';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
 import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
@@ -19,6 +19,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
   const [categoria, setCategoria] = useState(editando ? lancamentoEditando.categoria : null);
   const [subcategoria, setSubcategoria] = useState(editando ? (lancamentoEditando.subcategoria || '') : '');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [banco, setBanco] = useState(editando ? (lancamentoEditando.banco || '') : '');
   const [sugestaoEscolhidaManualmente, setSugestaoEscolhidaManualmente] = useState(editando);
   const [campoDescricaoFocado, setCampoDescricaoFocado] = useState(false);
 
@@ -54,6 +55,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
       subcategoria: tipo === 'despesa' ? subcategoria : null,
       formaRecebimento: tipo === 'receita' ? (formaRecebimento === 'avista' ? 'À vista/PIX' : 'À prazo') : null,
       qtdVendas: tipo === 'receita' && qtdVendas ? parseInt(qtdVendas) || null : null,
+      banco: tipo === 'despesa' ? (banco || null) : null,
     };
   }
 
@@ -209,6 +211,16 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
               <HelpCircle size={16} />
               Não sei classificar — me ajude
             </button>
+          )}
+
+          {categoria && (
+            <>
+              <FieldLabel>Banco / Conta de pagamento (opcional)</FieldLabel>
+              <select value={banco} onChange={e => setBanco(e.target.value)} style={inputStyle}>
+                <option value="">Selecionar banco...</option>
+                {BANCOS.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </>
           )}
         </>
       )}

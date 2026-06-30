@@ -43,7 +43,7 @@ export function sugerirPercentuais(lancamentos) {
   };
 }
 
-export function FormacaoPrecoScreen({ lancamentos }) {
+export function FormacaoPrecoScreen({ lancamentos, onPctCustoChange }) {
   const sugestao = useMemo(() => sugerirPercentuais(lancamentos), [lancamentos]);
 
   function paraTexto(v) {
@@ -106,6 +106,10 @@ export function FormacaoPrecoScreen({ lancamentos }) {
   const pctPrecoCustoFracao = pctPrecoCusto / 100;
   const precoMinimo = (custoProdutoNum > 0 && pctPrecoCustoFracao > 0) ? custoProdutoNum / pctPrecoCustoFracao : null;
   const percentuaisInviaveis = pctPrecoCustoFracao <= 0;
+
+  useEffect(() => {
+    if (onPctCustoChange) onPctCustoChange(Math.max(0, pctPrecoCusto));
+  }, [pctPrecoCusto]);
 
   function valorCampoEmReais(key) {
     return precoVendaNum * (percentuais[key] / 100);

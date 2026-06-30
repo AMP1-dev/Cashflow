@@ -17,3 +17,36 @@ body {
 input, select, button {
   font-family: inherit;
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #FAF8F3 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .gestao-row {
+    flex-direction: row !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  #root {
+    padding: 0 !important;
+  }
+  * {
+    box-shadow: none !important;
+  }
+}
+
+.gestao-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

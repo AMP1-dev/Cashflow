@@ -1,10 +1,10 @@
-import { ArrowDownCircle, ArrowUpCircle, ChevronRight, X } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ChevronRight, X, Presentation } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { EmptyState } from '../components/UIComponents';
 import { CATEGORIAS } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, onNovo, onEditar }) {
+export function Dashboard({ lancamentos, onNovo, onEditar, onIrGestaoAVista }) {
   const totalReceita = lancamentos.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
   const totalDespesa = lancamentos.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
   const saldo = totalReceita - totalDespesa;
@@ -34,6 +34,11 @@ export function Dashboard({ lancamentos, onNovo, onEditar }) {
           </div>
         </div>
       </div>
+
+      <button onClick={onIrGestaoAVista} style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid #1F5C52', background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#1F5C52', marginBottom: 20 }}>
+        <Presentation size={18} />
+        <span style={{ fontSize: 14, fontWeight: 600 }}>Quadro de Metas & Gestão à Vista</span>
+      </button>
 
       <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
         <button onClick={() => onNovo('despesa')} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #E5E0D5', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#1C2421' }}>

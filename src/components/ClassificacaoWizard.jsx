@@ -247,8 +247,8 @@ export function ClassificacaoWizard({ descricao, valorTotal, sugestoesExtras, on
   // Chegou numa categoria final
   if (node.categoria) {
     const cat = CATEGORIAS[node.categoria];
-    const subsHistorico = (sugestoesExtras || []).filter(s => !SUBCATEGORIAS_SUGERIDAS[node.categoria].includes(s));
-    const todasSubs = [...SUBCATEGORIAS_SUGERIDAS[node.categoria], ...Array.from(new Set(subsHistorico))];
+    const subsHistorico = (sugestoesExtras || []).filter(s => !(node.subcategorias || SUBCATEGORIAS_SUGERIDAS[node.categoria]).includes(s));
+    const todasSubs = [...(node.subcategorias || SUBCATEGORIAS_SUGERIDAS[node.categoria]), ...Array.from(new Set(subsHistorico))];
 
     // Fase de pergunta de fracionamento (só CMV)
     if (node.categoria === 'cmv' && faseCmv === 'perguntaFracao') {

@@ -4,7 +4,7 @@ import { EmptyState } from '../components/UIComponents';
 import { MESES } from '../utils/constants';
 import { formatBRL, formatCompactoBRL } from '../utils/formatters';
 
-export function DREScreen({ lancamentos, mesAtual }) {
+export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
   const calc = useMemo(() => {
     const receitas = lancamentos.filter(l => l.tipo === 'receita');
     const despesasCmv = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv');
@@ -13,7 +13,9 @@ export function DREScreen({ lancamentos, mesAtual }) {
     const despesasFinanceiras = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira');
 
     const faturamento = receitas.reduce((s, l) => s + l.valor, 0);
-    const cmv = despesasCmv.reduce((s, l) => s + l.valor, 0);
+    const cmvLancamentos = despesasCmv.reduce((s, l) => s + l.valor, 0);
+    const cmvEstimado = pctCmv > 0 ? faturamento * (pctCmv / 100) : 0;
+    const cmv = cmvEstimado + cmvLancamentos;
     const variaveis = despesasVariaveis.reduce((s, l) => s + l.valor, 0);
     const fixas = despesasFixas.reduce((s, l) => s + l.valor, 0);
     const financeiras = despesasFinanceiras.reduce((s, l) => s + l.valor, 0);
@@ -24,10 +26,11 @@ export function DREScreen({ lancamentos, mesAtual }) {
     const resultadoLiquido = resultadoOperacional - financeiras;
     const pctMC = faturamento > 0 ? margemContribuicao / faturamento : 0;
     const pontoEquilibrio = pctMC > 0 ? fixas / pctMC : 0;
+    const pontoEquilibrioFinanceiro = pctMC > 0 ? (fixas + financeiras) / pctMC : 0;
 
     return {
-      faturamento, cmv, variaveis, fixas, financeiras,
-      resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoLiquido, pontoEquilibrio, pctMC,
+      faturamento, cmv, cmvLancamentos, cmvEstimado, variaveis, fixas, financeiras,
+      resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoLiquido, pontoEquilibrio, pontoEquilibrioFinanceiro, pctMC,
       itensReceitas: receitas, itensCmv: despesasCmv, itensVariaveis: despesasVariaveis, itensFixas: despesasFixas, itensFinanceiras: despesasFinanceiras,
     };
   }, [lancamentos]);
@@ -48,6 +51,26 @@ export function DREScreen({ lancamentos, mesAtual }) {
 
       {!semDados && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+
+          {/* Aviso CMV não configurado */}
+          {pctCmv === 0 && (
+            <div style={{ background: '#FBF3E5', border: '1px solid #E8C896', borderRadius: 12, padding: '10px 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
+              <div style={{ fontSize: 12, color: '#8A6D1A', lineHeight: 1.5 }}>
+                <strong>CMV não configurado.</strong> Acesse a aba <strong>Preço</strong> e preencha os índices para o sistema calcular o CMV automaticamente com base no seu faturamento.
+              </div>
+            </div>
+          )}
+
+          {/* Detalhamento do CMV quando estimado está ativo */}
+          {pctCmv > 0 && (calc.cmvEstimado > 0 || calc.cmvLancamentos > 0) && (
+            <div style={{ background: '#F5E4D8', border: '1px solid #E8C896', borderRadius: 12, padding: '10px 12px', fontSize: 11.5, color: '#7A3A1A', lineHeight: 1.6 }}>
+              <strong>CMV calculado ({pctCmv.toFixed(1)}% sobre o faturamento)</strong>
+              {calc.cmvEstimado > 0 && <div>Estimado pela Formação de Preço: <strong>{formatBRL(calc.cmvEstimado)}</strong></div>}
+              {calc.cmvLancamentos > 0 && <div>Lançamentos manuais CMV: <strong>{formatBRL(calc.cmvLancamentos)}</strong></div>}
+              <div style={{ borderTop: '1px solid #D9B8A8', marginTop: 4, paddingTop: 4 }}>Total CMV: <strong>{formatBRL(calc.cmv)}</strong></div>
+            </div>
+          )}
           <DRELine label="Faturamento" valor={calc.faturamento} pct={pct(calc.faturamento)} destaque
             itens={calc.itensReceitas} aberto={linhaAberta === 'faturamento'} onToggle={() => toggleLinha('faturamento')} fat={fat} />
           <DRELine label="(–) CMV" valor={-calc.cmv} pct={pct(-calc.cmv)}
@@ -73,9 +96,24 @@ export function DREScreen({ lancamentos, mesAtual }) {
           </div>
 
           <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #EFEBE0', marginTop: 4 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 6 }}>Ponto de equilíbrio</div>
-            <div style={{ fontSize: 18, fontWeight: 600, color: '#1C2421' }}>{formatBRL(calc.pontoEquilibrio)}</div>
-            <div style={{ fontSize: 11.5, color: '#9C9A8F', marginTop: 4 }}>Quanto a empresa precisa faturar no mês para não ter prejuízo nem lucro.</div>
+            <div style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 10 }}>Ponto de equilíbrio</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div>
+                <div style={{ fontSize: 10.5, color: '#9C9A8F', marginBottom: 2 }}>Operacional</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: '#1C2421' }}>{formatBRL(calc.pontoEquilibrio)}</div>
+                <div style={{ fontSize: 11, color: '#9C9A8F', marginTop: 3 }}>Faturamento mínimo para cobrir custos fixos e variáveis (sem contar despesas financeiras).</div>
+              </div>
+              {calc.financeiras > 0 && (
+                <>
+                  <div style={{ height: 1, background: '#F0EDE3' }} />
+                  <div>
+                    <div style={{ fontSize: 10.5, color: '#7A2E3D', marginBottom: 2 }}>Financeiro</div>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: '#1C2421' }}>{formatBRL(calc.pontoEquilibrioFinanceiro)}</div>
+                    <div style={{ fontSize: 11, color: '#9C9A8F', marginTop: 3 }}>Faturamento mínimo incluindo juros, financiamentos e encargos bancários.</div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           <GraficoComposicaoDRE calc={calc} />
