@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react';
 import { MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, onVoltar }) {
+export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, pctCmv = 0, onVoltar }) {
   const [lucroDesejadoStr, setLucroDesejadoStr] = useState('10000');
 
   // Cálculos do mês atual
@@ -12,11 +12,14 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, onVolta
   const calcAtual = useMemo(() => {
     const faturamento = lancamentosMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
     const cmvCompras = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + l.valor, 0);
+    const cmvEstimado = pctCmv > 0 ? faturamento * (pctCmv / 100) : 0;
     
     // Lógica de Estoque
     const lInicial = lancamentosMes.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
     const lFinal = lancamentosMes.find(l => l.tipo === 'estoque' && l.categoria === 'final');
-    const cmv = (lInicial || lFinal) ? ((lInicial?.valor || 0) + cmvCompras - (lFinal?.valor || 0)) : cmvCompras;
+    const cmv = (lInicial || lFinal) 
+      ? ((lInicial?.valor || 0) + cmvCompras - (lFinal?.valor || 0)) 
+      : (cmvCompras + cmvEstimado);
 
     const variaveis = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + l.valor, 0);
     const fixas = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
