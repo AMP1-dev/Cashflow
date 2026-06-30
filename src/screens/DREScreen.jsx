@@ -1,10 +1,10 @@
-import { ChevronRight } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ChevronRight, PackageCheck } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
 import { EmptyState } from '../components/UIComponents';
 import { MESES } from '../utils/constants';
 import { formatBRL, formatCompactoBRL } from '../utils/formatters';
 
-export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
+export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, pctCmv = 0, onSalvarEstoque }) {
   const calc = useMemo(() => {
     const receitas = lancamentos.filter(l => l.tipo === 'receita');
     const despesasCmv = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv');
@@ -13,9 +13,20 @@ export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
     const despesasFinanceiras = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira');
 
     const faturamento = receitas.reduce((s, l) => s + l.valor, 0);
-    const cmvLancamentos = despesasCmv.reduce((s, l) => s + l.valor, 0);
+    const cmvCompras = despesasCmv.reduce((s, l) => s + l.valor, 0); // Compras do mês
     const cmvEstimado = pctCmv > 0 ? faturamento * (pctCmv / 100) : 0;
-    const cmv = cmvEstimado + cmvLancamentos;
+    
+    // Lógica de Estoque (CMV = Inicial + Compras - Final)
+    const lInicial = lancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal = lancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'final');
+    const estoqueInicial = lInicial ? lInicial.valor : null;
+    const estoqueFinal = lFinal ? lFinal.valor : null;
+    const temEstoque = estoqueInicial !== null || estoqueFinal !== null;
+
+    const cmv = temEstoque 
+      ? (estoqueInicial || 0) + cmvCompras - (estoqueFinal || 0)
+      : cmvEstimado + cmvCompras;
+
     const variaveis = despesasVariaveis.reduce((s, l) => s + l.valor, 0);
     const fixas = despesasFixas.reduce((s, l) => s + l.valor, 0);
     const financeiras = despesasFinanceiras.reduce((s, l) => s + l.valor, 0);
@@ -29,9 +40,10 @@ export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
     const pontoEquilibrioFinanceiro = pctMC > 0 ? (fixas + financeiras) / pctMC : 0;
 
     return {
-      faturamento, cmv, cmvLancamentos, cmvEstimado, variaveis, fixas, financeiras,
+      faturamento, cmv, cmvCompras, cmvEstimado, variaveis, fixas, financeiras,
       resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoLiquido, pontoEquilibrio, pontoEquilibrioFinanceiro, pctMC,
       itensReceitas: receitas, itensCmv: despesasCmv, itensVariaveis: despesasVariaveis, itensFixas: despesasFixas, itensFinanceiras: despesasFinanceiras,
+      estoqueInicial, estoqueFinal, temEstoque
     };
   }, [lancamentos]);
 
@@ -41,6 +53,31 @@ export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
 
   const [linhaAberta, setLinhaAberta] = useState(null);
   function toggleLinha(id) { setLinhaAberta(prev => prev === id ? null : id); }
+
+  const [modalEstoqueAberto, setModalEstoqueAberto] = useState(false);
+  const [valEstInicial, setValEstInicial] = useState('');
+  const [valEstFinal, setValEstFinal] = useState('');
+
+  const estoqueFinalMesAnterior = useMemo(() => {
+    if (!lancamentosAno) return null;
+    const mesAnterior = mesAtual === 0 ? 11 : mesAtual - 1;
+    const anoDoMesAnterior = mesAtual === 0 ? anoAtual - 1 : anoAtual;
+    const lancamentoAnt = lancamentosAno.find(l => l.mes === mesAnterior && l.ano === anoDoMesAnterior && l.tipo === 'estoque' && l.categoria === 'final');
+    return lancamentoAnt ? lancamentoAnt.valor : null;
+  }, [lancamentosAno, mesAtual, anoAtual]);
+
+  useEffect(() => {
+    if (modalEstoqueAberto) {
+      const defaultInicial = calc.estoqueInicial !== null ? calc.estoqueInicial : estoqueFinalMesAnterior;
+      setValEstInicial(defaultInicial !== null ? String(defaultInicial) : '');
+      setValEstFinal(calc.estoqueFinal !== null ? String(calc.estoqueFinal) : '');
+    }
+  }, [modalEstoqueAberto, calc.estoqueInicial, calc.estoqueFinal, estoqueFinalMesAnterior]);
+
+  function handleSalvarEstoque() {
+    onSalvarEstoque(valEstInicial, valEstFinal);
+    setModalEstoqueAberto(false);
+  }
 
   return (
     <div style={{ padding: 16 }}>
@@ -52,8 +89,13 @@ export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
       {!semDados && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-          {/* Aviso CMV não configurado */}
-          {pctCmv === 0 && (
+          <button onClick={() => setModalEstoqueAberto(true)} style={{ width: '100%', padding: '12px', borderRadius: 12, border: '1px solid #1F5C52', background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#1F5C52', marginBottom: 6 }}>
+            <PackageCheck size={18} />
+            <span style={{ fontSize: 13, fontWeight: 600 }}>Apurar CMV por Estoque (Inventário)</span>
+          </button>
+
+          {/* Aviso CMV não configurado e sem estoque */}
+          {pctCmv === 0 && !calc.temEstoque && (
             <div style={{ background: '#FBF3E5', border: '1px solid #E8C896', borderRadius: 12, padding: '10px 12px', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 14, flexShrink: 0 }}>⚠️</span>
               <div style={{ fontSize: 12, color: '#8A6D1A', lineHeight: 1.5 }}>
@@ -62,13 +104,27 @@ export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
             </div>
           )}
 
-          {/* Detalhamento do CMV quando estimado está ativo */}
-          {pctCmv > 0 && (calc.cmvEstimado > 0 || calc.cmvLancamentos > 0) && (
+          {/* Detalhamento do CMV */}
+          {(pctCmv > 0 || calc.temEstoque) && (
             <div style={{ background: '#F5E4D8', border: '1px solid #E8C896', borderRadius: 12, padding: '10px 12px', fontSize: 11.5, color: '#7A3A1A', lineHeight: 1.6 }}>
-              <strong>CMV calculado ({pctCmv.toFixed(1)}% sobre o faturamento)</strong>
-              {calc.cmvEstimado > 0 && <div>Estimado pela Formação de Preço: <strong>{formatBRL(calc.cmvEstimado)}</strong></div>}
-              {calc.cmvLancamentos > 0 && <div>Lançamentos manuais CMV: <strong>{formatBRL(calc.cmvLancamentos)}</strong></div>}
-              <div style={{ borderTop: '1px solid #D9B8A8', marginTop: 4, paddingTop: 4 }}>Total CMV: <strong>{formatBRL(calc.cmv)}</strong></div>
+              <strong>Composição do CMV (Custo da Mercadoria Vendida)</strong>
+              
+              {calc.temEstoque ? (
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Estoque Inicial:</span> <strong>{formatBRL(calc.estoqueInicial || 0)}</strong></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>(+) Compras no Mês:</span> <strong>{formatBRL(calc.cmvCompras || 0)}</strong></div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>(–) Estoque Final:</span> <strong>{formatBRL(calc.estoqueFinal || 0)}</strong></div>
+                </div>
+              ) : (
+                <div style={{ marginTop: 4 }}>
+                  {calc.cmvEstimado > 0 && <div>Estimado (Formação de Preço): <strong>{formatBRL(calc.cmvEstimado)}</strong></div>}
+                  {calc.cmvCompras > 0 && <div>Lançamentos manuais CMV: <strong>{formatBRL(calc.cmvCompras)}</strong></div>}
+                </div>
+              )}
+
+              <div style={{ borderTop: '1px solid #D9B8A8', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between' }}>
+                <span>Total CMV Abatido:</span> <strong>{formatBRL(calc.cmv)}</strong>
+              </div>
             </div>
           )}
           <DRELine label="Faturamento" valor={calc.faturamento} pct={pct(calc.faturamento)} destaque
@@ -117,6 +173,33 @@ export function DREScreen({ lancamentos, mesAtual, pctCmv = 0 }) {
           </div>
 
           <GraficoComposicaoDRE calc={calc} />
+        </div>
+      )}
+
+      {/* Modal de Estoque */}
+      {modalEstoqueAberto && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 20, width: '100%', maxWidth: 400 }}>
+            <h3 style={{ margin: '0 0 16px 0', fontSize: 18, color: '#1C2421' }}>Inventário de Estoque</h3>
+            <p style={{ fontSize: 13, color: '#5C5A4F', marginBottom: 20, lineHeight: 1.4 }}>
+              O CMV oficial é calculado pela fórmula: <br/><strong>Estoque Inicial + Compras - Estoque Final.</strong><br/>Deixe em branco para usar a estimativa automática.
+            </p>
+
+            <div style={{ marginBottom: 12 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5C5A4F', marginBottom: 4 }}>Estoque Inicial (R$)</label>
+              <input type="number" value={valEstInicial} onChange={e => setValEstInicial(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #D1CFC7', fontSize: 16, boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5C5A4F', marginBottom: 4 }}>Estoque Final (R$)</label>
+              <input type="number" value={valEstFinal} onChange={e => setValEstFinal(e.target.value)} placeholder="0.00" style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #D1CFC7', fontSize: 16, boxSizing: 'border-box' }} />
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setModalEstoqueAberto(false)} style={{ flex: 1, padding: 12, borderRadius: 8, border: '1px solid #D1CFC7', background: '#fff', color: '#5C5A4F', fontWeight: 600, cursor: 'pointer' }}>Cancelar</button>
+              <button onClick={handleSalvarEstoque} style={{ flex: 1, padding: 12, borderRadius: 8, border: 'none', background: '#1F5C52', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Salvar e Apurar</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

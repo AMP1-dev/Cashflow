@@ -30,6 +30,10 @@ input, select, button {
   .print-only {
     display: block !important;
   }
+  .app-container {
+    max-width: none !important;
+    margin: 0 !important;
+  }
   .gestao-row {
     flex-direction: row !important;
   }
@@ -49,4 +53,9 @@ input, select, button {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
 }

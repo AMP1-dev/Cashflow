@@ -11,7 +11,13 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, onVolta
 
   const calcAtual = useMemo(() => {
     const faturamento = lancamentosMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
-    const cmv = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + l.valor, 0);
+    const cmvCompras = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + l.valor, 0);
+    
+    // Lógica de Estoque
+    const lInicial = lancamentosMes.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal = lancamentosMes.find(l => l.tipo === 'estoque' && l.categoria === 'final');
+    const cmv = (lInicial || lFinal) ? ((lInicial?.valor || 0) + cmvCompras - (lFinal?.valor || 0)) : cmvCompras;
+
     const variaveis = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + l.valor, 0);
     const fixas = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
     const financeiras = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira').reduce((s, l) => s + l.valor, 0);

@@ -185,6 +185,28 @@ export default function CashFlowApp() {
     }
   }
 
+  async function salvarEstoqueMensal(estoqueInicial, estoqueFinal) {
+    const dataInicial = new Date(anoAtual, mesAtual, 1).toISOString().split('T')[0];
+    const dataFinal = new Date(anoAtual, mesAtual, daysInMonth(mesAtual, anoAtual)).toISOString().split('T')[0];
+    
+    const idsParaDeletar = lancamentosEmpresa.filter(l => l.tipo === 'estoque').map(l => l.id);
+    if (idsParaDeletar.length > 0) {
+       await supabase.from('lancamentos').delete().in('id', idsParaDeletar);
+    }
+
+    if (estoqueInicial !== null && estoqueInicial !== '') {
+      await supabase.from('lancamentos').insert({
+        empresa_id: empresaAtualObj.id, tipo: 'estoque', categoria: 'inicial', descricao: 'Estoque Inicial', valor: parseFloat(estoqueInicial), data_lancamento: dataInicial
+      });
+    }
+    if (estoqueFinal !== null && estoqueFinal !== '') {
+      await supabase.from('lancamentos').insert({
+        empresa_id: empresaAtualObj.id, tipo: 'estoque', categoria: 'final', descricao: 'Estoque Final', valor: parseFloat(estoqueFinal), data_lancamento: dataFinal
+      });
+    }
+    carregarLancamentos(empresaAtualObj.id);
+  }
+
   function abrirEdicao(lancamento) {
     setLancamentoEditando(lancamento);
     setShowLancamentoModal(true);
@@ -308,13 +330,13 @@ export default function CashFlowApp() {
   if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
 
   return (
-    <div style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', maxWidth: 480, margin: '0 auto', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
+    <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
       <TopBar empresa={{ nome: empresaAtualObj.fantasia || empresaAtualObj.razao_social }} usuario={empresaAtualObj.nome || empresaAtualObj.email_contato} onLogout={sair} mesAtual={mesAtual} setMesAtual={setMesAtual} />
 
       <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
         {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} onIrGestaoAVista={() => setTela('gestaoavista')} />}
         {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
-        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} pctCmv={pctCmv} />}
+        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} pctCmv={pctCmv} onSalvarEstoque={salvarEstoqueMensal} />}
         {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
         {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} onPctCustoChange={setPctCmv} />}
         {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
