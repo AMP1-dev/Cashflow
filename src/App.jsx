@@ -340,7 +340,7 @@ export default function CashFlowApp() {
         {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} />}
         {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
         {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
-        {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} pctCmv={pctCmv} onVoltar={() => setTela('dashboard')} />}
+        {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onVoltar={() => setTela('dashboard')} />}
       </div>
 
       <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} />

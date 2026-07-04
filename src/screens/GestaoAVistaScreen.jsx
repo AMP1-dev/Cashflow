@@ -1,9 +1,25 @@
 import { ArrowLeft, Printer, Target, TrendingUp } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, pctCmv = 0, onVoltar }) {
+export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresaId, onVoltar }) {
+  const [pctCmv, setPctCmv] = useState(0);
+
+  useEffect(() => {
+    if (!empresaId || mesAtual === undefined || anoAtual === undefined) return;
+    supabase
+      .from('cmv_config')
+      .select('pct_cmv')
+      .eq('empresa_id', empresaId)
+      .eq('mes', mesAtual)
+      .eq('ano', anoAtual)
+      .maybeSingle()
+      .then(({ data }) => {
+        setPctCmv(data?.pct_cmv ?? 0);
+      });
+  }, [empresaId, mesAtual, anoAtual]);
   const [lucroDesejadoStr, setLucroDesejadoStr] = useState(() => {
     return localStorage.getItem(`amp_meta_${anoAtual}_${mesAtual}`) || '10000';
   });
