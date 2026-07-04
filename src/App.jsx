@@ -10,11 +10,11 @@ import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
 import { AnualScreen } from './screens/AnualScreen';
 import { AssinaturaScreen, LoginScreen, RecuperarSenhaScreen, RedefinirSenhaScreen } from './screens/AuthScreens';
 import { Dashboard } from './screens/DashboardScreen';
+import { DiagnosticoScreen } from './screens/DiagnosticoScreen';
 import { DREScreen } from './screens/DREScreen';
 import { FichasTecnicasScreen } from './screens/FichasTecnicasScreen';
 import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
-import { DiagnosticoScreen } from './screens/DiagnosticoScreen';
 import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
 
 export default function CashFlowApp() {
@@ -24,7 +24,6 @@ export default function CashFlowApp() {
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
 
   const isNovoCadastroRef = useRef(false);
-  const [pctCmv, setPctCmv] = useState(0);
 
   const [tela, setTela] = useState('dashboard');
   const [mesAtual, setMesAtual] = useState(new Date().getMonth());
@@ -65,7 +64,7 @@ export default function CashFlowApp() {
     ]);
 
     const profile = reqProfile.data;
-    
+
     if (profile?.eh_admin) {
       setSessao({ tipo: 'admin' });
       carregarPainelAdmin();
@@ -188,10 +187,10 @@ export default function CashFlowApp() {
   async function salvarEstoqueMensal(estoqueInicial, estoqueFinal) {
     const dataInicial = new Date(anoAtual, mesAtual, 1).toISOString().split('T')[0];
     const dataFinal = new Date(anoAtual, mesAtual, daysInMonth(mesAtual, anoAtual)).toISOString().split('T')[0];
-    
+
     const idsParaDeletar = lancamentosEmpresa.filter(l => l.tipo === 'estoque').map(l => l.id);
     if (idsParaDeletar.length > 0) {
-       await supabase.from('lancamentos').delete().in('id', idsParaDeletar);
+      await supabase.from('lancamentos').delete().in('id', idsParaDeletar);
     }
 
     if (estoqueInicial !== null && estoqueInicial !== '') {
@@ -336,9 +335,9 @@ export default function CashFlowApp() {
       <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
         {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} onIrGestaoAVista={() => setTela('gestaoavista')} />}
         {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
-        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} pctCmv={pctCmv} onSalvarEstoque={salvarEstoqueMensal} />}
+        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onSalvarEstoque={salvarEstoqueMensal} />}
         {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
-        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} onPctCustoChange={setPctCmv} />}
+        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} />}
         {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
         {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
         {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} pctCmv={pctCmv} onVoltar={() => setTela('dashboard')} />}

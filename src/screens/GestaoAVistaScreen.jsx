@@ -4,7 +4,14 @@ import { MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
 export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, pctCmv = 0, onVoltar }) {
-  const [lucroDesejadoStr, setLucroDesejadoStr] = useState('10000');
+  const [lucroDesejadoStr, setLucroDesejadoStr] = useState(() => {
+    return localStorage.getItem(`amp_meta_${anoAtual}_${mesAtual}`) || '10000';
+  });
+
+  function handleLucroChange(val) {
+    setLucroDesejadoStr(val);
+    localStorage.setItem(`amp_meta_${anoAtual}_${mesAtual}`, val);
+  }
 
   // Cálculos do mês atual
   const lancamentosMes = useMemo(() => lancamentosAno.filter(l => l.mes === mesAtual), [lancamentosAno, mesAtual]);
@@ -40,14 +47,46 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, pctCmv 
       pctMC,
       lucroLiquido
     };
-  }, [lancamentosMes]);
+  }, [lancamentosMes, pctCmv]);
+
+  // Lógica do Mês Anterior (para projeção)
+  const calcAnterior = useMemo(() => {
+    let m = mesAtual - 1;
+    let a = anoAtual;
+    if (m < 0) {
+      m = 11;
+      a -= 1;
+    }
+    const lancsAnt = lancamentosAno.filter(l => l.mes === m && l.ano === a);
+    const fat = lancsAnt.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
+    const fixas = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
+    const financeiras = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira').reduce((s, l) => s + l.valor, 0);
+    const custosFixos = fixas + financeiras;
+
+    const cmvCompras = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + l.valor, 0);
+    const cmvEstimado = pctCmv > 0 ? fat * (pctCmv / 100) : 0;
+    const lInicial = lancsAnt.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal = lancsAnt.find(l => l.tipo === 'estoque' && l.categoria === 'final');
+    const cmv = (lInicial || lFinal) ? ((lInicial?.valor || 0) + cmvCompras - (lFinal?.valor || 0)) : (cmvCompras + cmvEstimado);
+    
+    const variaveis = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + l.valor, 0);
+    const margemContribuicao = fat - (cmv + variaveis);
+    const pctMC = fat > 0 ? margemContribuicao / fat : 0.30;
+
+    return { custosFixos, pctMC };
+  }, [lancamentosAno, mesAtual, anoAtual, pctCmv]);
 
   // Lógica de Metas
   const lucroDesejado = parseFloat(lucroDesejadoStr) || 0;
   
+  // Decide se usa a projeção (se o mês atual estiver zerado em receitas e custos)
+  const usandoProjecao = calcAtual.faturamento === 0 && calcAtual.custosFixosTotais === 0;
+  const baseCustosFixos = usandoProjecao ? calcAnterior.custosFixos : calcAtual.custosFixosTotais;
+  const basePctMC = usandoProjecao ? calcAnterior.pctMC : calcAtual.pctMC;
+
   // Fórmula: Faturamento Necessário = (Custos Fixos + Lucro Desejado) / % Margem de Contribuição
-  const faturamentoMeta = calcAtual.pctMC > 0 
-    ? (calcAtual.custosFixosTotais + lucroDesejado) / calcAtual.pctMC 
+  const faturamentoMeta = basePctMC > 0 
+    ? (baseCustosFixos + lucroDesejado) / basePctMC 
     : 0;
 
   // Dias no mês para a meta diária
@@ -109,12 +148,17 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, pctCmv 
           <input 
             type="number" 
             value={lucroDesejadoStr} 
-            onChange={(e) => setLucroDesejadoStr(e.target.value)}
+            onChange={(e) => handleLucroChange(e.target.value)}
             style={{ padding: '12px', borderRadius: 8, border: '1px solid #D1CFC7', fontSize: 16, fontWeight: 600, background: '#FBFAF6' }}
           />
           <div style={{ fontSize: 11, color: '#9C9A8F', marginTop: 4 }}>
             A meta diária será calculada com base no seu custo fixo atual e margem de contribuição.
           </div>
+          {usandoProjecao && (
+            <div style={{ marginTop: 6, padding: '8px 10px', background: '#FFF3E0', border: '1px solid #FFE0B2', borderRadius: 8, fontSize: 11.5, color: '#E65100', fontWeight: 500 }}>
+              💡 Como {MESES[mesAtual]} ainda não tem dados suficientes, estamos projetando sua meta usando os custos fixos e margem de contribuição do mês anterior! Ela se ajustará automaticamente quando você lançar dados neste mês.
+            </div>
+          )}
         </div>
       </div>
 
@@ -192,7 +236,7 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, pctCmv 
               const heightPct = (h.faturamento / maxFatHist) * 100;
               const isAtual = i === historico.length - 1;
               return (
-                <div key={h.mesLabel} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flex: 1 }}>
+                <div key={h.mesLabel} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flex: 1, height: '100%' }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#5C5A4F' }}>{formatBRL(h.faturamento)}</div>
                   <div style={{ width: '100%', maxWidth: 60, height: `${Math.max(heightPct, 5)}%`, background: isAtual ? '#1F5C52' : '#C9C5B6', borderRadius: '6px 6px 0 0' }} />
                   <div style={{ fontSize: 14, fontWeight: isAtual ? 700 : 500, color: isAtual ? '#1F5C52' : '#9C9A8F' }}>{h.mesLabel}</div>
