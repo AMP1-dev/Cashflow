@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Calculator } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { FieldLabel, inputStyle, EmptyState } from '../components/UIComponents';
+import { CalculadoraRH } from '../components/CalculadoraRH';
 
 const CAMPOS_PERCENTUAL = [
   { key: 'das', label: 'DAS — Simples Nacional', grupo: 'variavel' },
@@ -43,22 +44,47 @@ export function sugerirPercentuais(lancamentos) {
   };
 }
 
-export function FormacaoPrecoScreen({ lancamentos }) {
+export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual }) {
   const sugestao = useMemo(() => sugerirPercentuais(lancamentos), [lancamentos]);
+  const [showCalculadoraRH, setShowCalculadoraRH] = useState(false);
 
   function paraTexto(v) {
     return v === 0 ? '' : String(v).replace('.', ',');
   }
 
+  const storageKey = `amp_preco_${empresaId}_${anoAtual}_${mesAtual}`;
+
+  // Estados com persistência local baseada no mês
   const [textos, setTextos] = useState(() => {
+    const salvo = localStorage.getItem(`${storageKey}_textos`);
+    if (salvo) return JSON.parse(salvo);
     const t = {};
     CAMPOS_PERCENTUAL.forEach(c => { t[c.key] = paraTexto(sugestao[c.key]); });
     return t;
   });
-  const [usandoSugestao, setUsandoSugestao] = useState(true);
-  const [custoProduto, setCustoProduto] = useState('');
-  const [precoVenda, setPrecoVenda] = useState('');
 
+  const [usandoSugestao, setUsandoSugestao] = useState(() => {
+    const salvo = localStorage.getItem(`${storageKey}_usandoSugestao`);
+    return salvo ? JSON.parse(salvo) : true;
+  });
+
+  const [custoProduto, setCustoProduto] = useState(() => {
+    return localStorage.getItem(`${storageKey}_custoProduto`) || '';
+  });
+
+  const [precoVenda, setPrecoVenda] = useState(() => {
+    return localStorage.getItem(`${storageKey}_precoVenda`) || '';
+  });
+
+  // Salvar no localStorage sempre que mudar
+  useEffect(() => {
+    localStorage.setItem(`${storageKey}_textos`, JSON.stringify(textos));
+    localStorage.setItem(`${storageKey}_usandoSugestao`, JSON.stringify(usandoSugestao));
+    localStorage.setItem(`${storageKey}_custoProduto`, custoProduto);
+    localStorage.setItem(`${storageKey}_precoVenda`, precoVenda);
+  }, [textos, usandoSugestao, custoProduto, precoVenda, storageKey]);
+
+  // Se usar sugestão, atualiza sempre que vierem novos dados
   useEffect(() => {
     if (usandoSugestao) {
       const t = {};
@@ -113,8 +139,20 @@ export function FormacaoPrecoScreen({ lancamentos }) {
 
   return (
     <div style={{ padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 2 }}>Formação de preço</div>
-      <div style={{ fontSize: 11.5, color: '#9C9A8F', marginBottom: 16 }}>Descubra se o preço que o mercado aceita ainda deixa lucro</div>
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 2 }}>Formação de preço</div>
+          <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Descubra se o preço que o mercado aceita ainda deixa lucro</div>
+        </div>
+        <button 
+          onClick={() => setShowCalculadoraRH(true)}
+          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #1F5C52', background: '#D9EBE6', color: '#1F5C52', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
+        >
+          <Calculator size={14} />
+          Calc. Hora Técnica
+        </button>
+      </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Índices incidentes</span>
@@ -125,7 +163,7 @@ export function FormacaoPrecoScreen({ lancamentos }) {
         )}
       </div>
       <div style={{ fontSize: 10.5, color: '#9C9A8F', marginBottom: 10 }}>
-        {usandoSugestao ? 'Calculado a partir dos seus lançamentos deste mês. Você pode editar qualquer campo.' : 'Valores editados manualmente.'}
+        {usandoSugestao ? 'Calculado a partir dos seus lançamentos deste mês. Você pode editar qualquer campo.' : 'Valores editados manualmente e salvos para este mês.'}
         {precoVendaNum === 0 && ' Informe o preço de venda abaixo para ver os valores em R$.'}
       </div>
 
@@ -176,7 +214,7 @@ export function FormacaoPrecoScreen({ lancamentos }) {
       <div style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 8 }}>Simular preço</div>
       <div style={{ display: 'flex', gap: 10, marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
-          <FieldLabel>Custo do produto</FieldLabel>
+          <FieldLabel>Custo do produto/hora</FieldLabel>
           <div style={{ position: 'relative' }}>
             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9C9A8F' }}>R$</span>
             <input value={custoProduto} onChange={e => setCustoProduto(e.target.value)} placeholder="0,00" inputMode="decimal" style={{ ...inputStyle, paddingLeft: 30, marginTop: 0 }} />
@@ -195,7 +233,7 @@ export function FormacaoPrecoScreen({ lancamentos }) {
         custoProdutoNum > 0 ? (
           <SugestaoPrecoMinimo precoMinimo={precoMinimo} percentuaisInviaveis={percentuaisInviaveis} />
         ) : (
-          <EmptyState text="Informe o custo do produto e o preço de venda para simular o lucro." />
+          <EmptyState text="Informe o custo do produto (ou da hora técnica) e o preço de venda para simular o lucro." />
         )
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -215,13 +253,25 @@ export function FormacaoPrecoScreen({ lancamentos }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}><span>= Preço líquido</span><span>{formatBRL(precoLiquido)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>(–) Custo fixo, retirada, distrib. lucros</span><span>{formatBRL(valorFixos)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}><span>= Preço de custo (teto)</span><span>{formatBRL(precoCustoCalculado)}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>(–) Custo real do produto</span><span>{formatBRL(custoProdutoNum)}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>(–) Custo real do produto/hora</span><span>{formatBRL(custoProdutoNum)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: 4, marginTop: 2 }}><span>= Lucro</span><span>{formatBRL(lucro)}</span></div>
             </div>
           </div>
 
           {!positivo && <SugestaoPrecoMinimo precoMinimo={precoMinimo} percentuaisInviaveis={percentuaisInviaveis} />}
         </div>
+      )}
+
+      {showCalculadoraRH && (
+        <CalculadoraRH 
+          mesAtual={mesAtual}
+          anoAtual={anoAtual}
+          onClose={() => setShowCalculadoraRH(false)} 
+          onUsarValor={(valor) => {
+            setCustoProduto(String(valor.toFixed(2)).replace('.', ','));
+            setShowCalculadoraRH(false);
+          }}
+        />
       )}
     </div>
   );

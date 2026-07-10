@@ -20,6 +20,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
   const [subcategoria, setSubcategoria] = useState(editando ? (lancamentoEditando.subcategoria || '') : '');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
   const [banco, setBanco] = useState(editando ? (lancamentoEditando.banco || '') : '');
+  const [meioPagamento, setMeioPagamento] = useState(editando ? (lancamentoEditando.meioPagamento || '') : '');
   const [sugestaoEscolhidaManualmente, setSugestaoEscolhidaManualmente] = useState(editando);
   const [campoDescricaoFocado, setCampoDescricaoFocado] = useState(false);
 
@@ -55,7 +56,8 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
       subcategoria: tipo === 'despesa' ? subcategoria : null,
       formaRecebimento: tipo === 'receita' ? (formaRecebimento === 'avista' ? 'À vista/PIX' : 'À prazo') : null,
       qtdVendas: tipo === 'receita' && qtdVendas ? parseInt(qtdVendas) || null : null,
-      banco: tipo === 'despesa' ? (banco || null) : null,
+      banco: banco || null,
+      meio_pagamento: meioPagamento || null,
     };
   }
 
@@ -215,13 +217,27 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
 
           {categoria && (
             <>
-              <FieldLabel>Banco / Conta de pagamento (opcional)</FieldLabel>
+              <FieldLabel>Banco / Conta (opcional)</FieldLabel>
               <select value={banco} onChange={e => setBanco(e.target.value)} style={inputStyle}>
                 <option value="">Selecionar banco...</option>
                 {BANCOS.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </>
           )}
+        </>
+      )}
+
+      {categoria && (
+        <>
+          <FieldLabel>Meio de pagamento / Como pagou (opcional)</FieldLabel>
+          <select value={meioPagamento} onChange={e => setMeioPagamento(e.target.value)} style={inputStyle}>
+            <option value="">Selecionar meio de pagamento...</option>
+            <option value="PIX">PIX</option>
+            <option value="Dinheiro">Dinheiro</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Cartão">Cartão</option>
+            <option value="Transferência">Transferência</option>
+          </select>
         </>
       )}
 

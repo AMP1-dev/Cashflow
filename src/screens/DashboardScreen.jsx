@@ -1,10 +1,11 @@
-import { ArrowDownCircle, ArrowUpCircle, ChevronRight, X, Presentation } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ChevronRight, X, Presentation, FileText } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { EmptyState } from '../components/UIComponents';
-import { CATEGORIAS } from '../utils/constants';
+import { RelatorioBancosModal } from '../components/RelatorioBancosModal';
+import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, onNovo, onEditar, onIrGestaoAVista }) {
+export function Dashboard({ lancamentos, mesAtual, anoAtual, onNovo, onEditar, onIrGestaoAVista }) {
   const totalReceita = lancamentos.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
   const totalDespesa = lancamentos.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
   const saldo = totalReceita - totalDespesa;
@@ -15,8 +16,10 @@ export function Dashboard({ lancamentos, onNovo, onEditar, onIrGestaoAVista }) {
     return acc;
   }, [lancamentos]);
 
-  const recentes = [...lancamentos].sort((a, b) => b.dia - a.dia).slice(0, 6);
+  // Task 4: Remover limite de 6 itens
+  const recentes = [...lancamentos].sort((a, b) => b.dia - a.dia);
   const [recentesAbertos, setRecentesAbertos] = useState(false);
+  const [showRelatorioModal, setShowRelatorioModal] = useState(false);
 
   return (
     <div style={{ padding: 16 }}>
@@ -70,22 +73,41 @@ export function Dashboard({ lancamentos, onNovo, onEditar, onIrGestaoAVista }) {
         })}
       </div>
 
-      <button
-        onClick={() => setRecentesAbertos(a => !a)}
-        disabled={recentes.length === 0}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'none', border: 'none', padding: 0, marginBottom: recentesAbertos ? 10 : 0, cursor: recentes.length > 0 ? 'pointer' : 'default' }}
-      >
-        <span style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F' }}>Lançamentos recentes {recentes.length > 0 && `(${recentes.length})`}</span>
-        {recentes.length > 0 && (
-          <ChevronRight size={16} color="#9C9A8F" style={{ transform: recentesAbertos ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
-        )}
-      </button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: recentesAbertos ? 10 : 0 }}>
+        <button
+          onClick={() => setRecentesAbertos(a => !a)}
+          disabled={recentes.length === 0}
+          style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: recentes.length > 0 ? 'pointer' : 'default', textAlign: 'left' }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F' }}>Lançamentos recentes {recentes.length > 0 && `(${recentes.length})`}</span>
+          {recentes.length > 0 && (
+            <ChevronRight size={16} color="#9C9A8F" style={{ transform: recentesAbertos ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} />
+          )}
+        </button>
+        
+        {/* Botão de Relatório */}
+        <button 
+          onClick={() => setShowRelatorioModal(true)}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#fff', border: '1px solid #D1CFC7', borderRadius: 8, fontSize: 12, fontWeight: 600, color: '#1C2421', cursor: 'pointer' }}
+        >
+          <FileText size={14} /> Relatório
+        </button>
+      </div>
       {recentes.length === 0 ? (
         <EmptyState text="Nenhum lançamento neste mês ainda. Toque no + para começar." />
       ) : recentesAbertos && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
           {recentes.map(l => <LancamentoRow key={l.id} l={l} onEditar={onEditar} corPorCategoria={false} />)}
         </div>
+      )}
+
+      {showRelatorioModal && (
+        <RelatorioBancosModal 
+          lancamentosMes={lancamentos} 
+          mesLabel={MESES[mesAtual]}
+          ano={anoAtual}
+          onClose={() => setShowRelatorioModal(false)}
+        />
       )}
     </div>
   );

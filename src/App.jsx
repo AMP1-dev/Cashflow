@@ -5,6 +5,7 @@ import { daysInMonth, somenteDigitos } from './utils/formatters';
 
 import { BottomNav, TopBar } from './components/Navigation';
 import { NovoLancamentoModal } from './components/NovoLancamentoModal';
+import { AvisoRegimeCaixaModal } from './components/AvisoRegimeCaixaModal';
 
 import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
 import { AnualScreen } from './screens/AnualScreen';
@@ -33,6 +34,7 @@ export default function CashFlowApp() {
   const [showLancamentoModal, setShowLancamentoModal] = useState(false);
   const [tipoNovoLancamento, setTipoNovoLancamento] = useState('despesa');
   const [lancamentoEditando, setLancamentoEditando] = useState(null);
+  const [showAvisoModal, setShowAvisoModal] = useState(false);
 
   // Admin state
   const [assinantesAdmin, setAssinantesAdmin] = useState([]);
@@ -79,6 +81,10 @@ export default function CashFlowApp() {
       // Injetamos o nome do profile na empresa pra TopBar usar
       setEmpresaAtualObj({ ...empresa, nome: profile?.nome });
 
+      if (!localStorage.getItem('avisoRegimeCaixaVisto')) {
+        setShowAvisoModal(true);
+      }
+
       if (isNovoCadastroRef.current) {
         isNovoCadastroRef.current = false;
         setTela('diagnostico');
@@ -113,6 +119,7 @@ export default function CashFlowApp() {
           formaRecebimento: l.forma_recebimento === 'avista' ? 'À vista/PIX' : (l.forma_recebimento === 'aprazo' ? 'À prazo' : null),
           qtdVendas: l.qtd_vendas,
           banco: l.banco || null,
+          meioPagamento: l.meio_pagamento || null,
         };
       });
       setLancamentosGeral(mapeados);
@@ -151,6 +158,7 @@ export default function CashFlowApp() {
       forma_recebimento: novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
       qtd_vendas: novo.qtdVendas || null,
       banco: novo.banco || null,
+      meio_pagamento: novo.meio_pagamento || null,
     }).select().single();
 
     if (!error && data) {
@@ -177,6 +185,7 @@ export default function CashFlowApp() {
       forma_recebimento: dados.formaRecebimento ? (dados.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
       qtd_vendas: dados.qtdVendas || null,
       banco: dados.banco || null,
+      meio_pagamento: dados.meio_pagamento || null,
     }).eq('id', id);
 
     if (!error) {
@@ -214,6 +223,11 @@ export default function CashFlowApp() {
   function fecharModal() {
     setShowLancamentoModal(false);
     setLancamentoEditando(null);
+  }
+
+  function fecharAvisoModal() {
+    localStorage.setItem('avisoRegimeCaixaVisto', 'true');
+    setShowAvisoModal(false);
   }
 
   async function fazerLogin(email, senha) {
@@ -337,7 +351,7 @@ export default function CashFlowApp() {
         {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
         {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onSalvarEstoque={salvarEstoqueMensal} />}
         {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
-        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} />}
+        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} />}
         {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
         {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
         {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onVoltar={() => setTela('dashboard')} />}
@@ -357,6 +371,7 @@ export default function CashFlowApp() {
           onDelete={() => { removeLancamento(lancamentoEditando.id); fecharModal(); }}
         />
       )}
+      {showAvisoModal && <AvisoRegimeCaixaModal onClose={fecharAvisoModal} />}
     </div>
   );
 }
