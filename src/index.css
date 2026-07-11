@@ -47,6 +47,13 @@ input, select, button {
   * {
     box-shadow: none !important;
   }
+  #print-area {
+    zoom: 0.8; /* Reduz o tamanho em 20% para caber melhor na página A4 */
+  }
+  #print-area > div {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
 }
 
 .gestao-row {
