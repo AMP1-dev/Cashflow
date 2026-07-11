@@ -7,7 +7,7 @@ import { formatBRL } from '../utils/formatters';
 // ---------- Constantes e cálculo (puro, sem dependência de banco) ----------
 
 const UNIDADES_INGREDIENTE = ['kg', 'g', 'l', 'ml', 'un', 'h', 'min'];
-const FATOR_PARA_BASE = { kg: 1, g: 0.001, l: 1, ml: 0.001, un: 1, h: 1, min: 1 };
+const FATOR_PARA_BASE = { kg: 1, g: 0.001, l: 1, ml: 0.001, un: 1, h: 60, min: 1 };
 
 function converterParaBase(quantidade, unidade) {
     const fator = FATOR_PARA_BASE[unidade] ?? 1;
@@ -268,7 +268,14 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
             
             if (campo === 'unidadeCompra' && (valor === 'h' || valor === 'min')) {
                 const preco = valor === 'h' ? rhCustos.custoHora : rhCustos.custoMinuto;
-                return { ...i, [campo]: valor, precoCompra: preco > 0 ? preco.toFixed(2).replace('.', ',') : '', qtdCompra: '1', unidadeUso: valor };
+                return { 
+                    ...i, 
+                    [campo]: valor, 
+                    precoCompra: preco > 0 ? preco.toFixed(2).replace('.', ',') : '', 
+                    qtdCompra: '1', 
+                    unidadeUso: valor,
+                    nome: i.nome ? i.nome : 'Mão de obra'
+                };
             }
             
             return { ...i, [campo]: valor };
@@ -427,7 +434,9 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
     const { qtdLiquida, custoTotal, custoPorBase } = calcularIngrediente(ingrediente);
     const temPerda = (parseFloat(ingrediente.fatorCorrecao) || 1) > 1;
     const unidadeUso = ingrediente.unidadeUso || 'g';
-    const baseLabel = ingrediente.unidadeCompra === 'un' ? 'un' : (['l', 'ml'].includes(ingrediente.unidadeCompra) ? 'l' : 'kg');
+    const baseLabel = ingrediente.unidadeCompra === 'un' ? 'un' 
+                    : (['l', 'ml'].includes(ingrediente.unidadeCompra) ? 'l' 
+                    : (['h', 'min'].includes(ingrediente.unidadeCompra) ? 'min' : 'kg'));
 
     if (!expandido) {
         return (
