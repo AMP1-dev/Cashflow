@@ -59,16 +59,30 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
   );
 }
 
-export function AdminPanel({ assinantes, onAtualizarDados, onSair }) {
+export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSenha }) {
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [selecionado, setSelecionado] = useState(null);
+  const [mostrarCancelados, setMostrarCancelados] = useState(false);
 
   const filtrados = useMemo(() => {
     return assinantes.filter(a => {
       const bate = !busca.trim() || a.empresa.toLowerCase().includes(busca.toLowerCase()) || a.cpf.includes(busca) || (a.email || '').toLowerCase().includes(busca.toLowerCase());
-      const bateStatus = filtroStatus === 'todos' || a.status === filtroStatus;
+      let bateStatus = false;
+      if (filtroStatus === 'todos') {
+        bateStatus = a.status !== 'cancelado';
+      } else {
+        bateStatus = a.status === filtroStatus;
+      }
       return bate && bateStatus;
+    });
+  }, [assinantes, busca, filtroStatus]);
+
+  const cancelados = useMemo(() => {
+    if (filtroStatus !== 'todos') return [];
+    return assinantes.filter(a => {
+      const bate = !busca.trim() || a.empresa.toLowerCase().includes(busca.toLowerCase()) || a.cpf.includes(busca) || (a.email || '').toLowerCase().includes(busca.toLowerCase());
+      return bate && a.status === 'cancelado';
     });
   }, [assinantes, busca, filtroStatus]);
 
@@ -145,6 +159,39 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair }) {
             })}
           </div>
         )}
+        {filtroStatus === 'todos' && cancelados.length > 0 && (
+          <div style={{ marginTop: 24, borderTop: '1px solid #E1E3E6', paddingTop: 16 }}>
+            <button 
+              onClick={() => setMostrarCancelados(!mostrarCancelados)}
+              style={{ width: '100%', background: 'none', border: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', padding: '8px 0', color: '#6B7280', fontSize: 13, fontWeight: 600 }}
+            >
+              <span>Ver clientes cancelados ({cancelados.length})</span>
+              <span>{mostrarCancelados ? '▲' : '▼'}</span>
+            </button>
+            {mostrarCancelados && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+                {cancelados.map(a => {
+                  const st = STATUS_ASSINATURA[a.status];
+                  return (
+                    <button
+                      key={a.id}
+                      onClick={() => setSelecionado(a.id)}
+                      style={{ width: '100%', textAlign: 'left', background: '#fff', borderRadius: 12, border: '1px solid #E1E3E6', padding: '12px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', opacity: 0.7 }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.fantasia || a.empresa}</div>
+                        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
+                      </div>
+                      <span style={{ fontSize: 10.5, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 9px', borderRadius: 7, flexShrink: 0, marginLeft: 10 }}>
+                        {st.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {assinanteSelecionado && (
@@ -152,13 +199,14 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair }) {
           assinante={assinanteSelecionado}
           onAtualizarDados={onAtualizarDados}
           onClose={() => setSelecionado(null)}
+          onRecuperarSenha={onRecuperarSenha}
         />
       )}
     </div>
   );
 }
 
-export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose }) {
+export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, onRecuperarSenha }) {
   const [status, setStatus] = useState(assinante.status);
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
@@ -174,6 +222,13 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose }) 
     setSalvando(false);
     if (!resultado.ok) alert('Erro ao salvar: ' + resultado.erro);
     else onClose();
+  }
+
+  async function handleRecuperarSenha() {
+    if (!assinante.email) { alert('Este assinante não possui e-mail cadastrado.'); return; }
+    if (window.confirm(`Deseja enviar um e-mail de redefinição de senha para ${assinante.email}?`)) {
+       await onRecuperarSenha(assinante.email);
+    }
   }
 
   return (
@@ -233,9 +288,16 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose }) 
       <button
         onClick={handleSalvar}
         disabled={salvando}
-        style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: salvando ? '#D1D5DB' : '#1F5C52', color: salvando ? '#6B7280' : '#fff', fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer' }}
+        style={{ width: '100%', padding: '14px', borderRadius: 10, border: 'none', background: salvando ? '#D1D5DB' : '#1F5C52', color: salvando ? '#6B7280' : '#fff', fontSize: 15, fontWeight: 600, cursor: salvando ? 'wait' : 'pointer', marginBottom: 12 }}
       >
         {salvando ? 'Salvando...' : 'Salvar alterações'}
+      </button>
+      
+      <button
+        onClick={handleRecuperarSenha}
+        style={{ width: '100%', padding: '14px', borderRadius: 10, border: '1px solid #E1E3E6', background: '#fff', color: '#1F5C52', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+      >
+        Enviar link de redefinição de senha
       </button>
     </ModalShell>
   );

@@ -59,9 +59,6 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
           </button>
         </div>
 
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#4A655E', marginTop: 10 }}>
-          Protótipo — conta de teste: teste@ampflow.com.br / senha 123456
-        </div>
       </div>
     </div>
   );

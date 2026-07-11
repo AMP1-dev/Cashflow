@@ -41,12 +41,20 @@ export default function CashFlowApp() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) carregarDadosIniciais(session.user.id);
+      if (session && !window.location.hash.includes('type=recovery')) {
+        carregarDadosIniciais(session.user.id);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) carregarDadosIniciais(session.user.id);
-      else { setSessao(null); setEmpresaAtualObj(null); setLancamentosGeral([]); }
+      if (_event === 'PASSWORD_RECOVERY') {
+        setSessao(null); // Força a ficar na tela de auth
+        setTelaAuth('redefinir');
+      } else if (session && !window.location.hash.includes('type=recovery')) {
+        carregarDadosIniciais(session.user.id);
+      } else if (!session) {
+        setSessao(null); setEmpresaAtualObj(null); setLancamentosGeral([]);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -303,6 +311,21 @@ export default function CashFlowApp() {
     }
   }
 
+  async function salvarNovaSenha(novaSenha) {
+    const { error } = await supabase.auth.updateUser({ password: novaSenha });
+    if (error) {
+      alert('Erro ao redefinir a senha: ' + error.message);
+    } else {
+      alert('Senha alterada com sucesso! Você já pode acessar a plataforma.');
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        carregarDadosIniciais(data.session.user.id);
+      } else {
+        setTelaAuth('login');
+      }
+    }
+  }
+
   async function atualizarDadosAssinante(id, dados) {
     const { error } = await supabase.from('empresas').update(dados).eq('id', id);
     if (!error) {
@@ -328,7 +351,7 @@ export default function CashFlowApp() {
       return <RecuperarSenhaScreen onEnviar={(email) => { redefinirSenha(email); setTelaAuth('login'); }} onVoltarLogin={() => setTelaAuth('login')} />;
     }
     if (telaAuth === 'redefinir') {
-      return <RedefinirSenhaScreen email={emailRecuperacao} onRedefinir={() => { }} />;
+      return <RedefinirSenhaScreen email={emailRecuperacao} onRedefinir={salvarNovaSenha} />;
     }
     if (telaAuth === 'admin-login') {
       return <AdminLoginScreen onLogin={fazerLoginAdmin} onVoltar={() => setTelaAuth('login')} />;
@@ -337,7 +360,7 @@ export default function CashFlowApp() {
   }
 
   if (sessao.tipo === 'admin') {
-    return <AdminPanel assinantes={assinantesAdmin} onAtualizarDados={atualizarDadosAssinante} onSair={sair} />;
+    return <AdminPanel assinantes={assinantesAdmin} onAtualizarDados={atualizarDadosAssinante} onSair={sair} onRecuperarSenha={redefinirSenha} />;
   }
 
   if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
