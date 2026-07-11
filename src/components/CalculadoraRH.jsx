@@ -3,26 +3,22 @@ import { Calculator, X, Calendar } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { MESES } from '../utils/constants';
 
-export function CalculadoraRH({ mesAtual, anoAtual, onClose, onUsarValor }) {
-  const [salarioBrutoStr, setSalarioBrutoStr] = useState('1000');
+export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
+  const getStorage = (key, defaultVal) => {
+    const val = localStorage.getItem(`rh_calc_${empresaId}_${key}`);
+    return val !== null ? val : defaultVal;
+  };
+
+  const [salarioBrutoStr, setSalarioBrutoStr] = useState(() => getStorage('salario', '1000'));
+  const [regime, setRegime] = useState(() => getStorage('regime', 'simples'));
+  const [feriados, setFeriados] = useState(() => Number(getStorage('feriados', 0)));
+  const [horasDia, setHorasDia] = useState(() => Number(getStorage('horasDia', 7.33)));
+  const [horasNaoTrabalhadas, setHorasNaoTrabalhadas] = useState(() => Number(getStorage('pausas', 1)));
+  const [trabalhaSabado, setTrabalhaSabado] = useState(() => getStorage('sabado', 'false') === 'true');
   
-  // Parametros fixos conforme planilha
-  const horasMensal = 183.33; // Mensalista 220h, mas aqui na planilha deu 183,33 horas total.
-  
-  // Novo: Regime Tributário
-  const [regime, setRegime] = useState('simples'); // 'mei', 'simples', 'lucro'
-  
-  // Parametros de Tempo
   const [diasNoMes, setDiasNoMes] = useState(30);
   const [sabados, setSabados] = useState(0);
   const [domingos, setDomingos] = useState(0);
-  const [feriados, setFeriados] = useState(0);
-  
-  const [horasDia, setHorasDia] = useState(7.33);
-  const [horasNaoTrabalhadas, setHorasNaoTrabalhadas] = useState(1);
-  const [trabalhaSabado, setTrabalhaSabado] = useState(false);
-  
-  const [tempoProducaoMinutosStr, setTempoProducaoMinutosStr] = useState('60');
   
   // Ao montar ou mudar o mês, calcula os dias do mês, sábados e domingos
   useEffect(() => {
@@ -44,8 +40,17 @@ export function CalculadoraRH({ mesAtual, anoAtual, onClose, onUsarValor }) {
     
     setSabados(contaSab);
     setDomingos(contaDom);
-    setFeriados(0); // Zera feriados ao mudar o mês
   }, [mesAtual, anoAtual]);
+
+  // Salvar no localStorage sempre que mudar
+  useEffect(() => {
+    localStorage.setItem(`rh_calc_${empresaId}_salario`, salarioBrutoStr);
+    localStorage.setItem(`rh_calc_${empresaId}_regime`, regime);
+    localStorage.setItem(`rh_calc_${empresaId}_feriados`, feriados);
+    localStorage.setItem(`rh_calc_${empresaId}_horasDia`, horasDia);
+    localStorage.setItem(`rh_calc_${empresaId}_pausas`, horasNaoTrabalhadas);
+    localStorage.setItem(`rh_calc_${empresaId}_sabado`, trabalhaSabado);
+  }, [empresaId, salarioBrutoStr, regime, feriados, horasDia, horasNaoTrabalhadas, trabalhaSabado]);
 
   const salarioBruto = parseFloat(salarioBrutoStr) || 0;
   
@@ -86,19 +91,18 @@ export function CalculadoraRH({ mesAtual, anoAtual, onClose, onUsarValor }) {
     const horasProdutivas = horasDia - horasNaoTrabalhadas;
     const custoDia = diasUteis > 0 ? (totalSalario + encargoSoma) / diasUteis : 0;
     const custoHora = horasProdutivas > 0 ? custoDia / horasProdutivas : 0;
-    
-    const tempoProducaoMinutos = parseFloat(tempoProducaoMinutosStr) || 0;
     const custoMinuto = custoHora / 60;
-    const custoServico = tempoProducaoMinutos * custoMinuto;
+    
+    // Salvar custoHora e custoMinuto globalmente
+    localStorage.setItem(`amp_rh_custos_${empresaId}`, JSON.stringify({ custoHora, custoMinuto }));
     
     return {
       baseCalculo, ferias112, ferias13, decimoTerceiro, totalBase,
       fgts8, fgtsMulta, totalSalario, pctAumento,
       totalEncargosPct, encargoSoma,
-      diasUteis, custoDia, custoHora, horasProdutivas,
-      custoServico
+      diasUteis, custoDia, custoHora, horasProdutivas
     };
-  }, [salarioBruto, regime, diasNoMes, sabados, domingos, feriados, horasDia, horasNaoTrabalhadas, trabalhaSabado, tempoProducaoMinutosStr]);
+  }, [salarioBruto, regime, diasNoMes, sabados, domingos, feriados, horasDia, horasNaoTrabalhadas, trabalhaSabado, empresaId]);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -188,20 +192,6 @@ export function CalculadoraRH({ mesAtual, anoAtual, onClose, onUsarValor }) {
                 </div>
               </div>
             </div>
-
-            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #EFEBE0', overflow: 'hidden' }}>
-              <div style={{ background: '#F5F2E8', padding: '10px 16px', fontWeight: 600, fontSize: 13, color: '#5C5A4F', textAlign: 'center', textTransform: 'uppercase' }}>Custo por Serviço / Produto</div>
-              <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Tempo para produzir 1 item (minutos)</span>
-                  <input type="number" value={tempoProducaoMinutosStr} onChange={e => setTempoProducaoMinutosStr(e.target.value)} style={{ width: 80, textAlign: 'right', padding: '4px 8px', border: '1px solid #D1CFC7', borderRadius: 6, fontWeight: 600 }} />
-                </div>
-                <div style={{ fontSize: 11, color: '#9C9A8F', marginTop: 2 }}>
-                  Informe os minutos gastos para descobrir o custo exato da mão de obra que vai no produto final.
-                </div>
-              </div>
-            </div>
-            
           </div>
 
           {/* Lado Direito - Horas e Custo */}
@@ -258,12 +248,7 @@ export function CalculadoraRH({ mesAtual, anoAtual, onClose, onUsarValor }) {
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16 }}>
                   <div style={{ fontSize: 13, color: '#9FBDB5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Custo da Hora Técnica</div>
                   <div style={{ fontSize: 36, fontWeight: 700, color: '#9FE0C8', fontFamily: 'Georgia, serif' }}>{formatBRL(calc.custoHora)}</div>
-                  <div style={{ fontSize: 12, color: '#9FBDB5', marginTop: 4 }}>Custo que você deve embutir na precificação base hora.</div>
-                </div>
-                <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 16 }}>
-                  <div style={{ fontSize: 13, color: '#F5D5B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Custo do Serviço/Item</div>
-                  <div style={{ fontSize: 36, fontWeight: 700, color: '#F0BE94', fontFamily: 'Georgia, serif' }}>{formatBRL(calc.custoServico)}</div>
-                  <div style={{ fontSize: 12, color: '#E8C896', marginTop: 4 }}>Proporcional ao tempo de produção ({tempoProducaoMinutosStr} min).</div>
+                  <div style={{ fontSize: 12, color: '#9FBDB5', marginTop: 4 }}>Esse valor agora pode ser usado nas suas Fichas Técnicas.</div>
                 </div>
               </div>
             </div>
@@ -279,13 +264,8 @@ export function CalculadoraRH({ mesAtual, anoAtual, onClose, onUsarValor }) {
           
           <div style={{ display: 'flex', gap: 12 }}>
             <button onClick={onClose} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #D1CFC7', background: '#fff', fontWeight: 600, color: '#5C5A4F', cursor: 'pointer' }}>
-              Fechar
+              Fechar e Salvar
             </button>
-            {onUsarValor && (
-              <button onClick={() => onUsarValor(calc.custoServico > 0 ? calc.custoServico : calc.custoHora)} style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#1F5C52', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-                Usar Valor ({formatBRL(calc.custoServico > 0 ? calc.custoServico : calc.custoHora)})
-              </button>
-            )}
           </div>
         </div>
 

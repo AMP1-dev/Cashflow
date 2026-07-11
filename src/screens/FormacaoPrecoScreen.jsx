@@ -266,11 +266,8 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
         <CalculadoraRH 
           mesAtual={mesAtual}
           anoAtual={anoAtual}
+          empresaId={empresaId}
           onClose={() => setShowCalculadoraRH(false)} 
-          onUsarValor={(valor) => {
-            setCustoProduto(String(valor.toFixed(2)).replace('.', ','));
-            setShowCalculadoraRH(false);
-          }}
         />
       )}
     </div>

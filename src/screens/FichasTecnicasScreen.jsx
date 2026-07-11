@@ -6,8 +6,8 @@ import { formatBRL } from '../utils/formatters';
 
 // ---------- Constantes e cálculo (puro, sem dependência de banco) ----------
 
-const UNIDADES_INGREDIENTE = ['kg', 'g', 'l', 'ml', 'un'];
-const FATOR_PARA_BASE = { kg: 1, g: 0.001, l: 1, ml: 0.001, un: 1 };
+const UNIDADES_INGREDIENTE = ['kg', 'g', 'l', 'ml', 'un', 'h', 'min'];
+const FATOR_PARA_BASE = { kg: 1, g: 0.001, l: 1, ml: 0.001, un: 1, h: 1, min: 1 };
 
 function converterParaBase(quantidade, unidade) {
     const fator = FATOR_PARA_BASE[unidade] ?? 1;
@@ -146,6 +146,7 @@ export function FichasTecnicasScreen({ empresaId }) {
         return (
             <FichaTecnicaForm
                 ficha={fichaEditando}
+                empresaId={empresaId}
                 onSalvarEContinuar={async (dados) => {
                     if (fichaEditando) {
                         await updateFichaTecnica(fichaEditando.id, dados);
@@ -223,7 +224,7 @@ export function FichasTecnicasScreen({ empresaId }) {
 
 // ---------- Formulário de Ficha Técnica ----------
 
-function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancelar, onExcluir }) {
+function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFechar, onCancelar, onExcluir }) {
     const editando = !!ficha;
     const [nome, setNome] = useState(editando ? ficha.nome : '');
     const [rendimentoPorcoes, setRendimentoPorcoes] = useState(editando ? String(ficha.rendimentoPorcoes) : '1');
@@ -234,6 +235,9 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
     const [expandidos, setExpandidos] = useState(new Set());
     const [salvando, setSalvando] = useState(false);
     const [salvoRecentemente, setSalvoRecentemente] = useState(false);
+
+    const rhCustosString = localStorage.getItem(`amp_rh_custos_${empresaId}`);
+    const rhCustos = rhCustosString ? JSON.parse(rhCustosString) : { custoHora: 0, custoMinuto: 0 };
 
     const fichaAtual = { rendimentoPorcoes, ingredientes };
     const calc = useMemo(() => calcularFicha(fichaAtual), [rendimentoPorcoes, ingredientes]);
@@ -259,7 +263,16 @@ function FichaTecnicaForm({ ficha, onSalvarEContinuar, onSalvarEFechar, onCancel
     }
 
     function atualizarIngrediente(id, campo, valor) {
-        setIngredientes(prev => prev.map(i => i.id === id ? { ...i, [campo]: valor } : i));
+        setIngredientes(prev => prev.map(i => {
+            if (i.id !== id) return i;
+            
+            if (campo === 'unidadeCompra' && (valor === 'h' || valor === 'min')) {
+                const preco = valor === 'h' ? rhCustos.custoHora : rhCustos.custoMinuto;
+                return { ...i, [campo]: valor, precoCompra: preco > 0 ? preco.toFixed(2).replace('.', ',') : '', qtdCompra: '1', unidadeUso: valor };
+            }
+            
+            return { ...i, [campo]: valor };
+        }));
     }
 
     function removerIngrediente(id) {
@@ -489,6 +502,12 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                     ≈ {formatBRL(custoPorBase)} por {baseLabel}
                 </div>
             )}
+            
+            {['h', 'min'].includes(ingrediente.unidadeCompra) && (
+                <div style={{ background: '#EAF6EE', padding: '6px 10px', borderRadius: 6, fontSize: 11, color: '#1F5C52', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <AlertCircle size={12} /> Valor inicial importado da sua Calculadora RH (editável)
+                </div>
+            )}
 
             <div style={{ fontSize: 10.5, fontWeight: 600, color: '#9C9A8F', marginBottom: 5 }}>Quanto usa nesta receita</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
@@ -508,16 +527,18 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                 </select>
             </div>
 
-            <button
-                onClick={onAbrirWizard}
-                style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: `1px solid ${temPerda ? '#C9A063' : '#E5E0D5'}`, background: temPerda ? '#FBF3E5' : '#FBFAF6', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-                <span style={{ fontSize: 11.5, color: temPerda ? '#8A6D1A' : '#9C9A8F', display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Scale size={12} />
-                    {temPerda ? `Tem perda no preparo (fator ${(parseFloat(ingrediente.fatorCorrecao) || 1).toFixed(2)})` : 'Sem perda informada'}
-                </span>
-                <span style={{ fontSize: 10.5, color: '#5C5A4F', textDecoration: 'underline' }}>{temPerda ? 'ajustar' : 'verificar perda'}</span>
-            </button>
+            {!['h', 'min'].includes(ingrediente.unidadeCompra) && (
+                <button
+                    onClick={onAbrirWizard}
+                    style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: `1px solid ${temPerda ? '#C9A063' : '#E5E0D5'}`, background: temPerda ? '#FBF3E5' : '#FBFAF6', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                    <span style={{ fontSize: 11.5, color: temPerda ? '#8A6D1A' : '#9C9A8F', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Scale size={12} />
+                        {temPerda ? `Tem perda no preparo (fator ${(parseFloat(ingrediente.fatorCorrecao) || 1).toFixed(2)})` : 'Sem perda informada'}
+                    </span>
+                    <span style={{ fontSize: 10.5, color: '#5C5A4F', textDecoration: 'underline' }}>{temPerda ? 'ajustar' : 'verificar perda'}</span>
+                </button>
+            )}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: '#9C9A8F' }}>
                 <span>Qtd líquida: {qtdLiquida.toFixed(2)} {unidadeUso}</span>
