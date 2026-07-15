@@ -171,6 +171,8 @@ export default function CashFlowApp() {
 
     if (!error && data) {
       carregarLancamentos(empresaAtualObj.id);
+    } else {
+      alert('Erro ao registrar lançamento: ' + (error?.message || 'Falha desconhecida.'));
     }
   }
 
