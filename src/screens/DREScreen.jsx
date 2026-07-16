@@ -32,15 +32,20 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
   async function salvarPctCmv() {
     const pct = parseFloat((pctCmvStr || '0').replace(',', '.')) || 0;
     setSalvandoCmv(true);
-    await supabase.from('cmv_config').upsert({
+    const { error } = await supabase.from('cmv_config').upsert({
       empresa_id: empresaId,
       mes: mesAtual,
       ano: anoAtual,
       pct_cmv: pct,
     }, { onConflict: 'empresa_id,mes,ano' });
-    setPctCmvConfig(pct);
+    
+    if (error) {
+      alert('Erro ao salvar % CMV: ' + error.message);
+    } else {
+      setPctCmvConfig(pct);
+      setModalCmvAberto(false);
+    }
     setSalvandoCmv(false);
-    setModalCmvAberto(false);
   }
 
   // ─── Cálculo DRE ─────────────────────────────────────────────────────────
@@ -67,12 +72,12 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     if (temEstoque) {
       cmv = (estoqueInicial || 0) + cmvCompras - (estoqueFinal || 0);
       modoCmv = 'estoque';
-    } else if (cmvCompras > 0) {
-      cmv = cmvCompras;
-      modoCmv = 'lancamentos';
     } else if (pctCmvConfig > 0) {
       cmv = faturamento * (pctCmvConfig / 100);
       modoCmv = 'estimado';
+    } else if (cmvCompras > 0) {
+      cmv = cmvCompras;
+      modoCmv = 'lancamentos';
     } else {
       cmv = 0;
       modoCmv = 'zero';

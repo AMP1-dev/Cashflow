@@ -213,14 +213,16 @@ export default function CashFlowApp() {
     }
 
     if (estoqueInicial !== null && estoqueInicial !== '') {
-      await supabase.from('lancamentos').insert({
+      const { error: errIni } = await supabase.from('lancamentos').insert({
         empresa_id: empresaAtualObj.id, tipo: 'estoque', categoria: 'inicial', descricao: 'Estoque Inicial', valor: parseFloat(estoqueInicial), data_lancamento: dataInicial
       });
+      if (errIni) alert('Erro ao salvar estoque inicial: ' + errIni.message);
     }
     if (estoqueFinal !== null && estoqueFinal !== '') {
-      await supabase.from('lancamentos').insert({
+      const { error: errFim } = await supabase.from('lancamentos').insert({
         empresa_id: empresaAtualObj.id, tipo: 'estoque', categoria: 'final', descricao: 'Estoque Final', valor: parseFloat(estoqueFinal), data_lancamento: dataFinal
       });
+      if (errFim) alert('Erro ao salvar estoque final: ' + errFim.message);
     }
     carregarLancamentos(empresaAtualObj.id);
   }
