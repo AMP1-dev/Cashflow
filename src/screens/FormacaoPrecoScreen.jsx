@@ -4,15 +4,7 @@ import { formatBRL } from '../utils/formatters';
 import { FieldLabel, inputStyle, EmptyState } from '../components/UIComponents';
 import { CalculadoraRH } from '../components/CalculadoraRH';
 
-const CAMPOS_PERCENTUAL = [
-  { key: 'das', label: 'DAS — Simples Nacional', grupo: 'variavel' },
-  { key: 'comissao', label: 'Comissão', grupo: 'variavel' },
-  { key: 'cartao', label: 'Cartão Crédito/Débito', grupo: 'variavel' },
-  { key: 'outros', label: 'Outros', grupo: 'variavel' },
-  { key: 'custoFixo', label: 'Custo Fixo', grupo: 'fixo' },
-  { key: 'retirada', label: 'Retirada / Pró-labore', grupo: 'fixo' },
-  { key: 'distribLucros', label: 'Distrib. de Lucros', grupo: 'fixo' },
-];
+const TODOS_CAMPOS_KEYS = ['das', 'icms', 'pisCofins', 'csllIrpj', 'comissao', 'cartao', 'outros', 'custoFixo', 'retirada', 'distribLucros'];
 
 export function sugerirPercentuais(lancamentos) {
   const receitas = lancamentos.filter(l => l.tipo === 'receita');
@@ -27,6 +19,10 @@ export function sugerirPercentuais(lancamentos) {
   const somaPor = (filtro) => despesas.filter(filtro).reduce((s, l) => s + l.valor, 0);
 
   const das = somaPor(d => norm(d.descricao).includes('simples') || norm(d.descricao).includes('das') || norm(d.subcategoria).includes('simples'));
+  const icms = somaPor(d => norm(d.descricao).includes('icms') || norm(d.subcategoria).includes('icms'));
+  const pisCofins = somaPor(d => norm(d.descricao).includes('pis') || norm(d.descricao).includes('cofins') || norm(d.subcategoria).includes('pis'));
+  const csllIrpj = somaPor(d => norm(d.descricao).includes('csll') || norm(d.descricao).includes('irpj'));
+  
   const comissao = somaPor(d => norm(d.descricao).includes('comiss') || norm(d.subcategoria).includes('comiss'));
   const cartao = somaPor(d => norm(d.descricao).includes('cart') || norm(d.subcategoria).includes('cart') || norm(d.descricao).includes('tax'));
   const variaveisTotal = somaPor(d => d.categoria === 'variavel');
@@ -39,7 +35,8 @@ export function sugerirPercentuais(lancamentos) {
   const pct = (v) => Math.round((v / faturamento) * 1000) / 10;
 
   return {
-    das: pct(das), comissao: pct(comissao), cartao: pct(cartao), outros: pct(outros),
+    das: pct(das), icms: pct(icms), pisCofins: pct(pisCofins), csllIrpj: pct(csllIrpj),
+    comissao: pct(comissao), cartao: pct(cartao), outros: pct(outros),
     custoFixo: pct(custoFixo), retirada: pct(retirada), distribLucros: 0,
   };
 }
@@ -59,7 +56,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     const salvo = localStorage.getItem(`${storageKey}_textos`);
     if (salvo) return JSON.parse(salvo);
     const t = {};
-    CAMPOS_PERCENTUAL.forEach(c => { t[c.key] = paraTexto(sugestao[c.key]); });
+    TODOS_CAMPOS_KEYS.forEach(k => { t[k] = paraTexto(sugestao[k]); });
     return t;
   });
 
@@ -80,6 +77,10 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     return localStorage.getItem(`${storageKey}_quantidadeProspectada`) || '1';
   });
 
+  const [regimeTributario, setRegimeTributario] = useState(() => {
+    return localStorage.getItem(`${storageKey}_regimeTributario`) || 'simples';
+  });
+
   // Salvar no localStorage sempre que mudar
   useEffect(() => {
     localStorage.setItem(`${storageKey}_textos`, JSON.stringify(textos));
@@ -87,13 +88,14 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     localStorage.setItem(`${storageKey}_custoProduto`, custoProduto);
     localStorage.setItem(`${storageKey}_precoVenda`, precoVenda);
     localStorage.setItem(`${storageKey}_quantidadeProspectada`, quantidadeProspectada);
-  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, storageKey]);
+    localStorage.setItem(`${storageKey}_regimeTributario`, regimeTributario);
+  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, regimeTributario, storageKey]);
 
   // Se usar sugestão, atualiza sempre que vierem novos dados
   useEffect(() => {
     if (usandoSugestao) {
       const t = {};
-      CAMPOS_PERCENTUAL.forEach(c => { t[c.key] = paraTexto(sugestao[c.key]); });
+      TODOS_CAMPOS_KEYS.forEach(k => { t[k] = paraTexto(sugestao[k]); });
       setTextos(t);
     }
   }, [sugestao, usandoSugestao]);
@@ -105,18 +107,46 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
 
   function restaurarSugestao() {
     const t = {};
-    CAMPOS_PERCENTUAL.forEach(c => { t[c.key] = paraTexto(sugestao[c.key]); });
+    TODOS_CAMPOS_KEYS.forEach(k => { t[k] = paraTexto(sugestao[k]); });
     setTextos(t);
     setUsandoSugestao(true);
   }
 
+  const camposPercentual = useMemo(() => {
+    const baseVariavel = [
+      { key: 'comissao', label: 'Comissão', grupo: 'variavel' },
+      { key: 'cartao', label: 'Cartão Crédito/Débito', grupo: 'variavel' },
+      { key: 'outros', label: 'Outros', grupo: 'variavel' },
+    ];
+    const baseFixo = [
+      { key: 'custoFixo', label: 'Custo Fixo', grupo: 'fixo' },
+      { key: 'retirada', label: 'Retirada / Pró-labore', grupo: 'fixo' },
+      { key: 'distribLucros', label: 'Distrib. de Lucros', grupo: 'fixo' },
+    ];
+    
+    if (regimeTributario === 'simples') {
+      return [{ key: 'das', label: 'DAS — Simples Nacional', grupo: 'variavel' }, ...baseVariavel, ...baseFixo];
+    } else {
+      return [
+        { key: 'icms', label: 'ICMS', grupo: 'variavel' },
+        { key: 'pisCofins', label: 'PIS/COFINS', grupo: 'variavel' },
+        { key: 'csllIrpj', label: 'CSLL/IRPJ', grupo: 'variavel' },
+        ...baseVariavel, ...baseFixo
+      ];
+    }
+  }, [regimeTributario]);
+
   const percentuais = useMemo(() => {
     const p = {};
-    CAMPOS_PERCENTUAL.forEach(c => { p[c.key] = parseFloat((textos[c.key] || '0').replace(',', '.')) || 0; });
+    TODOS_CAMPOS_KEYS.forEach(k => { p[k] = parseFloat((textos[k] || '0').replace(',', '.')) || 0; });
     return p;
   }, [textos]);
 
-  const pctVariaveis = percentuais.das + percentuais.comissao + percentuais.cartao + percentuais.outros;
+  const impostos = regimeTributario === 'simples' 
+    ? percentuais.das 
+    : (percentuais.icms + percentuais.pisCofins + percentuais.csllIrpj);
+
+  const pctVariaveis = impostos + percentuais.comissao + percentuais.cartao + percentuais.outros;
   const pctFixos = percentuais.custoFixo + percentuais.retirada + percentuais.distribLucros;
   const pctPrecoLiquido = 100 - pctVariaveis;
   const pctPrecoCusto = pctPrecoLiquido - pctFixos;
@@ -159,6 +189,21 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
         </button>
       </div>
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button 
+          onClick={() => setRegimeTributario('simples')}
+          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'simples' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'simples' ? '#1F5C52' : '#fff', color: regimeTributario === 'simples' ? '#fff' : '#5C5A4F', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+        >
+          Simples Nacional
+        </button>
+        <button 
+          onClick={() => setRegimeTributario('real')}
+          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'real' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'real' ? '#1F5C52' : '#fff', color: regimeTributario === 'real' ? '#fff' : '#5C5A4F', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+        >
+          Lucro Presumido / Real
+        </button>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Índices incidentes</span>
         {!usandoSugestao && (
@@ -180,7 +225,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
             <span style={{ minWidth: 38, textAlign: 'right' }}>100,0%</span>
           </div>
         </div>
-        {CAMPOS_PERCENTUAL.map((campo) => (
+        {camposPercentual.map((campo) => (
           <div key={campo.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', borderTop: '1px solid #F0EDE3', background: campo.grupo === 'fixo' ? '#FBFAF6' : '#fff' }}>
             <span style={{ fontSize: 12.5, color: '#1C2421' }}>{campo.label}</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
