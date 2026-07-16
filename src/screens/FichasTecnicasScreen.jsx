@@ -135,7 +135,7 @@ export function FichasTecnicasScreen({ empresaId }) {
     }
 
     async function removeFichaTecnica(id) {
-        const { error } = await supabase.from('fichas_tecnicas').delete().eq('id', id);
+        const { error } = await supabase.from('fichas_tecnicas').update({ deletado_em: new Date().toISOString() }).eq('id', id);
         if (error) { alert('Erro ao excluir: ' + error.message); return; }
         setFichas(prev => prev.filter(f => f.id !== id));
     }

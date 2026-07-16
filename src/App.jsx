@@ -177,7 +177,7 @@ export default function CashFlowApp() {
   }
 
   async function removeLancamento(id) {
-    const { error } = await supabase.from('lancamentos').delete().eq('id', id);
+    const { error } = await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).eq('id', id);
     if (!error) {
       setLancamentosGeral(prev => prev.filter(l => l.id !== id));
     }
@@ -209,7 +209,7 @@ export default function CashFlowApp() {
 
     const idsParaDeletar = lancamentosEmpresa.filter(l => l.tipo === 'estoque').map(l => l.id);
     if (idsParaDeletar.length > 0) {
-      await supabase.from('lancamentos').delete().in('id', idsParaDeletar);
+      await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).in('id', idsParaDeletar);
     }
 
     if (estoqueInicial !== null && estoqueInicial !== '') {
