@@ -265,7 +265,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
 
           <div style={{ background: '#fff', borderRadius: 14, padding: 18, border: '1px solid #EFEBE0' }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 12 }}>Prospecção de venda</div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end' }}>
               <div style={{ flex: 1 }}>
                 <FieldLabel>Quantidade</FieldLabel>
                 <input 
