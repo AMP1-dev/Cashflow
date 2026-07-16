@@ -76,13 +76,18 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     return localStorage.getItem(`${storageKey}_precoVenda`) || '';
   });
 
+  const [quantidadeProspectada, setQuantidadeProspectada] = useState(() => {
+    return localStorage.getItem(`${storageKey}_quantidadeProspectada`) || '1';
+  });
+
   // Salvar no localStorage sempre que mudar
   useEffect(() => {
     localStorage.setItem(`${storageKey}_textos`, JSON.stringify(textos));
     localStorage.setItem(`${storageKey}_usandoSugestao`, JSON.stringify(usandoSugestao));
     localStorage.setItem(`${storageKey}_custoProduto`, custoProduto);
     localStorage.setItem(`${storageKey}_precoVenda`, precoVenda);
-  }, [textos, usandoSugestao, custoProduto, precoVenda, storageKey]);
+    localStorage.setItem(`${storageKey}_quantidadeProspectada`, quantidadeProspectada);
+  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, storageKey]);
 
   // Se usar sugestão, atualiza sempre que vierem novos dados
   useEffect(() => {
@@ -255,6 +260,32 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600 }}><span>= Preço de custo (teto)</span><span>{formatBRL(precoCustoCalculado)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>(–) Custo real do produto/hora</span><span>{formatBRL(custoProdutoNum)}</span></div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, borderTop: '1px solid rgba(0,0,0,0.1)', paddingTop: 4, marginTop: 2 }}><span>= Lucro</span><span>{formatBRL(lucro)}</span></div>
+            </div>
+          </div>
+
+          <div style={{ background: '#fff', borderRadius: 14, padding: 18, border: '1px solid #EFEBE0' }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 12 }}>Prospecção de venda</div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <FieldLabel>Quantidade</FieldLabel>
+                <input 
+                  value={quantidadeProspectada} 
+                  onChange={e => setQuantidadeProspectada(e.target.value.replace(/[^0-9]/g, ''))} 
+                  placeholder="Ex: 100" 
+                  inputMode="numeric" 
+                  style={{ ...inputStyle, marginTop: 0 }} 
+                />
+              </div>
+              <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: 6, background: '#F5F2E8', padding: 12, borderRadius: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#5C5A4F' }}>
+                  <span>Venda Total:</span>
+                  <span style={{ fontWeight: 600 }}>{formatBRL(precoVendaNum * parseInt(quantidadeProspectada || '0', 10))}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12.5, color: '#5C5A4F' }}>
+                  <span>Lucro Total:</span>
+                  <span style={{ fontWeight: 600, color: positivo ? '#1F5C52' : '#7A2E3D' }}>{formatBRL(lucro * parseInt(quantidadeProspectada || '0', 10))}</span>
+                </div>
+              </div>
             </div>
           </div>
 

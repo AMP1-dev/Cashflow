@@ -137,6 +137,10 @@ create table public.lancamentos (
   forma_recebimento   forma_recebimento,
   qtd_vendas          integer check (qtd_vendas is null or qtd_vendas > 0),
 
+  -- campos adicionais
+  banco               text,
+  meio_pagamento      text,
+
   criado_em           timestamptz not null default now(),
   atualizado_em       timestamptz not null default now(),
 
