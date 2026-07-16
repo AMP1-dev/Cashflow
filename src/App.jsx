@@ -301,6 +301,11 @@ export default function CashFlowApp() {
     if (vincError) return { ok: false, erro: 'Erro ao vincular: ' + vincError.message };
 
     isNovoCadastroRef.current = true;
+    
+    // Forçar o recarregamento da sessão agora que a empresa já existe no banco.
+    // Isso evita o bug de a tela ficar travada esperando o evento do Auth.
+    await carregarDadosIniciais(authData.user.id);
+    
     return { ok: true };
   }
 
