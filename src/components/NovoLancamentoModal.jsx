@@ -1,4 +1,4 @@
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Mic } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BANCOS, CATEGORIAS } from '../utils/constants';
 import { construirSugestoesDescricao } from '../utils/formatters';
@@ -23,6 +23,39 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
   const [meioPagamento, setMeioPagamento] = useState(editando ? (lancamentoEditando.meioPagamento || '') : '');
   const [sugestaoEscolhidaManualmente, setSugestaoEscolhidaManualmente] = useState(editando);
   const [campoDescricaoFocado, setCampoDescricaoFocado] = useState(false);
+  const [escutando, setEscutando] = useState(false);
+
+  const showMic = localStorage.getItem('amp_beta_voz') === 'true';
+
+  function startDictation() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Seu navegador não suporta reconhecimento de voz nativo.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'pt-BR';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => setEscutando(true);
+    
+    recognition.onresult = (event) => {
+      const transcricao = event.results[0][0].transcript;
+      // Capitaliza a primeira letra para ficar bonito
+      const textoFinal = transcricao.charAt(0).toUpperCase() + transcricao.slice(1);
+      setDescricao(textoFinal);
+      setSugestaoEscolhidaManualmente(false);
+    };
+
+    recognition.onerror = (e) => {
+      console.error(e);
+      setEscutando(false);
+    };
+
+    recognition.onend = () => setEscutando(false);
+    recognition.start();
+  }
 
   const sugestoesDescricao = useMemo(() => construirSugestoesDescricao(historicoCompleto || [], tipo), [historicoCompleto, tipo]);
 
@@ -110,9 +143,18 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
           onFocus={() => setCampoDescricaoFocado(true)}
           onBlur={() => setTimeout(() => setCampoDescricaoFocado(false), 150)}
           placeholder={tipo === 'despesa' ? 'Ex: Combustível, Aluguel...' : 'Ex: Venda balcão, Recebimento cliente X...'}
-          style={inputStyle}
+          style={{ ...inputStyle, paddingRight: showMic ? 40 : 12 }}
           autoComplete="off"
         />
+        {showMic && (
+          <button 
+            onClick={startDictation}
+            title={escutando ? "Ouvindo..." : "Ditar descrição"}
+            style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: escutando ? '#F2DDE1' : '#F0EDE3', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}
+          >
+            <Mic size={16} color={escutando ? '#B05A2E' : '#5C5A4F'} />
+          </button>
+        )}
         {mostrarSugestoes && (
           <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: '#fff', border: '1px solid #E5E0D5', borderRadius: 10, boxShadow: '0 4px 14px rgba(0,0,0,0.08)', zIndex: 5, overflow: 'hidden' }}>
             {sugestoesFiltradas.map(s => (
