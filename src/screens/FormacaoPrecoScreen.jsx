@@ -269,7 +269,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
             style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #C05621', background: '#FEEBC8', color: '#7B341E', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
           >
             <HardDrive size={14} />
-            <span>Depreciação de Máquina</span>
+            <span>ROI & Depreciação de Máquina</span>
           </button>
 
           <button 
@@ -488,21 +488,21 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
         exemplo={`• Custo Direto do Produto: R$ 50,00\n• Impostos + Taxas + Custo Fixo: 35%\n• Lucro Desejado: 15%\n➜ Margem de Contribuição Disponível: 100% - 50% = 50%\n➜ Preço de Venda Recomendado = R$ 100,00\n\n⚙️ Depreciação de Máquina: Se a sua máquina custou R$ 12.000 e dura 2.400 horas, o uso dela custa R$ 5,00 por hora técnica, que deve ser somado no custo direto.`}
       />
 
-      {/* Modal Calculadora de Depreciação de Máquina */}
+      {/* Modal Calculadora de ROI & Depreciação de Máquina */}
       {showCalculadoraDepreciacao && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#FAF8F3', borderRadius: 20, width: '100%', maxWidth: 500, overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(6px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#FAF8F3', borderRadius: 20, width: '100%', maxWidth: 500, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #EFEBE0' }}>
             <div style={{ padding: '18px 24px', background: '#fff', borderBottom: '1px solid #EFEBE0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#7B341E', fontWeight: 700, fontSize: 16 }}>
                 <HardDrive size={20} color="#C05621" />
-                <span>Calculadora de Depreciação de Equipamento</span>
+                <span>Calculadora de ROI & Depreciação de Equipamento</span>
               </div>
-              <button onClick={() => setShowCalculadoraDepreciacao(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9C9A8F' }}><X size={22} /></button>
+              <button onClick={() => setShowCalculadoraDepreciacao(false)} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#9C9A8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
             </div>
 
             <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ background: '#FEEBC8', border: '1px solid #FBD38D', borderRadius: 12, padding: 12, fontSize: 12, color: '#7B341E', lineHeight: 1.4 }}>
-                💡 <strong>Por que calcular a depreciação?</strong> Esse valor representa a reserva de dinheiro que sua empresa deve guardar para comprar uma máquina nova quando a atual quebrar ou chegar ao fim da vida útil.
+                💡 <strong>Retorno sobre o Investimento (ROI) & Depreciação:</strong> Ao incluir esse valor no preço de venda do seu produto ou hora técnica, a cada hora de uso da máquina você recupera uma parcela do investimento inicial, formando o caixa para a compra de uma nova máquina.
               </div>
 
               <div>
@@ -542,15 +542,15 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
               </div>
 
               {/* Result Box */}
-              <div style={{ background: '#2C5282', color: '#EBF8FF', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.9 }}>
-                  Custo de Depreciação por Hora de Uso
+              <div style={{ background: '#0F2B27', color: '#FAF8F3', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: '#9FBDB5' }}>
+                  Custo de Depreciação & ROI por Hora de Uso
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#90CDF4', fontFamily: 'Georgia, serif' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#9FE0C8', fontFamily: 'Georgia, serif' }}>
                   {formatBRL(custoHoraMaquina)} / hora
                 </div>
-                <div style={{ fontSize: 11, opacity: 0.85 }}>
-                  Fórmula: R$ {formatBRL(maquinaValorNum)} ÷ {maquinaVidaHorasNum}h de uso = {formatBRL(custoHoraMaquina)}/h
+                <div style={{ fontSize: 11, color: '#9FBDB5', lineHeight: 1.4 }}>
+                  Fórmula de Retorno: R$ {formatBRL(maquinaValorNum)} ÷ {maquinaVidaHorasNum}h = <strong>{formatBRL(custoHoraMaquina)}/h</strong> embutidos para quitar o ROI.
                 </div>
               </div>
             </div>
@@ -560,7 +560,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
                 onClick={() => setShowCalculadoraDepreciacao(false)}
                 style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#C05621', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
               >
-                Salvar e Aplicar
+                Salvar e Aplicar no Custo
               </button>
             </div>
           </div>
