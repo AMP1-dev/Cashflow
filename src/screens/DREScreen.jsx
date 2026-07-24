@@ -4,6 +4,7 @@ import { EmptyState } from '../components/UIComponents';
 import { supabase } from '../lib/supabase';
 import { MESES } from '../utils/constants';
 import { formatBRL, formatCompactoBRL } from '../utils/formatters';
+import * as XLSX from 'xlsx';
 
 export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, empresaId, onSalvarEstoque }) {
 
@@ -137,6 +138,48 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     setModalEstoqueAberto(false);
   }
 
+  function exportarDREParaExcel() {
+    const dadosExcel = [];
+    
+    // Resumo DRE
+    dadosExcel.push({ Data: 'RESUMO DRE', Descrição: '', Categoria: '', Tipo: '', Valor: '' });
+    dadosExcel.push({ Data: 'Faturamento', Descrição: '', Categoria: '', Tipo: 'Receita', Valor: calc.faturamento });
+    dadosExcel.push({ Data: 'CMV', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.cmv });
+    dadosExcel.push({ Data: 'Despesas Variáveis', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.variaveis });
+    dadosExcel.push({ Data: 'Despesas Fixas', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.fixas });
+    dadosExcel.push({ Data: 'Despesas Financeiras', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.financeiras });
+    dadosExcel.push({ Data: 'Resultado Líquido', Descrição: '', Categoria: '', Tipo: '', Valor: calc.resultadoLiquido });
+    dadosExcel.push({ Data: '', Descrição: '', Categoria: '', Tipo: '', Valor: '' });
+    
+    // Lançamentos Detalhados
+    dadosExcel.push({ Data: 'LANÇAMENTOS DETALHADOS', Descrição: '', Categoria: '', Tipo: '', Valor: '' });
+    
+    // Helper to add items
+    const addItems = (items) => {
+        items.forEach(it => {
+            dadosExcel.push({
+                Data: `Dia ${it.dia}`,
+                Descrição: it.descricao,
+                Categoria: it.categoria,
+                Subcategoria: it.subcategoria || '',
+                Tipo: it.tipo,
+                Valor: it.valor
+            });
+        });
+    };
+    
+    addItems(calc.itensReceitas);
+    addItems(calc.itensCmv);
+    addItems(calc.itensVariaveis);
+    addItems(calc.itensFixas);
+    addItems(calc.itensFinanceiras);
+    
+    const worksheet = XLSX.utils.json_to_sheet(dadosExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, `DRE_${MESES[mesAtual]}`);
+    XLSX.writeFile(workbook, `DRE_${MESES[mesAtual]}_${anoAtual}.xlsx`);
+  }
+
   return (
     <div style={{ padding: 16 }}>
       <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 2 }}>DRE — {MESES[mesAtual]}</div>
@@ -148,7 +191,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
           {/* Botões de ação */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 6 }}>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <button onClick={() => setModalEstoqueAberto(true)} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #1F5C52', background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#1F5C52' }}>
               <PackageCheck size={16} />
               <span style={{ fontSize: 12.5, fontWeight: 600 }}>Apurar por Estoque</span>
@@ -156,6 +199,9 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
             <button onClick={() => { setPctCmvStr(pctCmvConfig > 0 ? String(pctCmvConfig) : ''); setModalCmvAberto(true); }} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #4A3B8A', background: '#E5E0F5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#4A3B8A' }}>
               <Settings2 size={16} />
               <span style={{ fontSize: 12.5, fontWeight: 600 }}>Configurar % CMV</span>
+            </button>
+            <button onClick={exportarDREParaExcel} style={{ padding: '0 16px', borderRadius: 12, border: '1px solid #C9C5B6', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#5C5A4F', fontSize: 12.5, fontWeight: 600, flexShrink: 0 }}>
+              Exportar Excel
             </button>
           </div>
 

@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { TrendingUp, TrendingDown, AlertCircle, Calculator } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Calculator, Settings2, X, HelpCircle, HardDrive } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { FieldLabel, inputStyle, EmptyState } from '../components/UIComponents';
 import { CalculadoraRH } from '../components/CalculadoraRH';
+import { ConceitoAjudaModal } from '../components/ConceitoAjudaModal';
 
 const TODOS_CAMPOS_KEYS = ['das', 'icms', 'pisCofins', 'csllIrpj', 'comissao', 'cartao', 'outros', 'custoFixo', 'retirada', 'distribLucros'];
 
@@ -44,6 +45,7 @@ export function sugerirPercentuais(lancamentos) {
 export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual }) {
   const sugestao = useMemo(() => sugerirPercentuais(lancamentos), [lancamentos]);
   const [showCalculadoraRH, setShowCalculadoraRH] = useState(false);
+  const [showMatrizTributaria, setShowMatrizTributaria] = useState(false);
 
   function paraTexto(v) {
     return v === 0 ? '' : String(v).replace('.', ',');
@@ -51,7 +53,6 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
 
   const storageKey = `amp_preco_${empresaId}_${anoAtual}_${mesAtual}`;
 
-  // Estados com persistência local baseada no mês
   const [textos, setTextos] = useState(() => {
     const salvo = localStorage.getItem(`${storageKey}_textos`);
     if (salvo) return JSON.parse(salvo);
@@ -81,7 +82,28 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     return localStorage.getItem(`${storageKey}_regimeTributario`) || 'simples';
   });
 
-  // Salvar no localStorage sempre que mudar
+  // Configurações da Matriz Tributária
+  const [matrizConfig, setMatrizConfig] = useState(() => {
+    const salvo = localStorage.getItem(`${storageKey}_matrizConfig`);
+    return salvo ? JSON.parse(salvo) : {
+      setor: 8, // Vendas Geral
+      faturamento: 0,
+      iss: 0,
+      ipi: 0,
+    };
+  });
+
+  const [isAjudaPrecoOpen, setIsAjudaPrecoOpen] = useState(false);
+  const [showCalculadoraDepreciacao, setShowCalculadoraDepreciacao] = useState(false);
+
+  const [maquinaNome, setMaquinaNome] = useState(() => localStorage.getItem(`${storageKey}_maquinaNome`) || 'Máquina / Equipamento Principal');
+  const [maquinaValor, setMaquinaValor] = useState(() => localStorage.getItem(`${storageKey}_maquinaValor`) || '12000');
+  const [maquinaVidaHoras, setMaquinaVidaHoras] = useState(() => localStorage.getItem(`${storageKey}_maquinaVidaHoras`) || '2400');
+
+  const maquinaValorNum = parseFloat(maquinaValor) || 0;
+  const maquinaVidaHorasNum = parseFloat(maquinaVidaHoras) || 1;
+  const custoHoraMaquina = maquinaVidaHorasNum > 0 ? maquinaValorNum / maquinaVidaHorasNum : 0;
+
   useEffect(() => {
     localStorage.setItem(`${storageKey}_textos`, JSON.stringify(textos));
     localStorage.setItem(`${storageKey}_usandoSugestao`, JSON.stringify(usandoSugestao));
@@ -89,16 +111,19 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     localStorage.setItem(`${storageKey}_precoVenda`, precoVenda);
     localStorage.setItem(`${storageKey}_quantidadeProspectada`, quantidadeProspectada);
     localStorage.setItem(`${storageKey}_regimeTributario`, regimeTributario);
-  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, regimeTributario, storageKey]);
+    localStorage.setItem(`${storageKey}_matrizConfig`, JSON.stringify(matrizConfig));
+    localStorage.setItem(`${storageKey}_maquinaNome`, maquinaNome);
+    localStorage.setItem(`${storageKey}_maquinaValor`, maquinaValor);
+    localStorage.setItem(`${storageKey}_maquinaVidaHoras`, maquinaVidaHoras);
+  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, regimeTributario, matrizConfig, maquinaNome, maquinaValor, maquinaVidaHoras, storageKey]);
 
-  // Se usar sugestão, atualiza sempre que vierem novos dados
   useEffect(() => {
-    if (usandoSugestao) {
+    if (usandoSugestao && regimeTributario === 'simples') {
       const t = {};
       TODOS_CAMPOS_KEYS.forEach(k => { t[k] = paraTexto(sugestao[k]); });
       setTextos(t);
     }
-  }, [sugestao, usandoSugestao]);
+  }, [sugestao, usandoSugestao, regimeTributario]);
 
   function atualizarPct(key, valorDigitado) {
     setUsandoSugestao(false);
@@ -112,11 +137,59 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     setUsandoSugestao(true);
   }
 
+  function aplicarMatrizTributaria(novaConfig) {
+    setMatrizConfig(novaConfig);
+    setUsandoSugestao(false);
+    
+    // Cálculos da matriz
+    const setorBase = novaConfig.setor / 100;
+    const fat = novaConfig.faturamento;
+    
+    let pisCofins = 0;
+    let csllIrpj = 0;
+    
+    if (regimeTributario === 'presumido') {
+      pisCofins = 3.65; // 0.65 PIS + 3.00 COFINS
+      
+      const csll = setorBase * 0.09;
+      const irpjBase = setorBase * 0.15;
+      
+      let irpjAdicional = 0;
+      if (fat > 20000) {
+        const excedente = fat - 20000;
+        const impostoAdicional = excedente * setorBase * 0.10;
+        irpjAdicional = impostoAdicional / fat; // Alíquota efetiva
+      }
+      
+      csllIrpj = (csll + irpjBase + irpjAdicional) * 100;
+    } else if (regimeTributario === 'real') {
+      pisCofins = 9.25; // 1.65 PIS + 7.60 COFINS (Não cumulativo)
+      
+      // Estimativa para Lucro Real baseada na mesma presunção para fins de precificação unitária
+      const csll = setorBase * 0.09;
+      const irpjBase = setorBase * 0.15;
+      let irpjAdicional = 0;
+      if (fat > 20000) {
+        const excedente = fat - 20000;
+        const impostoAdicional = excedente * setorBase * 0.10;
+        irpjAdicional = impostoAdicional / fat;
+      }
+      csllIrpj = (csll + irpjBase + irpjAdicional) * 100;
+    }
+
+    setTextos(prev => ({
+      ...prev,
+      pisCofins: paraTexto(Math.round(pisCofins * 100) / 100),
+      csllIrpj: paraTexto(Math.round(csllIrpj * 100) / 100),
+      icms: paraTexto(Math.round((parseFloat(prev.icms?.replace(',','.')||0) + novaConfig.iss + novaConfig.ipi) * 100) / 100) // Simplificação: soma ISS e IPI no campo ICMS/Outros
+    }));
+  }
+
   const camposPercentual = useMemo(() => {
     const baseVariavel = [
       { key: 'comissao', label: 'Comissão', grupo: 'variavel' },
       { key: 'cartao', label: 'Cartão Crédito/Débito', grupo: 'variavel' },
-      { key: 'outros', label: 'Outros', grupo: 'variavel' },
+      { key: 'outros', label: 'Outros (Frete, etc)', grupo: 'variavel' },
     ];
     const baseFixo = [
       { key: 'custoFixo', label: 'Custo Fixo', grupo: 'fixo' },
@@ -128,7 +201,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
       return [{ key: 'das', label: 'DAS — Simples Nacional', grupo: 'variavel' }, ...baseVariavel, ...baseFixo];
     } else {
       return [
-        { key: 'icms', label: 'ICMS', grupo: 'variavel' },
+        { key: 'icms', label: 'ICMS / ISS / IPI', grupo: 'variavel' },
         { key: 'pisCofins', label: 'PIS/COFINS', grupo: 'variavel' },
         { key: 'csllIrpj', label: 'CSLL/IRPJ', grupo: 'variavel' },
         ...baseVariavel, ...baseFixo
@@ -177,43 +250,89 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 2 }}>Formação de preço</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 2 }}>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F' }}>Formação de preço</span>
+            <button
+              onClick={() => setIsAjudaPrecoOpen(true)}
+              style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', borderRadius: 8, padding: '3px 8px', color: '#1F5C52', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+            >
+              <HelpCircle size={14} />
+              <span>Guia Conceitual</span>
+            </button>
+          </div>
           <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Descubra se o preço que o mercado aceita ainda deixa lucro</div>
         </div>
-        <button 
-          onClick={() => setShowCalculadoraRH(true)}
-          style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #1F5C52', background: '#D9EBE6', color: '#1F5C52', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
-        >
-          <Calculator size={14} />
-          Calc. Hora Técnica
-        </button>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button 
+            onClick={() => setShowCalculadoraDepreciacao(true)}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #C05621', background: '#FEEBC8', color: '#7B341E', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
+          >
+            <HardDrive size={14} />
+            <span>Depreciação de Máquina</span>
+          </button>
+
+          <button 
+            onClick={() => setShowCalculadoraRH(true)}
+            style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #1F5C52', background: '#D9EBE6', color: '#1F5C52', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 12, cursor: 'pointer' }}
+          >
+            <Calculator size={14} />
+            <span>Calc. Hora Técnica</span>
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <button 
           onClick={() => setRegimeTributario('simples')}
-          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'simples' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'simples' ? '#1F5C52' : '#fff', color: regimeTributario === 'simples' ? '#fff' : '#5C5A4F', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'simples' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'simples' ? '#1F5C52' : '#fff', color: regimeTributario === 'simples' ? '#fff' : '#5C5A4F', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
         >
           Simples Nacional
         </button>
         <button 
-          onClick={() => setRegimeTributario('real')}
-          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'real' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'real' ? '#1F5C52' : '#fff', color: regimeTributario === 'real' ? '#fff' : '#5C5A4F', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          onClick={() => setRegimeTributario('presumido')}
+          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'presumido' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'presumido' ? '#1F5C52' : '#fff', color: regimeTributario === 'presumido' ? '#fff' : '#5C5A4F', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
         >
-          Lucro Presumido / Real
+          Lucro Presumido
+        </button>
+        <button 
+          onClick={() => setRegimeTributario('real')}
+          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'real' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'real' ? '#1F5C52' : '#fff', color: regimeTributario === 'real' ? '#fff' : '#5C5A4F', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+        >
+          Lucro Real
         </button>
       </div>
 
+      {(regimeTributario === 'presumido' || regimeTributario === 'real') && (
+        <div style={{ marginBottom: 16 }}>
+          {regimeTributario === 'real' && (
+            <div style={{ background: '#FBF3E5', border: '1px solid #E8C896', borderRadius: 8, padding: '10px 12px', display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 10 }}>
+              <AlertCircle size={16} color="#8A6D1A" style={{ flexShrink: 0, marginTop: 2 }} />
+              <div style={{ fontSize: 11, color: '#8A6D1A', lineHeight: 1.4 }}>
+                <strong>Atenção (Lucro Real):</strong> Os valores calculados são estimativas aproximadas para precificação. A apuração oficial exige dados contábeis globais (LALUR) que fogem do escopo unitário.
+              </div>
+            </div>
+          )}
+          <button 
+            onClick={() => setShowMatrizTributaria(true)}
+            style={{ width: '100%', padding: '12px', borderRadius: 10, border: '1px solid #4A3B8A', background: '#E5E0F5', color: '#4A3B8A', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          >
+            <Settings2 size={16} />
+            Configurar Matriz Tributária ({regimeTributario === 'real' ? 'Real' : 'Presumido'})
+          </button>
+        </div>
+      )}
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Índices incidentes</span>
-        {!usandoSugestao && (
+        {!usandoSugestao && regimeTributario === 'simples' && (
           <button onClick={restaurarSugestao} style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
             usar sugestão automática
           </button>
         )}
       </div>
       <div style={{ fontSize: 10.5, color: '#9C9A8F', marginBottom: 10 }}>
-        {usandoSugestao ? 'Calculado a partir dos seus lançamentos deste mês. Você pode editar qualquer campo.' : 'Valores editados manualmente e salvos para este mês.'}
+        {usandoSugestao && regimeTributario === 'simples' ? 'Calculado a partir dos seus lançamentos deste mês. Você pode editar qualquer campo.' : 'Valores editados manualmente e salvos para este mês.'}
         {precoVendaNum === 0 && ' Informe o preço de venda abaixo para ver os valores em R$.'}
       </div>
 
@@ -238,7 +357,8 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
                   onChange={e => atualizarPct(campo.key, e.target.value.replace(/[^0-9,.-]/g, ''))}
                   inputMode="decimal"
                   placeholder="0"
-                  style={{ width: 46, textAlign: 'right', padding: '5px 6px', borderRadius: 6, border: '1px solid #E5E0D5', fontSize: 12.5, background: '#fff', color: '#1C2421' }}
+                  disabled={['pisCofins', 'csllIrpj'].includes(campo.key) && (regimeTributario === 'presumido' || regimeTributario === 'real')}
+                  style={{ width: 46, textAlign: 'right', padding: '5px 6px', borderRadius: 6, border: '1px solid #E5E0D5', fontSize: 12.5, background: ['pisCofins', 'csllIrpj'].includes(campo.key) && (regimeTributario === 'presumido' || regimeTributario === 'real') ? '#F0EDE3' : '#fff', color: '#1C2421' }}
                 />
                 <span style={{ fontSize: 11.5, color: '#9C9A8F' }}>%</span>
               </div>
@@ -346,6 +466,188 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
           onClose={() => setShowCalculadoraRH(false)} 
         />
       )}
+
+      {showMatrizTributaria && (
+        <ModalMatrizTributaria 
+          configAtual={matrizConfig}
+          regime={regimeTributario}
+          onClose={() => setShowMatrizTributaria(false)}
+          onSalvar={(cfg) => {
+            aplicarMatrizTributaria(cfg);
+            setShowMatrizTributaria(false);
+          }}
+        />
+      )}
+      {/* Conceito Ajuda Modal: Formação de Preço */}
+      <ConceitoAjudaModal
+        isOpen={isAjudaPrecoOpen}
+        onClose={() => setIsAjudaPrecoOpen(false)}
+        titulo="Formação de Preço, Margem & Depreciação"
+        conceito="Formação de Preço é a metodologia para calcular quanto você deve cobrar pelo produto ou serviço cobrindo todos os impostos, comissões, taxas de cartão, custos fixos, depreciação de máquinas e a sua margem de lucro desejada."
+        porQueImporta="Cobrar 'de cabeça' ou apenas imitando os concorrentes sem conhecer seus custos reais faz muitas empresas venderem bastante e fecharem o mês no prejuízo."
+        exemplo={`• Custo Direto do Produto: R$ 50,00\n• Impostos + Taxas + Custo Fixo: 35%\n• Lucro Desejado: 15%\n➜ Margem de Contribuição Disponível: 100% - 50% = 50%\n➜ Preço de Venda Recomendado = R$ 100,00\n\n⚙️ Depreciação de Máquina: Se a sua máquina custou R$ 12.000 e dura 2.400 horas, o uso dela custa R$ 5,00 por hora técnica, que deve ser somado no custo direto.`}
+      />
+
+      {/* Modal Calculadora de Depreciação de Máquina */}
+      {showCalculadoraDepreciacao && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div style={{ background: '#FAF8F3', borderRadius: 20, width: '100%', maxWidth: 500, overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: '18px 24px', background: '#fff', borderBottom: '1px solid #EFEBE0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#7B341E', fontWeight: 700, fontSize: 16 }}>
+                <HardDrive size={20} color="#C05621" />
+                <span>Calculadora de Depreciação de Equipamento</span>
+              </div>
+              <button onClick={() => setShowCalculadoraDepreciacao(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9C9A8F' }}><X size={22} /></button>
+            </div>
+
+            <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: '#FEEBC8', border: '1px solid #FBD38D', borderRadius: 12, padding: 12, fontSize: 12, color: '#7B341E', lineHeight: 1.4 }}>
+                💡 <strong>Por que calcular a depreciação?</strong> Esse valor representa a reserva de dinheiro que sua empresa deve guardar para comprar uma máquina nova quando a atual quebrar ou chegar ao fim da vida útil.
+              </div>
+
+              <div>
+                <FieldLabel>Nome do Equipamento / Máquina</FieldLabel>
+                <input
+                  type="text"
+                  value={maquinaNome}
+                  onChange={e => setMaquinaNome(e.target.value)}
+                  placeholder="Ex: Impressora 3D / Torno / Computador"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <FieldLabel>Valor de Compra do Equipamento (R$)</FieldLabel>
+                <input
+                  type="number"
+                  value={maquinaValor}
+                  onChange={e => setMaquinaValor(e.target.value)}
+                  placeholder="Ex: 12000"
+                  style={inputStyle}
+                />
+              </div>
+
+              <div>
+                <FieldLabel>Vida Útil Estimada em Horas de Uso</FieldLabel>
+                <div style={{ fontSize: 11, color: '#718096', marginBottom: 4 }}>
+                  Ex: 2.400 horas (considerando 100h de uso/mês durante 24 meses).
+                </div>
+                <input
+                  type="number"
+                  value={maquinaVidaHoras}
+                  onChange={e => setMaquinaVidaHoras(e.target.value)}
+                  placeholder="Ex: 2400"
+                  style={inputStyle}
+                />
+              </div>
+
+              {/* Result Box */}
+              <div style={{ background: '#2C5282', color: '#EBF8FF', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.9 }}>
+                  Custo de Depreciação por Hora de Uso
+                </div>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#90CDF4', fontFamily: 'Georgia, serif' }}>
+                  {formatBRL(custoHoraMaquina)} / hora
+                </div>
+                <div style={{ fontSize: 11, opacity: 0.85 }}>
+                  Fórmula: R$ {formatBRL(maquinaValorNum)} ÷ {maquinaVidaHorasNum}h de uso = {formatBRL(custoHoraMaquina)}/h
+                </div>
+              </div>
+            </div>
+
+            <div style={{ padding: '16px 24px', background: '#fff', borderTop: '1px solid #EFEBE0', display: 'flex', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowCalculadoraDepreciacao(false)}
+                style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#C05621', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+              >
+                Salvar e Aplicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ModalMatrizTributaria({ configAtual, regime, onClose, onSalvar }) {
+  const [setor, setSetor] = useState(configAtual.setor);
+  const [faturamento, setFaturamento] = useState(String(configAtual.faturamento || ''));
+  const [iss, setIss] = useState(String(configAtual.iss || ''));
+  const [ipi, setIpi] = useState(String(configAtual.ipi || ''));
+
+  function handleSalvar() {
+    onSalvar({
+      setor: parseFloat(setor),
+      faturamento: parseFloat(faturamento.replace(',', '.')) || 0,
+      iss: parseFloat(iss.replace(',', '.')) || 0,
+      ipi: parseFloat(ipi.replace(',', '.')) || 0,
+    });
+  }
+
+  return (
+    <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ background: '#FAF8F3', borderRadius: 16, width: '100%', maxWidth: 450, maxHeight: '95vh', overflowY: 'auto' }}>
+        <div style={{ padding: '20px 24px', background: '#fff', borderBottom: '1px solid #EFEBE0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#1C2421', fontWeight: 600, fontSize: 16 }}>
+            <Settings2 size={20} color="#4A3B8A" />
+            Matriz Tributária ({regime === 'real' ? 'Lucro Real' : 'Lucro Presumido'})
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9C9A8F' }}><X size={24} /></button>
+        </div>
+
+        <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <FieldLabel>Setor de Atividade (Base de Presunção)</FieldLabel>
+            <select value={setor} onChange={e => setSetor(Number(e.target.value))} style={inputStyle}>
+              <option value={1.6}>Combustível (1,6%)</option>
+              <option value={8}>Vendas Geral / Comércio (8%)</option>
+              <option value={16}>Transporte (16%)</option>
+              <option value={32}>Serviços (32%)</option>
+            </select>
+          </div>
+
+          <div>
+            <FieldLabel>Faturamento Mensal Projetado (R$)</FieldLabel>
+            <div style={{ fontSize: 11, color: '#9C9A8F', marginBottom: 6, lineHeight: 1.4 }}>
+              Usado para calcular o Adicional de IRPJ (10% sobre o que exceder R$ 20.000 mensais).
+            </div>
+            <input 
+              value={faturamento} 
+              onChange={e => setFaturamento(e.target.value.replace(/[^0-9,.-]/g, ''))} 
+              placeholder="Ex: 50000" 
+              inputMode="decimal" 
+              style={inputStyle} 
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <FieldLabel>ISS (%)</FieldLabel>
+              <input value={iss} onChange={e => setIss(e.target.value.replace(/[^0-9,.-]/g, ''))} placeholder="Ex: 5" inputMode="decimal" style={inputStyle} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <FieldLabel>IPI (%)</FieldLabel>
+              <input value={ipi} onChange={e => setIpi(e.target.value.replace(/[^0-9,.-]/g, ''))} placeholder="Ex: 10" inputMode="decimal" style={inputStyle} />
+            </div>
+          </div>
+
+          <div style={{ background: '#EAF6EE', borderRadius: 10, padding: 12, marginTop: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#1F5C52', marginBottom: 4 }}>O sistema calculará automaticamente:</div>
+            <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11.5, color: '#1F5C52', lineHeight: 1.5 }}>
+              <li>PIS/COFINS ({regime === 'real' ? 'Não Cumulativo 9,25%' : 'Cumulativo 3,65%'})</li>
+              <li>CSLL (9% sobre a base)</li>
+              <li>IRPJ (15% sobre a base) + Adicional (10% se houver)</li>
+              <li>Soma de ICMS + ISS + IPI no campo variável</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style={{ padding: 24, background: '#fff', borderTop: '1px solid #EFEBE0', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+          <button onClick={onClose} style={{ padding: '10px 16px', borderRadius: 8, border: '1px solid #D1CFC7', background: '#fff', fontWeight: 600, color: '#5C5A4F', cursor: 'pointer' }}>Cancelar</button>
+          <button onClick={handleSalvar} style={{ padding: '10px 16px', borderRadius: 8, border: 'none', background: '#4A3B8A', fontWeight: 600, color: '#fff', cursor: 'pointer' }}>Calcular e Aplicar</button>
+        </div>
+      </div>
     </div>
   );
 }

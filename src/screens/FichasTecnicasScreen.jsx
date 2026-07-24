@@ -1,8 +1,10 @@
-import { AlertCircle, ChevronLeft, ChevronRight, Plus, Scale, X } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, Plus, Scale, X, HelpCircle, Truck } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState, FieldLabel, inputStyle, ModalShell } from '../components/UIComponents';
 import { supabase } from '../lib/supabase';
 import { formatBRL } from '../utils/formatters';
+import { ConceitoAjudaModal } from '../components/ConceitoAjudaModal';
+import * as XLSX from 'xlsx';
 
 // ---------- Constantes e cálculo (puro, sem dependência de banco) ----------
 
@@ -23,9 +25,11 @@ export function calcularFatorCorrecao(pesoBruto, pesoLiquido) {
 
 function calcularCustoPorBase(ing) {
     const precoCompra = parseFloat(ing.precoCompra) || 0;
+    const fretePct = parseFloat(ing.pctFrete) || 0;
+    const precoReal = precoCompra * (1 + (fretePct / 100));
     const qtdCompraBase = converterParaBase(ing.qtdCompra, ing.unidadeCompra);
     if (qtdCompraBase <= 0) return 0;
-    return precoCompra / qtdCompraBase;
+    return precoReal / qtdCompraBase;
 }
 
 export function calcularIngrediente(ing) {
@@ -235,6 +239,7 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
     const [expandidos, setExpandidos] = useState(new Set());
     const [salvando, setSalvando] = useState(false);
     const [salvoRecentemente, setSalvoRecentemente] = useState(false);
+    const [isAjudaFichaOpen, setIsAjudaFichaOpen] = useState(false);
 
     const rhCustosString = localStorage.getItem(`amp_rh_custos_${empresaId}`);
     const rhCustos = rhCustosString ? JSON.parse(rhCustosString) : { custoHora: 0, custoMinuto: 0 };
@@ -311,6 +316,35 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
         setSalvando(false);
     }
 
+    function exportarParaExcel() {
+        const dadosExcel = [
+            { A: 'Ficha Técnica:', B: nome || 'Sem Nome' },
+            { A: 'Rendimento (porções):', B: rendimentoPorcoes },
+            { A: 'Peso da Porção (g):', B: pesoPorcao || 'N/A' },
+            { A: '' },
+            { A: 'Custo da Receita:', B: formatBRL(calc.custoReceita) },
+            { A: 'Custo por Porção:', B: formatBRL(calc.custoPorcao) },
+            { A: '' },
+            { A: 'Ingrediente', B: 'Qtd Bruta', C: 'Unidade', D: 'Fator Correção', E: 'Qtd Líquida', F: 'Custo Total' }
+        ];
+
+        calc.ingredientesCalc.forEach(ing => {
+            dadosExcel.push({
+                A: ing.nome || 'Sem Nome',
+                B: ing.qtdBruta || '0',
+                C: ing.unidadeUso || ing.unidadeCompra || 'g',
+                D: parseFloat(ing.fatorCorrecao || 1).toFixed(2),
+                E: ing.qtdLiquida.toFixed(2),
+                F: formatBRL(ing.custoTotal)
+            });
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(dadosExcel, { skipHeader: true });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Ficha Técnica");
+        XLSX.writeFile(workbook, `Ficha_Tecnica_${(nome || 'Nova').replace(/\s+/g, '_')}.xlsx`);
+    }
+
     const podeSalvar = nome.trim().length > 0 && !salvando;
 
     const ingredienteWizard = wizardIngredienteId ? ingredientes.find(i => i.id === wizardIngredienteId) : null;
@@ -326,11 +360,27 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
 
     return (
         <div style={{ paddingBottom: 88 }}>
-            <div style={{ padding: '16px 16px 0' }}>
-                <button onClick={onCancelar} style={{ background: 'none', border: 'none', color: '#9C9A8F', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14, padding: 0 }}>
-                    <ChevronLeft size={15} /> Voltar para fichas técnicas
-                </button>
-                <div style={{ fontFamily: 'Georgia, serif', fontSize: 19, marginBottom: 12 }}>{editando ? 'Editar ficha técnica' : 'Nova ficha técnica'}</div>
+            <div style={{ padding: '16px 16px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <div>
+                    <button onClick={onCancelar} style={{ background: 'none', border: 'none', color: '#9C9A8F', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 14, padding: 0 }}>
+                        <ChevronLeft size={15} /> Voltar para fichas técnicas
+                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                        <span style={{ fontFamily: 'Georgia, serif', fontSize: 19 }}>{editando ? 'Editar ficha técnica' : 'Nova ficha técnica'}</span>
+                        <button
+                            onClick={() => setIsAjudaFichaOpen(true)}
+                            style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', borderRadius: 8, padding: '3px 8px', color: '#1F5C52', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                        >
+                            <HelpCircle size={14} />
+                            <span>Guia Conceitual</span>
+                        </button>
+                    </div>
+                </div>
+                {editando && (
+                    <button onClick={exportarParaExcel} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #1F5C52', background: '#D9EBE6', color: '#1F5C52', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        Exportar Excel
+                    </button>
+                )}
             </div>
 
             {/* Resultado calculado fica fixo no topo, sempre visível em telas de celular */}
@@ -424,6 +474,15 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
                     {salvando ? 'Salvando...' : 'Salvar e fechar'}
                 </button>
             </div>
+
+            <ConceitoAjudaModal
+                isOpen={isAjudaFichaOpen}
+                onClose={() => setIsAjudaFichaOpen(false)}
+                titulo="Ficha Técnica & Rateio de Frete de Insumos"
+                conceito="A Ficha Técnica é a receita padronizada do seu produto ou serviço. Ela detalha cada ingrediente ou matéria-prima utilizada, as quantidades brutas, perdas (fator de correção) e o frete de entrega do insumo."
+                porQueImporta="Ignorar o valor do frete e as perdas da matéria-prima causa o erro mais comum na precificação: achar que o produto custou R$ 10,00 quando na verdade custou R$ 13,50, destruindo a sua margem de lucro."
+                exemplo={`• Ingrediente A: R$ 20,00 por kg\n• Rateio de Frete do Lote: +10%\n➜ Custo Real com Frete = R$ 22,00 por kg\n\n• Quantidade em uso na porção: 200g (0,2 kg)\n• Perda no pré-preparo: 10% (Fator 1,11)\n➜ Custo Efetivo do Insumo na Porção = R$ 4,88.`}
+            />
         </div>
     );
 }
@@ -507,10 +566,28 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                 </select>
             </div>
             {custoPorBase > 0 && (
-                <div style={{ fontSize: 10.5, color: '#9C9A8F', marginTop: -4, marginBottom: 10 }}>
-                    ≈ {formatBRL(custoPorBase)} por {baseLabel}
+                <div style={{ fontSize: 10.5, color: '#9C9A8F', marginTop: -4, marginBottom: 8 }}>
+                    ≈ {formatBRL(custoPorBase)} por {baseLabel} {ingrediente.pctFrete > 0 ? `(inclui +${ingrediente.pctFrete}% de frete/taxas)` : ''}
                 </div>
             )}
+
+            {/* Rateio de Frete & Taxas do Insumo */}
+            <div style={{ background: '#FFFDF9', border: '1px solid #E8C896', borderRadius: 8, padding: '6px 10px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: 11, color: '#8A6D1A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Truck size={14} color="#C05621" />
+                    <span>Rateio Frete/Taxas do Lote (%)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <input
+                        value={ingrediente.pctFrete || ''}
+                        onChange={e => onChange('pctFrete', e.target.value.replace(/[^0-9,.-]/g, ''))}
+                        placeholder="Ex: 10"
+                        inputMode="decimal"
+                        style={{ ...inputStyle, marginTop: 0, width: 60, padding: '4px 6px', fontSize: 12, textAlign: 'right', border: '1px solid #E8C896', background: '#fff' }}
+                    />
+                    <span style={{ fontSize: 11, color: '#8A6D1A', fontWeight: 600 }}>%</span>
+                </div>
+            </div>
             
             {['h', 'min'].includes(ingrediente.unidadeCompra) && (
                 <div style={{ background: '#EAF6EE', padding: '6px 10px', borderRadius: 6, fontSize: 11, color: '#1F5C52', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
