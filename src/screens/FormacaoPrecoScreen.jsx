@@ -248,38 +248,44 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
   return (
     <div style={{ padding: 16 }}>
       
-      {/* Header com alinhamento perfeito e botões padronizados */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 20, background: '#fff', padding: '14px 18px', borderRadius: 14, border: '1px solid #EFEBE0', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-        <div>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: '#1C2421', margin: 0 }}>Formação de Preço</h2>
-          <div style={{ fontSize: 11.5, color: '#747266', marginTop: 2 }}>Descubra se o preço que o mercado aceita ainda deixa lucro</div>
-        </div>
+      {/* Header com Design Ultra-Limpo e Simétrico */}
+      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #EFEBE0', padding: 18, marginBottom: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.02)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+        
+        {/* Linha 1: Título + Subtítulo + Botão de Guia Conceitual */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+          <div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1C2421', margin: 0, fontFamily: 'Georgia, serif' }}>Formação de Preço</h2>
+            <div style={{ fontSize: 12, color: '#747266', marginTop: 2 }}>Descubra se o preço que o mercado aceita ainda deixa lucro</div>
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <button
             onClick={() => setIsAjudaPrecoOpen(true)}
-            style={{ height: 38, padding: '0 14px', borderRadius: 10, border: '1px solid #B8E0D7', background: '#E6F4F1', color: '#1F5C52', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+            style={{ height: 34, padding: '0 12px', borderRadius: 8, border: '1px solid #B8E0D7', background: '#E6F4F1', color: '#1F5C52', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.2s' }}
           >
-            <HelpCircle size={15} />
+            <HelpCircle size={14} />
             <span>Guia Conceitual</span>
+          </button>
+        </div>
+
+        {/* Linha 2: Barra de Ações com Botões Simétricos em 2 Colunas */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 10, paddingTop: 10, borderTop: '1px solid #F5F2E8' }}>
+          <button 
+            onClick={() => setShowCalculadoraRH(true)}
+            style={{ height: 42, padding: '0 16px', borderRadius: 10, border: 'none', background: '#1F5C52', color: '#FAF8F3', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 2px 6px rgba(31,92,82,0.2)', transition: 'all 0.2s' }}
+          >
+            <Calculator size={16} />
+            <span>Calc. Hora Técnica</span>
           </button>
 
           <button 
             onClick={() => setShowCalculadoraDepreciacao(true)}
-            style={{ height: 38, padding: '0 14px', borderRadius: 10, border: '1px solid #FBD38D', background: '#FFFAF0', color: '#C05621', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', transition: 'all 0.2s' }}
+            style={{ height: 42, padding: '0 16px', borderRadius: 10, border: '1px solid #FBD38D', background: '#FFFAF0', color: '#C05621', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.2s' }}
           >
-            <HardDrive size={15} />
-            <span>ROI / Depreciação</span>
-          </button>
-
-          <button 
-            onClick={() => setShowCalculadoraRH(true)}
-            style={{ height: 38, padding: '0 14px', borderRadius: 10, border: 'none', background: '#1F5C52', color: '#FAF8F3', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', boxShadow: '0 2px 6px rgba(31,92,82,0.2)', transition: 'all 0.2s' }}
-          >
-            <Calculator size={15} />
-            <span>Calc. Hora Técnica</span>
+            <HardDrive size={16} />
+            <span>ROI / Depreciação de Máquina</span>
           </button>
         </div>
+
       </div>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
