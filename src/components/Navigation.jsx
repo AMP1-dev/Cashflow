@@ -37,7 +37,7 @@ export function BottomNav({ tela, setTela, onAdd }) {
     { id: 'diagnostico', label: 'Avaliação', icon: Activity },
   ];
   return (
-    <div className="no-print" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 8px calc(7px + env(safe-area-inset-bottom))', boxSizing: 'border-box' }}>
+    <div className="no-print" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px calc(9px + env(safe-area-inset-bottom))', boxSizing: 'border-box', boxShadow: '0 -4px 12px rgba(0,0,0,0.04)' }}>
       {items.map(it => <NavButton key={it.id} item={it} active={tela === it.id} onClick={() => setTela(it.id)} />)}
     </div>
   );
@@ -46,9 +46,9 @@ export function BottomNav({ tela, setTela, onAdd }) {
 function NavButton({ item, active, onClick }) {
   const Icon = item.icon;
   return (
-    <button onClick={onClick} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1, background: 'none', border: 'none', cursor: 'pointer', padding: '5px 0', color: active ? '#1F5C52' : '#9C9A8F', minWidth: 0 }}>
-      <Icon size={16} strokeWidth={active ? 2.2 : 1.8} />
-      <span style={{ fontSize: 8.5, fontWeight: active ? 600 : 400, whiteSpace: 'nowrap' }}>{item.label}</span>
+    <button onClick={onClick} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0', color: active ? '#1F5C52' : '#9C9A8F', minWidth: 0 }}>
+      <Icon size={19} strokeWidth={active ? 2.3 : 1.8} />
+      <span style={{ fontSize: 9.5, fontWeight: active ? 600 : 500, whiteSpace: 'nowrap' }}>{item.label}</span>
     </button>
   );
 }
