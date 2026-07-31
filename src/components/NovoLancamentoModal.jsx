@@ -275,6 +275,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
           <select value={meioPagamento} onChange={e => setMeioPagamento(e.target.value)} style={inputStyle}>
             <option value="">Selecionar meio de pagamento...</option>
             <option value="PIX">PIX</option>
+            <option value="Boleto">Boleto / Fatura</option>
             <option value="Dinheiro">Dinheiro</option>
             <option value="Cheque">Cheque</option>
             <option value="Cartão">Cartão</option>

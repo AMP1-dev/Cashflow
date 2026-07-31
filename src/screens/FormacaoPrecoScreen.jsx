@@ -99,9 +99,21 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
   const [maquinaNome, setMaquinaNome] = useState(() => localStorage.getItem(`${storageKey}_maquinaNome`) || 'Máquina / Equipamento Principal');
   const [maquinaValor, setMaquinaValor] = useState(() => localStorage.getItem(`${storageKey}_maquinaValor`) || '12000');
   const [maquinaVidaHoras, setMaquinaVidaHoras] = useState(() => localStorage.getItem(`${storageKey}_maquinaVidaHoras`) || '2400');
+  const [maquinaHorasDia, setMaquinaHorasDia] = useState(() => localStorage.getItem(`${storageKey}_maquinaHorasDia`) || '8');
+  const [maquinaDiasMes, setMaquinaDiasMes] = useState(() => localStorage.getItem(`${storageKey}_maquinaDiasMes`) || '22');
+  const [maquinaMesesVida, setMaquinaMesesVida] = useState(() => localStorage.getItem(`${storageKey}_maquinaMesesVida`) || '24');
+  const [maquinaModoCalculo, setMaquinaModoCalculo] = useState(() => localStorage.getItem(`${storageKey}_maquinaModoCalculo`) || 'calculado');
 
   const maquinaValorNum = parseFloat(maquinaValor) || 0;
-  const maquinaVidaHorasNum = parseFloat(maquinaVidaHoras) || 1;
+  const maquinaHorasDiaNum = parseFloat(maquinaHorasDia) || 0;
+  const maquinaDiasMesNum = parseFloat(maquinaDiasMes) || 0;
+  const maquinaMesesVidaNum = parseFloat(maquinaMesesVida) || 0;
+  
+  const horasCalculadas = maquinaHorasDiaNum * maquinaDiasMesNum * maquinaMesesVidaNum;
+  const maquinaVidaHorasNum = maquinaModoCalculo === 'calculado' 
+    ? (horasCalculadas > 0 ? horasCalculadas : 1) 
+    : (parseFloat(maquinaVidaHoras) || 1);
+
   const custoHoraMaquina = maquinaVidaHorasNum > 0 ? maquinaValorNum / maquinaVidaHorasNum : 0;
 
   useEffect(() => {
@@ -115,13 +127,19 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     localStorage.setItem(`${storageKey}_maquinaNome`, maquinaNome);
     localStorage.setItem(`${storageKey}_maquinaValor`, maquinaValor);
     localStorage.setItem(`${storageKey}_maquinaVidaHoras`, maquinaVidaHoras);
-  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, regimeTributario, matrizConfig, maquinaNome, maquinaValor, maquinaVidaHoras, storageKey]);
+    localStorage.setItem(`${storageKey}_maquinaHorasDia`, maquinaHorasDia);
+    localStorage.setItem(`${storageKey}_maquinaDiasMes`, maquinaDiasMes);
+    localStorage.setItem(`${storageKey}_maquinaMesesVida`, maquinaMesesVida);
+    localStorage.setItem(`${storageKey}_maquinaModoCalculo`, maquinaModoCalculo);
+  }, [textos, usandoSugestao, custoProduto, precoVenda, quantidadeProspectada, regimeTributario, matrizConfig, maquinaNome, maquinaValor, maquinaVidaHoras, maquinaHorasDia, maquinaDiasMes, maquinaMesesVida, maquinaModoCalculo, storageKey]);
 
   useEffect(() => {
     if (usandoSugestao && regimeTributario === 'simples') {
       const t = {};
       TODOS_CAMPOS_KEYS.forEach(k => { t[k] = paraTexto(sugestao[k]); });
       setTextos(t);
+    } else if (regimeTributario === 'mei') {
+      setTextos(prev => ({ ...prev, das: '0' }));
     }
   }, [sugestao, usandoSugestao, regimeTributario]);
 
@@ -197,7 +215,9 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
       { key: 'distribLucros', label: 'Distrib. de Lucros', grupo: 'fixo' },
     ];
     
-    if (regimeTributario === 'simples') {
+    if (regimeTributario === 'mei') {
+      return [{ key: 'das', label: 'DAS — MEI (Imposto Fixo = 0% unit.)', grupo: 'variavel' }, ...baseVariavel, ...baseFixo];
+    } else if (regimeTributario === 'simples') {
       return [{ key: 'das', label: 'DAS — Simples Nacional', grupo: 'variavel' }, ...baseVariavel, ...baseFixo];
     } else {
       return [
@@ -215,7 +235,9 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     return p;
   }, [textos]);
 
-  const impostos = regimeTributario === 'simples' 
+  const impostos = regimeTributario === 'mei'
+    ? 0
+    : regimeTributario === 'simples' 
     ? percentuais.das 
     : (percentuais.icms + percentuais.pisCofins + percentuais.csllIrpj);
 
@@ -288,26 +310,41 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
 
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 12 }}>
+        <button 
+          onClick={() => { setRegimeTributario('mei'); setTextos(prev => ({ ...prev, das: '0' })); }}
+          style={{ padding: '10px 4px', borderRadius: 8, border: `1px solid ${regimeTributario === 'mei' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'mei' ? '#1F5C52' : '#fff', color: regimeTributario === 'mei' ? '#fff' : '#5C5A4F', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}
+        >
+          MEI
+        </button>
         <button 
           onClick={() => setRegimeTributario('simples')}
-          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'simples' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'simples' ? '#1F5C52' : '#fff', color: regimeTributario === 'simples' ? '#fff' : '#5C5A4F', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          style={{ padding: '10px 4px', borderRadius: 8, border: `1px solid ${regimeTributario === 'simples' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'simples' ? '#1F5C52' : '#fff', color: regimeTributario === 'simples' ? '#fff' : '#5C5A4F', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}
         >
-          Simples Nacional
+          Simples
         </button>
         <button 
           onClick={() => setRegimeTributario('presumido')}
-          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'presumido' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'presumido' ? '#1F5C52' : '#fff', color: regimeTributario === 'presumido' ? '#fff' : '#5C5A4F', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          style={{ padding: '10px 4px', borderRadius: 8, border: `1px solid ${regimeTributario === 'presumido' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'presumido' ? '#1F5C52' : '#fff', color: regimeTributario === 'presumido' ? '#fff' : '#5C5A4F', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}
         >
-          Lucro Presumido
+          Presumido
         </button>
         <button 
           onClick={() => setRegimeTributario('real')}
-          style={{ flex: 1, padding: '10px', borderRadius: 8, border: `1px solid ${regimeTributario === 'real' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'real' ? '#1F5C52' : '#fff', color: regimeTributario === 'real' ? '#fff' : '#5C5A4F', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          style={{ padding: '10px 4px', borderRadius: 8, border: `1px solid ${regimeTributario === 'real' ? '#1F5C52' : '#E5E0D5'}`, background: regimeTributario === 'real' ? '#1F5C52' : '#fff', color: regimeTributario === 'real' ? '#fff' : '#5C5A4F', fontSize: 11.5, fontWeight: 600, cursor: 'pointer' }}
         >
           Lucro Real
         </button>
       </div>
+
+      {regimeTributario === 'mei' && (
+        <div style={{ background: '#EAF6EE', border: '1px solid #CFEAD9', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <AlertCircle size={18} color="#1F5C52" style={{ flexShrink: 0, marginTop: 2 }} />
+          <div style={{ fontSize: 11.5, color: '#1F5C52', lineHeight: 1.4 }}>
+            💡 <strong>Regime MEI (Microempreendedor Individual):</strong> O imposto DAS no MEI é um valor fixo mensal (aprox. R$ 70 - R$ 75/mês) e não incide como percentual sobre cada venda. A alíquota variável no preço é <strong>0%</strong> (o valor do DAS fixo deve compor o seu Custo Fixo).
+          </div>
+        </div>
+      )}
 
       {(regimeTributario === 'presumido' || regimeTributario === 'real') && (
         <div style={{ marginBottom: 16 }}>
@@ -534,17 +571,96 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
               </div>
 
               <div>
-                <FieldLabel>Vida Útil Estimada em Horas de Uso</FieldLabel>
-                <div style={{ fontSize: 11, color: '#718096', marginBottom: 4 }}>
-                  Ex: 2.400 horas (considerando 100h de uso/mês durante 24 meses).
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <FieldLabel>Cálculo da Vida Útil</FieldLabel>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button
+                      type="button"
+                      onClick={() => setMaquinaModoCalculo('calculado')}
+                      style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #C05621', background: maquinaModoCalculo === 'calculado' ? '#C05621' : '#fff', color: maquinaModoCalculo === 'calculado' ? '#fff' : '#C05621', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Uso Diário (Simples)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setMaquinaModoCalculo('direto')}
+                      style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #C05621', background: maquinaModoCalculo === 'direto' ? '#C05621' : '#fff', color: maquinaModoCalculo === 'direto' ? '#fff' : '#C05621', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                    >
+                      Direto em Horas
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type="number"
-                  value={maquinaVidaHoras}
-                  onChange={e => setMaquinaVidaHoras(e.target.value)}
-                  placeholder="Ex: 2400"
-                  style={inputStyle}
-                />
+
+                {maquinaModoCalculo === 'calculado' ? (
+                  <div style={{ background: '#FFF8F0', border: '1px solid #FBD38D', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 11.5, fontWeight: 600, color: '#7B341E', marginBottom: 4 }}>1. Quantas horas por dia a máquina é usada?</div>
+                      <input
+                        type="number"
+                        value={maquinaHorasDia}
+                        onChange={e => setMaquinaHorasDia(e.target.value)}
+                        placeholder="Ex: 8"
+                        style={{ ...inputStyle, marginTop: 0 }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: '#7B341E', marginBottom: 4 }}>2. Dias por mês</div>
+                        <input
+                          type="number"
+                          value={maquinaDiasMes}
+                          onChange={e => setMaquinaDiasMes(e.target.value)}
+                          placeholder="Ex: 22"
+                          style={{ ...inputStyle, marginTop: 0 }}
+                        />
+                      </div>
+
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 600, color: '#7B341E', marginBottom: 4 }}>3. Prazo total (meses)</div>
+                        <input
+                          type="number"
+                          value={maquinaMesesVida}
+                          onChange={e => setMaquinaMesesVida(e.target.value)}
+                          placeholder="Ex: 24"
+                          style={{ ...inputStyle, marginTop: 0 }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Presets de meses */}
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 11, color: '#7B341E', fontWeight: 600 }}>Prazos comuns:</span>
+                      {['12', '24', '36', '48', '60'].map(m => (
+                        <button
+                          key={m}
+                          type="button"
+                          onClick={() => setMaquinaMesesVida(m)}
+                          style={{ padding: '3px 8px', borderRadius: 6, border: `1px solid ${maquinaMesesVida === m ? '#C05621' : '#CBD5E0'}`, background: maquinaMesesVida === m ? '#C05621' : '#fff', color: maquinaMesesVida === m ? '#fff' : '#4A5568', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}
+                        >
+                          {m} meses
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ background: '#fff', padding: 10, borderRadius: 8, border: '1px dashed #FBD38D', fontSize: 11.5, color: '#7B341E', lineHeight: 1.4 }}>
+                      🧮 <strong>Cálculo:</strong> {maquinaHorasDiaNum}h/dia × {maquinaDiasMesNum} dias/mês × {maquinaMesesVidaNum} meses = <strong>{maquinaVidaHorasNum.toLocaleString('pt-BR')} horas totais</strong>.
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: 11, color: '#718096', marginBottom: 4 }}>
+                      Informe o total acumulado estimado de horas de uso:
+                    </div>
+                    <input
+                      type="number"
+                      value={maquinaVidaHoras}
+                      onChange={e => setMaquinaVidaHoras(e.target.value)}
+                      placeholder="Ex: 2400"
+                      style={inputStyle}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Result Box */}
@@ -556,17 +672,21 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
                   {formatBRL(custoHoraMaquina)} / hora
                 </div>
                 <div style={{ fontSize: 11, color: '#9FBDB5', lineHeight: 1.4 }}>
-                  Fórmula de Retorno: R$ {formatBRL(maquinaValorNum)} ÷ {maquinaVidaHorasNum}h = <strong>{formatBRL(custoHoraMaquina)}/h</strong> embutidos para quitar o ROI.
+                  Fórmula de Retorno: {formatBRL(maquinaValorNum)} ÷ {maquinaVidaHorasNum.toLocaleString('pt-BR')}h de uso = <strong>{formatBRL(custoHoraMaquina)}/h</strong> embutidos para quitar o ROI.
                 </div>
               </div>
             </div>
 
-            <div style={{ padding: '16px 24px', background: '#fff', borderTop: '1px solid #EFEBE0', display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ padding: '16px 24px', background: '#fff', borderTop: '1px solid #EFEBE0', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
               <button
-                onClick={() => setShowCalculadoraDepreciacao(false)}
+                type="button"
+                onClick={() => {
+                  setCustoProduto(custoHoraMaquina.toFixed(2).replace('.', ','));
+                  setShowCalculadoraDepreciacao(false);
+                }}
                 style={{ padding: '10px 20px', borderRadius: 10, border: 'none', background: '#C05621', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
               >
-                Salvar e Aplicar no Custo
+                Aplicar Custo/Hora no Preço ({formatBRL(custoHoraMaquina)}/h)
               </button>
             </div>
           </div>

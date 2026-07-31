@@ -3,7 +3,7 @@ import { MESES } from '../utils/constants';
 
 export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
   return (
-    <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
+    <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10, borderRadius: '0 0 20px 20px', boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: 11, color: '#9FBDB5' }}>{usuario}</div>

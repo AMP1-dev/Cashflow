@@ -415,6 +415,13 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
                     </div>
                 </div>
 
+                {/* Banner Orientativo de Rendimento */}
+                <div style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', borderRadius: 10, padding: '10px 14px', marginTop: 10, fontSize: 12, color: '#1F5C52', lineHeight: 1.4 }}>
+                    💡 <strong>Como lançar os ingredientes para esta receita?</strong><br />
+                    • <strong>Se Rendimento = {rendimentoPorcoes || '1'} {parseInt(rendimentoPorcoes || 1) > 1 ? 'porções' : 'porção'}:</strong> Informe nos ingredientes a quantidade <u>total consumida para fazer a receita inteira (o lote de {rendimentoPorcoes || '1'} porções)</u>. O sistema divide automaticamente o custo total por {rendimentoPorcoes || '1'} para obter o custo de 1 porção ({formatBRL(calc.custoPorcao)}).<br />
+                    • <strong>Ou se preferir:</strong> Mantenha Rendimento = 1 e informe apenas as quantidades gastas em 1 porção individual.
+                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 8 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Ingredientes {ingredientes.length > 0 && `(${ingredientes.length})`}</span>
                     <button onClick={addIngrediente} style={{ background: 'none', border: '1px dashed #C9C5B6', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#5C5A4F', fontSize: 11.5 }}>

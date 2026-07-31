@@ -38,35 +38,61 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, onNovo, onEditar, o
         </div>
       </div>
 
-      <button onClick={onIrGestaoAVista} style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1px solid #1F5C52', background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#1F5C52', marginBottom: 20 }}>
-        <Presentation size={18} />
-        <span style={{ fontSize: 14, fontWeight: 600 }}>Quadro de Metas & Gestão à Vista</span>
-      </button>
-
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-        <button onClick={() => onNovo('despesa')} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #E5E0D5', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#1C2421' }}>
-          <ArrowDownCircle size={18} color="#B05A2E" />
-          <span style={{ fontSize: 13, fontWeight: 500 }}>Lançar despesa</span>
+      {/* Botões de Ação Principal (Hero Buttons) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        <button 
+          onClick={() => onNovo('receita')} 
+          style={{ padding: '14px 12px', borderRadius: 14, border: '1px solid #CFEAD9', background: '#EAF6EE', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left', boxShadow: '0 2px 8px rgba(31,92,82,0.06)', transition: 'transform 0.1s' }}
+        >
+          <div style={{ background: '#1F5C52', borderRadius: 10, padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+            <ArrowUpCircle size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#1F5C52' }}>Lançar receita</div>
+            <div style={{ fontSize: 11, color: '#5C8A71' }}>Venda / Entrada</div>
+          </div>
         </button>
-        <button onClick={() => onNovo('receita')} style={{ flex: 1, padding: '13px 0', borderRadius: 12, border: '1px solid #E5E0D5', background: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#1C2421' }}>
-          <ArrowUpCircle size={18} color="#1F5C52" />
-          <span style={{ fontSize: 13, fontWeight: 500 }}>Lançar receita</span>
+
+        <button 
+          onClick={() => onNovo('despesa')} 
+          style={{ padding: '14px 12px', borderRadius: 14, border: '1px solid #F7D6C8', background: '#FDF2EE', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', textAlign: 'left', boxShadow: '0 2px 8px rgba(176,90,46,0.06)', transition: 'transform 0.1s' }}
+        >
+          <div style={{ background: '#B05A2E', borderRadius: 10, padding: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
+            <ArrowDownCircle size={22} />
+          </div>
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#B05A2E' }}>Lançar despesa</div>
+            <div style={{ fontSize: 11, color: '#C07D5A' }}>Conta / Saída</div>
+          </div>
         </button>
       </div>
 
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 10 }}>Despesas por categoria</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+      {/* Banner Secundário: Gestão à Vista */}
+      <button 
+        onClick={onIrGestaoAVista} 
+        style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1px solid #B8E0D7', background: '#E6F4F1', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: '#1F5C52', marginBottom: 20, boxShadow: '0 1px 4px rgba(0,0,0,0.02)' }}
+      >
+        <Presentation size={18} />
+        <span style={{ fontSize: 13, fontWeight: 600 }}>Quadro de Metas & Gestão à Vista</span>
+      </button>
+
+      {/* Seção Despesas por Categoria (Grid Limpo 2x2) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F' }}>Despesas por categoria</span>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
         {Object.entries(CATEGORIAS).map(([key, cat]) => {
           const valor = porCategoria[key] || 0;
           const pct = totalDespesa > 0 ? (valor / totalDespesa) * 100 : 0;
           return (
-            <div key={key} style={{ background: '#fff', borderRadius: 10, padding: '10px 12px', border: '1px solid #EFEBE0' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
-                <span style={{ color: cat.color, fontWeight: 600 }}>{cat.short}</span>
-                <span style={{ color: '#5C5A4F' }}>{formatBRL(valor)}</span>
+            <div key={key} style={{ background: '#fff', borderRadius: 12, padding: '12px', border: '1px solid #EFEBE0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ color: cat.color, fontWeight: 600, fontSize: 12.5 }}>{cat.short}</span>
+                <span style={{ fontSize: 10.5, color: '#747266', background: '#F5F2E8', padding: '1px 5px', borderRadius: 5, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
               </div>
-              <div style={{ height: 5, background: '#F0EDE3', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: cat.color, borderRadius: 3 }} />
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1C2421', marginBottom: 6 }}>{formatBRL(valor)}</div>
+              <div style={{ height: 4, background: '#F0EDE3', borderRadius: 2, overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: cat.color, borderRadius: 2 }} />
               </div>
             </div>
           );
