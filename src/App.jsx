@@ -100,14 +100,21 @@ export default function CashFlowApp() {
     }
   }
 
+  function formatDataISO(ano, mesZeroIndex, dia) {
+    const m = String(mesZeroIndex + 1).padStart(2, '0');
+    const d = String(dia).padStart(2, '0');
+    return `${ano}-${m}-${d}`;
+  }
+
   async function carregarLancamentos(empresaId) {
-    const dataInicio = new Date(anoAtual, 0, 1).toISOString().split('T')[0];
-    const dataFim = new Date(anoAtual, 11, 31).toISOString().split('T')[0];
+    const dataInicio = `${anoAtual}-01-01`;
+    const dataFim = `${anoAtual}-12-31`;
 
     const { data } = await supabase
       .from('lancamentos')
       .select('*')
       .eq('empresa_id', empresaId)
+      .is('deletado_em', null)
       .gte('data_lancamento', dataInicio)
       .lte('data_lancamento', dataFim);
 
@@ -154,7 +161,8 @@ export default function CashFlowApp() {
   }, [lancamentosGeral]);
 
   async function addLancamento(novo) {
-    const dataStr = new Date(anoAtual, mesAtual, novo.dia).toISOString().split('T')[0];
+    const mesAlvo = novo.mes !== undefined ? novo.mes : mesAtual;
+    const dataStr = formatDataISO(anoAtual, mesAlvo, novo.dia);
     const { data, error } = await supabase.from('lancamentos').insert({
       empresa_id: empresaAtualObj.id,
       tipo: novo.tipo,
@@ -184,7 +192,8 @@ export default function CashFlowApp() {
   }
 
   async function updateLancamento(id, dados) {
-    const dataStr = new Date(anoAtual, mesAtual, dados.dia).toISOString().split('T')[0];
+    const mesAlvo = dados.mes !== undefined ? dados.mes : mesAtual;
+    const dataStr = formatDataISO(anoAtual, mesAlvo, dados.dia);
     const { error } = await supabase.from('lancamentos').update({
       tipo: dados.tipo,
       descricao: dados.descricao,
@@ -204,8 +213,8 @@ export default function CashFlowApp() {
   }
 
   async function salvarEstoqueMensal(estoqueInicial, estoqueFinal) {
-    const dataInicial = new Date(anoAtual, mesAtual, 1).toISOString().split('T')[0];
-    const dataFinal = new Date(anoAtual, mesAtual, daysInMonth(mesAtual, anoAtual)).toISOString().split('T')[0];
+    const dataInicial = formatDataISO(anoAtual, mesAtual, 1);
+    const dataFinal = formatDataISO(anoAtual, mesAtual, daysInMonth(mesAtual, anoAtual));
 
     const idsParaDeletar = lancamentosEmpresa.filter(l => l.tipo === 'estoque').map(l => l.id);
     if (idsParaDeletar.length > 0) {
@@ -395,6 +404,8 @@ export default function CashFlowApp() {
         <NovoLancamentoModal
           tipoInicial={tipoNovoLancamento}
           diasNoMes={daysInMonth(mesAtual, anoAtual)}
+          mesAtual={mesAtual}
+          anoAtual={anoAtual}
           lancamentoEditando={lancamentoEditando}
           historicoCompleto={lancamentosGeral}
           onClose={fecharModal}

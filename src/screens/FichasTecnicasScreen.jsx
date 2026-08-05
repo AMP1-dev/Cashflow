@@ -109,6 +109,7 @@ export function FichasTecnicasScreen({ empresaId }) {
             .from('fichas_tecnicas')
             .select('*')
             .eq('empresa_id', empresaId)
+            .is('deletado_em', null)
             .order('criado_em', { ascending: false });
 
         if (!error && data) setFichas(data.map(mapearFichaDoBanco));

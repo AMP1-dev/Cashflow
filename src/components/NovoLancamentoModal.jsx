@@ -1,16 +1,18 @@
-import { HelpCircle, Mic } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Mic } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { BANCOS, CATEGORIAS } from '../utils/constants';
-import { construirSugestoesDescricao } from '../utils/formatters';
+import { BANCOS, CATEGORIAS, MESES } from '../utils/constants';
+import { construirSugestoesDescricao, daysInMonth } from '../utils/formatters';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
 import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
 
-export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando, historicoCompleto, onClose, onSave, onUpdate, onDelete }) {
+export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Date().getMonth(), anoAtual = new Date().getFullYear(), lancamentoEditando, historicoCompleto, onClose, onSave, onUpdate, onDelete }) {
   const editando = !!lancamentoEditando;
   const [tipo, setTipo] = useState(editando ? lancamentoEditando.tipo : tipoInicial);
   const [descricao, setDescricao] = useState(editando ? lancamentoEditando.descricao : '');
   const [valor, setValor] = useState(editando ? String(lancamentoEditando.valor).replace('.', ',') : '');
-  const [dia, setDia] = useState(editando ? lancamentoEditando.dia : (new Date().getDate() > diasNoMes ? diasNoMes : new Date().getDate()));
+  const [mes, setMes] = useState(editando ? (lancamentoEditando.mes !== undefined ? lancamentoEditando.mes : mesAtual) : mesAtual);
+  const totalDiasMes = daysInMonth(mes, anoAtual);
+  const [dia, setDia] = useState(editando ? lancamentoEditando.dia : (new Date().getDate() > totalDiasMes ? totalDiasMes : new Date().getDate()));
   const [formaRecebimento, setFormaRecebimento] = useState(
     editando && lancamentoEditando.formaRecebimento === 'À prazo' ? 'aprazo' : 'avista'
   );
@@ -24,6 +26,10 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
   const [sugestaoEscolhidaManualmente, setSugestaoEscolhidaManualmente] = useState(editando);
   const [campoDescricaoFocado, setCampoDescricaoFocado] = useState(false);
   const [escutando, setEscutando] = useState(false);
+
+  const realMesAtual = new Date().getMonth();
+  const realAnoAtual = new Date().getFullYear();
+  const ehMesDiferente = mes !== realMesAtual || anoAtual !== realAnoAtual;
 
   const showMic = localStorage.getItem('amp_beta_voz') === 'true';
 
@@ -84,7 +90,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
 
   function montarDados() {
     return {
-      tipo, descricao: descricao.trim(), valor: valorNum, dia,
+      tipo, descricao: descricao.trim(), valor: valorNum, mes, dia,
       categoria: tipo === 'despesa' ? categoria : null,
       subcategoria: tipo === 'despesa' ? subcategoria : null,
       formaRecebimento: tipo === 'receita' ? (formaRecebimento === 'avista' ? 'À vista/PIX' : 'À prazo') : null,
@@ -115,6 +121,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
               tipo: 'despesa',
               descricao: p.descricao || descricao.trim(),
               valor: p.valor,
+              mes,
               dia,
               categoria: p.categoria,
               subcategoria: p.subcategoria || null,
@@ -134,6 +141,15 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
         <ToggleTipo label="Despesa" active={tipo === 'despesa'} color="#B05A2E" onClick={() => { setTipo('despesa'); }} />
         <ToggleTipo label="Receita" active={tipo === 'receita'} color="#1F5C52" onClick={() => setTipo('receita')} />
       </div>
+
+      {ehMesDiferente && (
+        <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <AlertTriangle size={20} style={{ color: '#E8A33D', flexShrink: 0 }} />
+          <div style={{ fontSize: 12, color: '#8A5D00', lineHeight: 1.35 }}>
+            <strong>Aviso de alteração de histórico:</strong> Você está lançando no mês de <strong>{MESES[mes]}</strong> (o mês atual é <strong>{MESES[realMesAtual]}</strong>). Lançar em outros meses alterará o histórico e relatórios daquele período.
+          </div>
+        </div>
+      )}
 
       <FieldLabel>Descrição</FieldLabel>
       <div style={{ position: 'relative' }}>
@@ -190,10 +206,24 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, lancamentoEditando
         />
       </div>
 
-      <FieldLabel>Dia do lançamento</FieldLabel>
-      <select value={dia} onChange={e => setDia(parseInt(e.target.value))} style={inputStyle}>
-        {Array.from({ length: diasNoMes }, (_, i) => i + 1).map(d => <option key={d} value={d}>Dia {d}</option>)}
-      </select>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ flex: 1 }}>
+          <FieldLabel>Mês do lançamento</FieldLabel>
+          <select value={mes} onChange={e => setMes(parseInt(e.target.value))} style={inputStyle}>
+            {MESES.map((nomeMes, idx) => (
+              <option key={idx} value={idx}>{nomeMes}</option>
+            ))}
+          </select>
+        </div>
+        <div style={{ flex: 1 }}>
+          <FieldLabel>Dia do lançamento</FieldLabel>
+          <select value={dia} onChange={e => setDia(parseInt(e.target.value))} style={inputStyle}>
+            {Array.from({ length: daysInMonth(mes, anoAtual) }, (_, i) => i + 1).map(d => (
+              <option key={d} value={d}>Dia {d}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {tipo === 'receita' && (
         <>
