@@ -1,7 +1,7 @@
-import { AlertTriangle, HelpCircle, Mic } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { BANCOS, CATEGORIAS, MESES } from '../utils/constants';
-import { construirSugestoesDescricao, daysInMonth } from '../utils/formatters';
+import { BANCOS, CATEGORIAS, MESES, SUBCATEGORIAS_SUGERIDAS, PLANO_DE_CONTAS_SUGERIDO } from '../utils/constants';
+import { construirSugestoesDescricao, daysInMonth, formatBRL } from '../utils/formatters';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
 import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
 
@@ -26,12 +26,39 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
   const [sugestaoEscolhidaManualmente, setSugestaoEscolhidaManualmente] = useState(editando);
   const [campoDescricaoFocado, setCampoDescricaoFocado] = useState(false);
   const [escutando, setEscutando] = useState(false);
+  const [mostrarPlanoContas, setMostrarPlanoContas] = useState(false);
+  const [grupoPlanoAberto, setGrupoPlanoAberto] = useState('custos_diretos');
 
   const realMesAtual = new Date().getMonth();
   const realAnoAtual = new Date().getFullYear();
   const ehMesDiferente = mes !== realMesAtual || anoAtual !== realAnoAtual;
 
   const showMic = localStorage.getItem('amp_beta_voz') === 'true';
+
+  const valorNum = parseFloat((valor || '0').replace(',', '.')) || 0;
+
+  // Detector Inteligente de Concentração de Despesas (Item 2)
+  const alertaConcentracao = useMemo(() => {
+    if (tipo !== 'despesa' || valorNum <= 0) return null;
+    const despesasMes = (historicoCompleto || []).filter(l => l.tipo === 'despesa' && l.mes === mes);
+    const mediaDiaria = despesasMes.length > 0 ? (despesasMes.reduce((s, l) => s + l.valor, 0) / (totalDiasMes || 30)) : 0;
+    
+    const despesasJanela = despesasMes.filter(l => l.dia === dia || l.dia === dia - 1 || l.dia === dia + 1)
+      .filter(l => !editando || l.id !== lancamentoEditando?.id)
+      .reduce((s, l) => s + l.valor, 0);
+
+    const totalPeriodo = despesasJanela + valorNum;
+    const dMin = Math.max(1, dia - 1);
+    const dMax = Math.min(totalDiasMes, dia + 1);
+
+    if (totalPeriodo >= 400 && (mediaDiaria === 0 || totalPeriodo >= mediaDiaria * 1.8)) {
+      return {
+        diasStr: dMin === dMax ? `Dia ${dia}` : `Dias ${dMin} a ${dMax}`,
+        total: totalPeriodo,
+      };
+    }
+    return null;
+  }, [tipo, valorNum, mes, dia, historicoCompleto, totalDiasMes, editando, lancamentoEditando]);
 
   function startDictation() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -85,7 +112,6 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
     setCampoDescricaoFocado(false);
   }
 
-  const valorNum = parseFloat((valor || '0').replace(',', '.')) || 0;
   const podeSalvar = descricao.trim().length > 0 && valorNum > 0 && (tipo === 'receita' || categoria);
 
   function montarDados() {
@@ -137,16 +163,16 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
 
   return (
     <ModalShell onClose={onClose} titulo={editando ? 'Editar lançamento' : (tipo === 'despesa' ? 'Nova despesa' : 'Nova receita')}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 18 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
         <ToggleTipo label="Despesa" active={tipo === 'despesa'} color="#B05A2E" onClick={() => { setTipo('despesa'); }} />
         <ToggleTipo label="Receita" active={tipo === 'receita'} color="#1F5C52" onClick={() => setTipo('receita')} />
       </div>
 
       {ehMesDiferente && (
-        <div style={{ marginBottom: 16, padding: '10px 12px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <AlertTriangle size={20} style={{ color: '#E8A33D', flexShrink: 0 }} />
-          <div style={{ fontSize: 12, color: '#8A5D00', lineHeight: 1.35 }}>
-            <strong>Aviso de alteração de histórico:</strong> Você está lançando no mês de <strong>{MESES[mes]}</strong> (o mês atual é <strong>{MESES[realMesAtual]}</strong>). Lançar em outros meses alterará o histórico e relatórios daquele período.
+        <div style={{ marginBottom: 12, padding: '8px 10px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <AlertTriangle size={18} style={{ color: '#E8A33D', flexShrink: 0 }} />
+          <div style={{ fontSize: 11.5, color: '#8A5D00', lineHeight: 1.3 }}>
+            <strong>Aviso de histórico:</strong> Lançando em <strong>{MESES[mes]}</strong> (atual: <strong>{MESES[realMesAtual]}</strong>).
           </div>
         </div>
       )}
@@ -251,21 +277,21 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
             <>
               <button
                 onClick={() => setShowWizard(true)}
-                style={{ width: '100%', textAlign: 'left', padding: '12px 14px', borderRadius: 10, border: `1px solid ${CATEGORIAS[categoria].color}`, background: CATEGORIAS[categoria].bg, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                style={{ width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 9, border: `1px solid ${CATEGORIAS[categoria].color}`, background: CATEGORIAS[categoria].bg, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 600, color: CATEGORIAS[categoria].color }}>{CATEGORIAS[categoria].label}</div>
-                  {subcategoria && <div style={{ fontSize: 12, color: '#5C5A4F', marginTop: 2 }}>{subcategoria}</div>}
+                  <div style={{ fontSize: 13, fontWeight: 600, color: CATEGORIAS[categoria].color }}>{CATEGORIAS[categoria].label}</div>
+                  {subcategoria && <div style={{ fontSize: 11.5, color: '#5C5A4F', marginTop: 1 }}>{subcategoria}</div>}
                 </div>
-                <span style={{ fontSize: 11.5, color: CATEGORIAS[categoria].color, textDecoration: 'underline' }}>refazer perguntas</span>
+                <span style={{ fontSize: 11, color: CATEGORIAS[categoria].color, textDecoration: 'underline' }}>refazer perguntas</span>
               </button>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
                 {Object.entries(CATEGORIAS).map(([key, cat]) => (
                   <button
                     key={key}
                     onClick={() => { setCategoria(key); setSubcategoria(''); }}
                     style={{
-                      padding: '6px 10px', borderRadius: 7, fontSize: 11.5, cursor: 'pointer',
+                      padding: '5px 9px', borderRadius: 7, fontSize: 11, cursor: 'pointer',
                       border: `1px solid ${key === categoria ? cat.color : '#E5E0D5'}`,
                       background: key === categoria ? cat.bg : '#fff',
                       color: key === categoria ? cat.color : '#9C9A8F',
@@ -276,19 +302,189 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
                   </button>
                 ))}
               </div>
+
+              {/* Sugestões de Subcategorias da Categoria Selecionada */}
+              {SUBCATEGORIAS_SUGERIDAS[categoria] && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ fontSize: 10.5, color: '#9C9A8F', marginBottom: 4 }}>Subcategoria sugerida:</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {SUBCATEGORIAS_SUGERIDAS[categoria].map((subName) => {
+                      const sel = subcategoria === subName;
+                      return (
+                        <button
+                          key={subName}
+                          type="button"
+                          onClick={() => setSubcategoria(sel ? '' : subName)}
+                          style={{
+                            padding: '3px 7px', borderRadius: 6, fontSize: 10.5, cursor: 'pointer',
+                            border: `1px solid ${sel ? CATEGORIAS[categoria].color : '#E5E0D5'}`,
+                            background: sel ? CATEGORIAS[categoria].bg : '#fff',
+                            color: sel ? CATEGORIAS[categoria].color : '#5C5A4F',
+                            fontWeight: sel ? 600 : 400
+                          }}
+                        >
+                          {subName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Nota Informativa sobre Mão de Obra Extra (Item 1) */}
+              {subcategoria && (subcategoria.toLowerCase().includes('mão de obra') || subcategoria.toLowerCase().includes('diária') || subcategoria.toLowerCase().includes('diaria') || subcategoria.toLowerCase().includes('freelancer')) && (
+                <div style={{ marginTop: 8, padding: '7px 9px', borderRadius: 8, background: '#EAF4F1', border: '1px solid #1F5C52', fontSize: 11, color: '#1F5C52', lineHeight: 1.3 }}>
+                  💡 <strong>Nota:</strong> Lançamento de diária/freelancer extra de produção. Contabilizado como <strong>despesa variável</strong>, sem distorcer o CMV de alimentos/insumos da DRE.
+                </div>
+              )}
             </>
           ) : (
             <button
+              type="button"
               onClick={() => setShowWizard(true)}
-              style={{ width: '100%', padding: '13px 14px', borderRadius: 10, border: '1px dashed #C9A063', background: '#FBF3E5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, color: '#8A6D1A', fontSize: 13.5, fontWeight: 500 }}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1px dashed #C9A063', background: '#FBF3E5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, color: '#8A6D1A', fontSize: 12.5, fontWeight: 600 }}
             >
-              <HelpCircle size={16} />
-              Não sei classificar — me ajude
+              <HelpCircle size={15} />
+              Não sei classificar — me ajude com perguntas
             </button>
           )}
 
+          {/* Gaveta Colapsável: Classificação pronta (Custos ou Despesas) em tom azul pastel */}
+          <div style={{ marginTop: 8, border: '1px solid #BEE3ED', borderRadius: 9, overflow: 'hidden', background: '#F2FAFC' }}>
+            <button
+              type="button"
+              onClick={() => setMostrarPlanoContas(prev => !prev)}
+              style={{
+                width: '100%',
+                padding: '8px 11px',
+                background: mostrarPlanoContas ? '#E2F3F8' : '#F2FAFC',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                color: '#165266',
+                fontSize: 11.5,
+                fontWeight: 600,
+                transition: 'background 0.2s',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <BookOpen size={14} style={{ color: '#1B6A82' }} />
+                <span>Classificação pronta (Custos ou Despesas)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ fontSize: 10, color: '#1B6A82', fontWeight: 600, background: '#D9EFF5', padding: '1px 6px', borderRadius: 4 }}>
+                  {mostrarPlanoContas ? 'Ocultar' : 'Ver opções'}
+                </span>
+                {mostrarPlanoContas ? <ChevronUp size={13} color="#1B6A82" /> : <ChevronDown size={13} color="#1B6A82" />}
+              </div>
+            </button>
+
+            {mostrarPlanoContas && (
+              <div style={{ padding: 12, borderTop: '1px solid #E5E0D5', background: '#fff' }}>
+                <div style={{ fontSize: 11, color: '#8C897E', marginBottom: 10, lineHeight: 1.4 }}>
+                  Toque em qualquer item abaixo para aplicar a classificação correta e preencher a descrição automaticamente:
+                </div>
+
+                {/* Pílulas/Abas dos Grupos do Plano de Contas */}
+                <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 6, marginBottom: 10 }}>
+                  {PLANO_DE_CONTAS_SUGERIDO.map(grupo => {
+                    const ativo = grupoPlanoAberto === grupo.id;
+                    return (
+                      <button
+                        key={grupo.id}
+                        type="button"
+                        onClick={() => setGrupoPlanoAberto(grupo.id)}
+                        style={{
+                          padding: '5px 9px',
+                          borderRadius: 7,
+                          fontSize: 11,
+                          fontWeight: ativo ? 700 : 500,
+                          whiteSpace: 'nowrap',
+                          border: `1px solid ${ativo ? grupo.badgeColor : '#E5E0D5'}`,
+                          background: ativo ? grupo.badgeBg : '#F5F3ED',
+                          color: ativo ? grupo.badgeColor : '#6B685D',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {grupo.grupo.split(' (')[0]}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Itens do Grupo Selecionado */}
+                {(() => {
+                  const grupoSel = PLANO_DE_CONTAS_SUGERIDO.find(g => g.id === grupoPlanoAberto) || PLANO_DE_CONTAS_SUGERIDO[0];
+                  return (
+                    <div style={{ background: '#FAF8F3', border: `1px solid ${grupoSel.badgeColor}33`, borderRadius: 8, padding: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <strong style={{ fontSize: 11.5, color: '#2B2A24' }}>{grupoSel.grupo}</strong>
+                        <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 5, background: grupoSel.badgeBg, color: grupoSel.badgeColor }}>
+                          {grupoSel.tipoLabel}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 10.5, color: '#7C796E', margin: '0 0 8px 0', lineHeight: 1.3 }}>
+                        {grupoSel.descricao}
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                        {grupoSel.itens.map(item => {
+                          const selecionado = categoria === grupoSel.categoria && (subcategoria === item.sub || subcategoria === item.nome);
+                          return (
+                            <button
+                              key={item.nome}
+                              type="button"
+                              onClick={() => {
+                                if (!descricao.trim()) {
+                                  setDescricao(item.nome);
+                                }
+                                setCategoria(grupoSel.categoria);
+                                setSubcategoria(item.sub || item.nome);
+                                setSugestaoEscolhidaManualmente(true);
+                              }}
+                              style={{
+                                padding: '5px 8px',
+                                borderRadius: 6,
+                                fontSize: 11,
+                                cursor: 'pointer',
+                                border: `1px solid ${selecionado ? grupoSel.badgeColor : '#DDD8CE'}`,
+                                background: selecionado ? grupoSel.badgeBg : '#fff',
+                                color: selecionado ? grupoSel.badgeColor : '#3A3831',
+                                fontWeight: selecionado ? 700 : 400,
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                transition: 'all 0.15s',
+                              }}
+                            >
+                              {selecionado && <Check size={11} color={grupoSel.badgeColor} />}
+                              <span>{item.nome}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+
           {categoria && (
             <>
+              <FieldLabel>Meio de pagamento / Como pagou (opcional)</FieldLabel>
+              <select value={meioPagamento} onChange={e => setMeioPagamento(e.target.value)} style={inputStyle}>
+                <option value="">Selecionar meio de pagamento...</option>
+                <option value="PIX">PIX</option>
+                <option value="Débito em conta">Débito em conta</option>
+                <option value="Boleto">Boleto / Fatura</option>
+                <option value="Dinheiro">Dinheiro</option>
+                <option value="Cartão">Cartão</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Transferência">Transferência</option>
+              </select>
+
               <FieldLabel>Banco / Conta (opcional)</FieldLabel>
               <select value={banco} onChange={e => setBanco(e.target.value)} style={inputStyle}>
                 <option value="">Selecionar banco...</option>
@@ -299,25 +495,20 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
         </>
       )}
 
-      {categoria && (
-        <>
-          <FieldLabel>Meio de pagamento / Como pagou (opcional)</FieldLabel>
-          <select value={meioPagamento} onChange={e => setMeioPagamento(e.target.value)} style={inputStyle}>
-            <option value="">Selecionar meio de pagamento...</option>
-            <option value="PIX">PIX</option>
-            <option value="Boleto">Boleto / Fatura</option>
-            <option value="Dinheiro">Dinheiro</option>
-            <option value="Cheque">Cheque</option>
-            <option value="Cartão">Cartão</option>
-            <option value="Transferência">Transferência</option>
-          </select>
-        </>
+      {/* Alerta Preventivo de Concentração de Despesas (Item 2) */}
+      {alertaConcentracao && (
+        <div style={{ marginTop: 16, padding: '10px 12px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <AlertTriangle size={18} style={{ color: '#E8A33D', flexShrink: 0, marginTop: 2 }} />
+          <div style={{ fontSize: 11.5, color: '#8A5D00', lineHeight: 1.4 }}>
+            <strong>Alerta de Concentração:</strong> Os <strong>{alertaConcentracao.diasStr}</strong> já acumulam <strong>{formatBRL(alertaConcentracao.total)}</strong> em saídas previstas. Avalie negociar este vencimento para aliviar a pressão no caixa desse período.
+          </div>
+        </div>
       )}
 
       <button
         onClick={handleSalvar}
         disabled={!podeSalvar}
-        style={{ width: '100%', marginTop: 22, padding: '14px', borderRadius: 10, border: 'none', background: podeSalvar ? '#0F2B27' : '#E5E0D5', color: podeSalvar ? '#FAF8F3' : '#9C9A8F', fontSize: 15, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed' }}
+        style={{ width: '100%', marginTop: 20, padding: '14px', borderRadius: 10, border: 'none', background: podeSalvar ? '#0F2B27' : '#E5E0D5', color: podeSalvar ? '#FAF8F3' : '#9C9A8F', fontSize: 15, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed' }}
       >
         {editando ? 'Salvar alterações' : 'Salvar lançamento'}
       </button>

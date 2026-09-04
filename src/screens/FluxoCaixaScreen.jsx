@@ -40,6 +40,23 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
     return { tendenciaPct, pctDiasAtivos, mediaReceitaDia, mediaDespesaDia, diasAtivos: diasComMovimento.length };
   }, [porDia, dias]);
 
+  const diasConcentracao = useMemo(() => {
+    const mapa = {};
+    const totalDespesasMes = lancamentos.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
+    const mediaDiaria = dias > 0 ? (totalDespesasMes / dias) : 0;
+    
+    for (let d = 1; d <= dias; d++) {
+      const somaJanela = (porDia[d-1]?.despesa || 0) + (porDia[d]?.despesa || 0) + (porDia[d+1]?.despesa || 0);
+      if (somaJanela >= 500 && (mediaDiaria === 0 || somaJanela >= mediaDiaria * 1.8)) {
+        mapa[d] = {
+          totalJanela: somaJanela,
+          diasStr: d === 1 ? `1 e 2` : (d === dias ? `${d-1} e ${d}` : `${d-1}, ${d} e ${d+1}`)
+        };
+      }
+    }
+    return mapa;
+  }, [lancamentos, porDia, dias]);
+
   const temDadosFluxo = indicadores.diasAtivos > 0;
 
   return (
@@ -61,6 +78,7 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
           const temMovimento = info.receita > 0 || info.despesa > 0;
           const selecionado = diaSelecionado === dia;
           const positivo = saldoDia >= 0;
+          const ehConcentrado = !!diasConcentracao[dia];
 
           return (
             <button
@@ -70,11 +88,16 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
                 aspectRatio: '1', borderRadius: 9, padding: '5px 4px 4px', textAlign: 'left',
                 display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
                 cursor: 'pointer', position: 'relative',
-                border: selecionado ? '1.5px solid #0F2B27' : '1px solid #EFEBE0',
+                border: selecionado ? '1.5px solid #0F2B27' : (ehConcentrado ? '1.5px solid #E8A33D' : '1px solid #EFEBE0'),
                 background: temMovimento ? (positivo ? '#EAF4F1' : '#FBEFE8') : '#fff',
               }}
             >
-              <span style={{ fontSize: 10.5, fontWeight: 600, color: temMovimento ? '#1C2421' : '#C9C5B6' }}>{dia}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span style={{ fontSize: 10.5, fontWeight: 600, color: temMovimento ? '#1C2421' : '#C9C5B6' }}>{dia}</span>
+                {ehConcentrado && (
+                  <span title="Pico de concentração de despesas neste período" style={{ fontSize: 9, color: '#E8A33D', fontWeight: 800 }}>⚠️</span>
+                )}
+              </div>
               {temMovimento && (
                 <span style={{ fontSize: 11, fontWeight: 700, color: positivo ? '#1F5C52' : '#B05A2E', lineHeight: 1.1, wordBreak: 'break-word' }}>
                   {positivo ? '+' : '-'}{formatCompacto(Math.abs(saldoDia))}
@@ -85,9 +108,10 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
         })}
       </div>
 
-      <div style={{ display: 'flex', gap: 14, fontSize: 11, color: '#9C9A8F', marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 14, fontSize: 11, color: '#9C9A8F', marginBottom: 16, flexWrap: 'wrap' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 3, background: '#EAF4F1', border: '1px solid #1F5C52', display: 'inline-block' }} /> saldo positivo</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 3, background: '#FBEFE8', border: '1px solid #B05A2E', display: 'inline-block' }} /> saldo negativo</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ color: '#E8A33D', fontSize: 11, fontWeight: 700 }}>⚠️</span> pico de concentração</span>
       </div>
 
       {!diaSelecionado && (
@@ -135,6 +159,15 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
               {infoSelecionado.despesa > 0 && <span style={{ color: '#B05A2E' }}>-{formatBRL(infoSelecionado.despesa)}</span>}
             </div>
           </div>
+
+          {diasConcentracao[diaSelecionado] && (
+            <div style={{ marginBottom: 12, padding: '8px 12px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 14 }}>⚠️</span>
+              <div style={{ fontSize: 11.5, color: '#8A5D00', lineHeight: 1.35 }}>
+                <strong>Pico de Concentração:</strong> Os dias <strong>{diasConcentracao[diaSelecionado].diasStr}</strong> concentram <strong>{formatBRL(diasConcentracao[diaSelecionado].totalJanela)}</strong> em saídas previstas.
+              </div>
+            </div>
+          )}
           {infoSelecionado.itens.length === 0 ? (
             <div style={{ fontSize: 12.5, color: '#9C9A8F', textAlign: 'center', padding: '10px 0' }}>Sem movimento neste dia.</div>
           ) : (

@@ -88,6 +88,15 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     const fixas     = despesasFix.reduce((s, l) => s + l.valor, 0);
     const financeiras = despesasFin.reduce((s, l) => s + l.valor, 0);
 
+    // Mão de Obra Extra (Diárias / Freelancers) e Mão de Obra Fixa
+    const despesasMaoDeObraExtra = despesasVar.filter(l => (l.subcategoria && (l.subcategoria.toLowerCase().includes('mão de obra') || l.subcategoria.toLowerCase().includes('diária') || l.subcategoria.toLowerCase().includes('diaria') || l.subcategoria.toLowerCase().includes('freelancer'))) || (l.descricao && (l.descricao.toLowerCase().includes('diária') || l.descricao.toLowerCase().includes('diaria') || l.descricao.toLowerCase().includes('freelancer'))));
+    const maoDeObraExtraTotal = despesasMaoDeObraExtra.reduce((s, l) => s + l.valor, 0);
+
+    const despesasMaoDeObraFixa = despesasFix.filter(l => (l.subcategoria && (l.subcategoria.toLowerCase().includes('salário') || l.subcategoria.toLowerCase().includes('salario') || l.subcategoria.toLowerCase().includes('folha') || l.subcategoria.toLowerCase().includes('pró-labore') || l.subcategoria.toLowerCase().includes('pro-labore'))) || (l.descricao && (l.descricao.toLowerCase().includes('salário') || l.descricao.toLowerCase().includes('salario') || l.descricao.toLowerCase().includes('pró-labore') || l.descricao.toLowerCase().includes('pro-labore'))));
+    const maoDeObraFixaTotal = despesasMaoDeObraFixa.reduce((s, l) => s + l.valor, 0);
+    const maoDeObraTotal = maoDeObraExtraTotal + maoDeObraFixaTotal;
+    const custoPrimario = cmv + maoDeObraTotal;
+
     const resultadoComVendas  = faturamento - cmv;
     const margemContribuicao  = resultadoComVendas - variaveis;
     const resultadoOperacional = margemContribuicao - fixas;
@@ -100,6 +109,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
       faturamento, cmv, cmvCompras, modoCmv, variaveis, fixas, financeiras,
       resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoLiquido,
       pontoEquilibrio, pontoEquilibrioFinanceiro, pctMC,
+      maoDeObraExtraTotal, maoDeObraFixaTotal, maoDeObraTotal, custoPrimario,
       itensReceitas: receitas, itensCmv: despesasCmv,
       itensVariaveis: despesasVar, itensFixas: despesasFix, itensFinanceiras: despesasFin,
       estoqueInicial, estoqueFinal, temEstoque,
@@ -242,6 +252,42 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
             </div>
           )}
 
+          {/* Card de Custo Primário (Insumos + Mão de Obra - Item 1) */}
+          {(calc.cmv > 0 || calc.maoDeObraTotal > 0) && (
+            <div style={{ background: '#F0F4F8', border: '1px solid #C8D8E6', borderRadius: 12, padding: '12px 14px', fontSize: 12, color: '#1E3A5F', lineHeight: 1.5 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <strong>Custo Primário (Insumos + Mão de Obra)</strong>
+                {fat > 0 && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                    background: pct(calc.custoPrimario) <= 58 ? '#D9EBE6' : (pct(calc.custoPrimario) <= 65 ? '#F3EAC9' : '#F5E4D8'),
+                    color: pct(calc.custoPrimario) <= 58 ? '#1F5C52' : (pct(calc.custoPrimario) <= 65 ? '#8A6D1A' : '#B05A2E')
+                  }}>
+                    {pct(calc.custoPrimario) <= 58 ? '🟢 Saudável (< 58%)' : (pct(calc.custoPrimario) <= 65 ? '🟡 Atenção (58-65%)' : '🔴 Alto (> 65%)')}
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5 }}>
+                <span>Insumos & Mercadorias (CMV):</span>
+                <span><strong>{formatBRL(calc.cmv)}</strong> ({pct(calc.cmv).toFixed(1)}%)</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11.5, marginTop: 2 }}>
+                <span>Mão de Obra Total (Fixa + Extras):</span>
+                <span><strong>{formatBRL(calc.maoDeObraTotal)}</strong> ({pct(calc.maoDeObraTotal).toFixed(1)}%)</span>
+              </div>
+              {calc.maoDeObraExtraTotal > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: '#5B7A9C', paddingLeft: 8 }}>
+                  <span>↳ Diárias / Mão de Obra Extra:</span>
+                  <span>{formatBRL(calc.maoDeObraExtraTotal)} ({pct(calc.maoDeObraExtraTotal).toFixed(1)}%)</span>
+                </div>
+              )}
+              <div style={{ borderTop: '1px solid #B8CCE0', marginTop: 6, paddingTop: 6, display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: '#0F2B48' }}>
+                <span>Custo Primário Total:</span>
+                <span>{formatBRL(calc.custoPrimario)} {fat > 0 && `(${pct(calc.custoPrimario).toFixed(1)}%)`}</span>
+              </div>
+            </div>
+          )}
+
           <DRELine label="Faturamento" valor={calc.faturamento} pct={pct(calc.faturamento)} destaque itens={calc.itensReceitas} aberto={linhaAberta === 'faturamento'} onToggle={() => toggleLinha('faturamento')} fat={fat} />
           <DRELine label="(–) CMV" valor={-calc.cmv} pct={pct(-calc.cmv)} itens={calc.itensCmv} aberto={linhaAberta === 'cmv'} onToggle={() => toggleLinha('cmv')} fat={fat} negativo />
           <DRELine label="Resultado com vendas" valor={calc.resultadoComVendas} pct={pct(calc.resultadoComVendas)} sub />
@@ -250,7 +296,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
           <DRELine label="(–) Despesas fixas" valor={-calc.fixas} pct={pct(-calc.fixas)} itens={calc.itensFixas} aberto={linhaAberta === 'fixa'} onToggle={() => toggleLinha('fixa')} fat={fat} negativo />
           <DRELine label="Resultado operacional" valor={calc.resultadoOperacional} pct={pct(calc.resultadoOperacional)} sub />
           <DRELine label="(–) Despesas financeiras" valor={-calc.financeiras} pct={pct(-calc.financeiras)} itens={calc.itensFinanceiras} aberto={linhaAberta === 'financeira'} onToggle={() => toggleLinha('financeira')} fat={fat} negativo />
-          <DRELine label="Resultado líquido do mês" valor={calc.resultadoLiquido} pct={pct(calc.resultadoLiquido)} sub destaque />
+          <DRELine label={calc.resultadoLiquido < 0 ? "Prejuízo líquido do mês" : "Lucro líquido do mês"} valor={calc.resultadoLiquido} pct={pct(calc.resultadoLiquido)} sub destaque resultadoFinal />
 
           {/* Ponto de equilíbrio */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #EFEBE0', marginTop: 4 }}>
@@ -271,6 +317,20 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
                   </div>
                 </>
               )}
+
+              {/* Alerta de Descompasso com o Ponto de Equilíbrio */}
+              {(() => {
+                const peAlvo = calc.financeiras > 0 ? calc.pontoEquilibrioFinanceiro : calc.pontoEquilibrio;
+                if (peAlvo > 0 && calc.faturamento < peAlvo) {
+                  const falta = peAlvo - calc.faturamento;
+                  return (
+                    <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 12px', marginTop: 4, fontSize: 11.5, color: '#991B1B', lineHeight: 1.45 }}>
+                      ⚠️ <strong>Abaixo do Ponto de Equilíbrio:</strong> Faltam <strong>{formatBRL(falta)}</strong> em vendas para a operação cobrir os custos e sair do prejuízo no mês.
+                    </div>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
 
@@ -310,9 +370,14 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
             <p style={{ fontSize: 13, color: '#5C5A4F', marginBottom: 6, lineHeight: 1.5 }}>
               Informe o percentual médio que o custo de mercadoria representa no seu faturamento. Esse valor é salvo para este mês.
             </p>
-            <div style={{ background: '#F0EDE3', borderRadius: 10, padding: '8px 12px', marginBottom: 16, fontSize: 12, color: '#7A7868', lineHeight: 1.5 }}>
+            <div style={{ background: '#F0EDE3', borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#7A7868', lineHeight: 1.5 }}>
               Referências: Alimentação 28–40% · Varejo 45–65% · Fabricação 35–50% · Serviços 10–25%
             </div>
+            {calc.cmvCompras > 0 && (
+              <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 10, padding: '10px 12px', marginBottom: 16, fontSize: 12, color: '#92400E', lineHeight: 1.4 }}>
+                ⚠️ <strong>Atenção:</strong> Você já possui <strong>{formatBRL(calc.cmvCompras)}</strong> em compras lançadas como CMV neste mês. Ao definir um percentual médio estimado (ex: 35%), o sistema passará a usar a estimativa para calcular o CMV na DRE e nas Metas, substituindo os lançamentos reais de compras para fins de cálculo de margem.
+              </div>
+            )}
             <div style={{ marginBottom: 20 }}>
               <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#5C5A4F', marginBottom: 4 }}>% do Custo de Mercadoria</label>
               <div style={{ position: 'relative' }}>

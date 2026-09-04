@@ -53,10 +53,14 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
           </button>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 24 }}>
+        <div style={{ textAlign: 'center', marginTop: 20 }}>
           <button onClick={onIrParaAdmin} style={{ background: 'none', border: 'none', color: '#4A655E', fontSize: 11.5, cursor: 'pointer' }}>
             Acesso administrativo
           </button>
+        </div>
+
+        <div style={{ textAlign: 'center', marginTop: 28, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+          AMP Flow • Versão 2.5
         </div>
 
       </div>
@@ -139,6 +143,9 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
         <div style={{ textAlign: 'center', fontSize: 11, color: '#4A655E', marginTop: 14 }}>
           * campos obrigatórios. Sua conta começa em período de teste.
         </div>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+          AMP Flow • Versão 2.5
+        </div>
       </div>
     </div>
   );
@@ -147,6 +154,24 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
 export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
   const [email, setEmail] = useState('');
   const [enviado, setEnviado] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [erro, setErro] = useState('');
+
+  async function handleEnviar() {
+    if (!email.trim() || !email.includes('@')) {
+      setErro('Informe um e-mail válido cadastrado na sua conta.');
+      return;
+    }
+    setLoading(true);
+    setErro('');
+    const res = await onEnviar(email.trim());
+    setLoading(false);
+    if (res && !res.ok) {
+      setErro(res.erro || 'Erro ao enviar e-mail de recuperação.');
+    } else {
+      setEnviado(true);
+    }
+  }
 
   return (
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -164,65 +189,121 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
           {!enviado ? (
             <>
               <AuthLabel>E-mail cadastrado</AuthLabel>
-              <AuthInput value={email} onChange={setEmail} placeholder="seu@email.com" inputMode="email" type="email" autoCapitalize="none" last />
+              <AuthInput
+                value={email}
+                onChange={(v) => { setEmail(v); setErro(''); }}
+                placeholder="seu@email.com"
+                inputMode="email"
+                type="email"
+                autoCapitalize="none"
+                onKeyDown={(e) => e.key === 'Enter' && handleEnviar()}
+                last
+              />
+
+              {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
+
               <button
-                onClick={() => email.includes('@') && setEnviado(true)}
-                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}
+                onClick={handleEnviar}
+                disabled={loading}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}
               >
-                Enviar link de recuperação
+                {loading ? 'Enviando e-mail...' : 'Enviar link de recuperação'}
               </button>
             </>
           ) : (
             <div style={{ textAlign: 'center' }}>
-              <Check size={28} color="#9FE0C8" style={{ marginBottom: 10 }} />
-              <div style={{ fontSize: 14, color: '#FAF8F3', marginBottom: 6 }}>Recuperação enviada</div>
-              <div style={{ fontSize: 12.5, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 18 }}>
-                Se o e-mail <strong style={{ color: '#FAF8F3' }}>{email}</strong> estiver cadastrado, você receberá um link seguro para redefinir sua senha.
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#1F5C52', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <Check size={24} color="#9FE0C8" />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#FAF8F3', marginBottom: 8 }}>E-mail enviado com sucesso!</div>
+              <div style={{ fontSize: 12.5, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 20 }}>
+                Enviamos um link de redefinição para <strong style={{ color: '#FAF8F3' }}>{email}</strong>. Verifique sua caixa de entrada e spam.
               </div>
               <button
-                onClick={() => onEnviar(email)}
+                onClick={onVoltarLogin}
                 style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
               >
-                Enviar e-mail de recuperação
+                Ir para o Login
               </button>
             </div>
           )}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+          AMP Flow • Versão 2.5
         </div>
       </div>
     </div>
   );
 }
 
-export function RedefinirSenhaScreen({ email, onRedefinir }) {
+export function RedefinirSenhaScreen({ onRedefinir, onVoltarLogin }) {
   const [novaSenha, setNovaSenha] = useState('');
   const [confirmar, setConfirmar] = useState('');
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sucesso, setSucesso] = useState(false);
 
   async function handleRedefinir() {
-    if (!novaSenha || novaSenha.length < 6) { setErro('A senha precisa ter ao menos 6 caracteres.'); return; }
-    if (novaSenha !== confirmar) { setErro('As senhas não coincidem.'); return; }
-    await onRedefinir(novaSenha);
+    if (!novaSenha || novaSenha.length < 6) { setErro('A nova senha precisa ter ao menos 6 caracteres.'); return; }
+    if (novaSenha !== confirmar) { setErro('As senhas digitadas não coincidem.'); return; }
+    setLoading(true);
+    setErro('');
+    const res = await onRedefinir(novaSenha);
+    setLoading(false);
+    if (res && !res.ok) {
+      setErro(res.erro || 'Erro ao redefinir a senha.');
+    } else {
+      setSucesso(true);
+    }
   }
 
   return (
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Nova senha</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Defina uma nova senha para sua conta</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Redefinir senha</div>
+          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Crie uma nova senha segura para sua conta</div>
         </div>
 
         <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
-          <AuthLabel>Nova senha</AuthLabel>
-          <AuthInput value={novaSenha} onChange={setNovaSenha} placeholder="Mínimo 6 caracteres" type="password" />
-          <AuthLabel>Confirme a nova senha</AuthLabel>
-          <AuthInput value={confirmar} onChange={setConfirmar} placeholder="Repita a senha" type="password" last />
+          {!sucesso ? (
+            <>
+              <AuthLabel>Nova senha</AuthLabel>
+              <AuthInput value={novaSenha} onChange={(v) => { setNovaSenha(v); setErro(''); }} placeholder="Mínimo 6 caracteres" type="password" />
+              
+              <AuthLabel>Confirme a nova senha</AuthLabel>
+              <AuthInput value={confirmar} onChange={(v) => { setConfirmar(v); setErro(''); }} placeholder="Repita a nova senha" type="password" onKeyDown={(e) => e.key === 'Enter' && handleRedefinir()} last />
 
-          {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
+              {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
 
-          <button onClick={handleRedefinir} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
-            Salvar nova senha
-          </button>
+              <button
+                onClick={handleRedefinir}
+                disabled={loading}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}
+              >
+                {loading ? 'Salvando nova senha...' : 'Salvar nova senha'}
+              </button>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#1F5C52', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <Check size={24} color="#9FE0C8" />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#FAF8F3', marginBottom: 8 }}>Senha alterada!</div>
+              <div style={{ fontSize: 12.5, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 20 }}>
+                Sua senha foi redefinida com sucesso. Você já pode acessar a plataforma com sua nova credencial.
+              </div>
+              <button
+                onClick={onVoltarLogin}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+              >
+                Acessar minha conta
+              </button>
+            </div>
+          )}
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+          AMP Flow • Versão 2.5
         </div>
       </div>
     </div>

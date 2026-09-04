@@ -1,420 +1,123 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from './lib/supabase';
-import { ADMIN_CREDENCIAIS } from './utils/constants';
-import { daysInMonth, somenteDigitos } from './utils/formatters';
+import React, { useState, useEffect } from 'react';
+import RadioApp from './RadioApp';
+import { AmpProvider, useAmp } from './context/AmpContext';
+import { AmpNavbar } from './components/amp/AmpNavbar';
+import { AmpHero } from './components/amp/AmpHero';
+import { AmpFullStackSection } from './components/amp/AmpFullStackSection';
+import { AmpEcosystemSection } from './components/amp/AmpEcosystemSection';
+import { AmpSolutionsAndCasesSection } from './components/amp/AmpSolutionsAndCasesSection';
+import { AmpLeadershipUptimeSection } from './components/amp/AmpLeadershipUptimeSection';
+import { AmpDiagnosticSection } from './components/amp/AmpDiagnosticSection';
+import { AmpClientPortalSection } from './components/amp/AmpClientPortalSection';
+import { AmpFooter } from './components/amp/AmpFooter';
+import { AmpModals } from './components/amp/AmpModals';
+import { AmpRadioBar } from './components/amp/AmpRadioBar';
+import { AmpAdminPanel } from './components/amp/AmpAdminPanel';
 
-import { BottomNav, TopBar } from './components/Navigation';
-import { NovoLancamentoModal } from './components/NovoLancamentoModal';
-import { AvisoRegimeCaixaModal } from './components/AvisoRegimeCaixaModal';
+function MainPortal() {
+  const { currentView, toast, themeMode } = useAmp();
+  const isDark = themeMode === 'dark';
 
-import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
-import { AnualScreen } from './screens/AnualScreen';
-import { AssinaturaScreen, LoginScreen, RecuperarSenhaScreen, RedefinirSenhaScreen } from './screens/AuthScreens';
-import { Dashboard } from './screens/DashboardScreen';
-import { DiagnosticoScreen } from './screens/DiagnosticoScreen';
-import { DREScreen } from './screens/DREScreen';
-import { FichasTecnicasScreen } from './screens/FichasTecnicasScreen';
-import { FluxoCaixa } from './screens/FluxoCaixaScreen';
-import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
-import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
-
-export default function CashFlowApp() {
-  const [sessao, setSessao] = useState(null);
-  const [empresaAtualObj, setEmpresaAtualObj] = useState(null);
-  const [telaAuth, setTelaAuth] = useState('login');
-  const [emailRecuperacao, setEmailRecuperacao] = useState('');
-
-  const isNovoCadastroRef = useRef(false);
-
-  const [tela, setTela] = useState('dashboard');
-  const [mesAtual, setMesAtual] = useState(new Date().getMonth());
-  const [anoAtual] = useState(new Date().getFullYear());
-
-  const [lancamentosGeral, setLancamentosGeral] = useState([]);
-  const [showLancamentoModal, setShowLancamentoModal] = useState(false);
-  const [tipoNovoLancamento, setTipoNovoLancamento] = useState('despesa');
-  const [lancamentoEditando, setLancamentoEditando] = useState(null);
-  const [showAvisoModal, setShowAvisoModal] = useState(false);
-
-  // Admin state
-  const [assinantesAdmin, setAssinantesAdmin] = useState([]);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session && !window.location.hash.includes('type=recovery')) {
-        carregarDadosIniciais(session.user.id);
-      }
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (_event === 'PASSWORD_RECOVERY') {
-        setSessao(null); // Força a ficar na tela de auth
-        setTelaAuth('redefinir');
-      } else if (session && !window.location.hash.includes('type=recovery')) {
-        carregarDadosIniciais(session.user.id);
-      } else if (!session) {
-        setSessao(null); setEmpresaAtualObj(null); setLancamentosGeral([]);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (sessao?.tipo === 'cliente' && empresaAtualObj) {
-      carregarLancamentos(empresaAtualObj.id);
-    }
-  }, [sessao, empresaAtualObj, mesAtual, anoAtual]);
-
-  async function carregarDadosIniciais(userId) {
-    // Para ganhar tempo, fazemos as duas buscas (perfil e empresas) ao mesmo tempo!
-    const [reqProfile, reqVinculadas] = await Promise.all([
-      supabase.from('profiles').select('eh_admin, nome, cpf').eq('id', userId).single(),
-      supabase.from('empresa_usuarios').select('empresa_id, empresas (*)').eq('usuario_id', userId)
-    ]);
-
-    const profile = reqProfile.data;
-
-    if (profile?.eh_admin) {
-      setSessao({ tipo: 'admin' });
-      carregarPainelAdmin();
-      return;
-    }
-
-    const vinculadas = reqVinculadas.data;
-
-    if (vinculadas && vinculadas.length > 0) {
-      const empresa = vinculadas[0].empresas;
-      setSessao({ tipo: 'cliente', empresaId: empresa.id });
-      // Injetamos o nome do profile na empresa pra TopBar usar
-      setEmpresaAtualObj({ ...empresa, nome: profile?.nome });
-
-      if (!localStorage.getItem('avisoRegimeCaixaVisto')) {
-        setShowAvisoModal(true);
-      }
-
-      if (isNovoCadastroRef.current) {
-        isNovoCadastroRef.current = false;
-        setTela('diagnostico');
-      }
-    }
+  if (currentView === 'admin') {
+    return (
+      <div className={`min-h-screen font-sans antialiased ${
+        isDark ? 'bg-[#0B0F19] text-slate-100' : 'bg-slate-50 text-slate-900'
+      }`}>
+        <AmpAdminPanel />
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-50 animate-fadeIn">
+            <div className={`px-5 py-3 rounded-xl shadow-lg border text-xs font-normal ${
+              toast.type === 'error' ? 'bg-rose-900 text-white border-rose-700' :
+              toast.type === 'warning' ? 'bg-amber-800 text-white border-amber-600' :
+              'bg-[#0052D9] text-white border-[#003B99]'
+            }`}>
+              {toast.message}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   }
-
-  function formatDataISO(ano, mesZeroIndex, dia) {
-    const m = String(mesZeroIndex + 1).padStart(2, '0');
-    const d = String(dia).padStart(2, '0');
-    return `${ano}-${m}-${d}`;
-  }
-
-  async function carregarLancamentos(empresaId) {
-    const dataInicio = `${anoAtual}-01-01`;
-    const dataFim = `${anoAtual}-12-31`;
-
-    const { data } = await supabase
-      .from('lancamentos')
-      .select('*')
-      .eq('empresa_id', empresaId)
-      .is('deletado_em', null)
-      .gte('data_lancamento', dataInicio)
-      .lte('data_lancamento', dataFim);
-
-    if (data) {
-      const mapeados = data.map(l => {
-        const dateObj = new Date(l.data_lancamento + 'T12:00:00');
-        return {
-          id: l.id,
-          tipo: l.tipo,
-          descricao: l.descricao,
-          valor: parseFloat(l.valor),
-          dia: dateObj.getDate(),
-          mes: dateObj.getMonth(),
-          ano: dateObj.getFullYear(),
-          categoria: l.categoria,
-          subcategoria: l.subcategoria,
-          formaRecebimento: l.forma_recebimento === 'avista' ? 'À vista/PIX' : (l.forma_recebimento === 'aprazo' ? 'À prazo' : null),
-          qtdVendas: l.qtd_vendas,
-          banco: l.banco || null,
-          meioPagamento: l.meio_pagamento || null,
-        };
-      });
-      setLancamentosGeral(mapeados);
-    }
-  }
-
-  async function carregarPainelAdmin() {
-    const { data } = await supabase.from('empresas').select('*').order('criado_em', { ascending: false });
-    if (data) {
-      setAssinantesAdmin(data.map(e => ({
-        id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
-        email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
-        vencimento: e.vencimento, valor_assinatura: e.valor_assinatura
-      })));
-    }
-  }
-
-  const lancamentosEmpresa = useMemo(() => {
-    return lancamentosGeral.filter(l => l.mes === mesAtual);
-  }, [lancamentosGeral, mesAtual]);
-
-  const lancamentosAno = useMemo(() => {
-    return lancamentosGeral;
-  }, [lancamentosGeral]);
-
-  async function addLancamento(novo) {
-    const mesAlvo = novo.mes !== undefined ? novo.mes : mesAtual;
-    const dataStr = formatDataISO(anoAtual, mesAlvo, novo.dia);
-    const { data, error } = await supabase.from('lancamentos').insert({
-      empresa_id: empresaAtualObj.id,
-      tipo: novo.tipo,
-      descricao: novo.descricao,
-      valor: novo.valor,
-      data_lancamento: dataStr,
-      categoria: novo.categoria || null,
-      subcategoria: novo.subcategoria || null,
-      forma_recebimento: novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-      qtd_vendas: novo.qtdVendas || null,
-      banco: novo.banco || null,
-      meio_pagamento: novo.meio_pagamento || null,
-    }).select().single();
-
-    if (!error && data) {
-      carregarLancamentos(empresaAtualObj.id);
-    } else {
-      alert('Erro ao registrar lançamento: ' + (error?.message || 'Falha desconhecida.'));
-    }
-  }
-
-  async function removeLancamento(id) {
-    const { error } = await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).eq('id', id);
-    if (!error) {
-      setLancamentosGeral(prev => prev.filter(l => l.id !== id));
-    }
-  }
-
-  async function updateLancamento(id, dados) {
-    const mesAlvo = dados.mes !== undefined ? dados.mes : mesAtual;
-    const dataStr = formatDataISO(anoAtual, mesAlvo, dados.dia);
-    const { error } = await supabase.from('lancamentos').update({
-      tipo: dados.tipo,
-      descricao: dados.descricao,
-      valor: dados.valor,
-      data_lancamento: dataStr,
-      categoria: dados.categoria || null,
-      subcategoria: dados.subcategoria || null,
-      forma_recebimento: dados.formaRecebimento ? (dados.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-      qtd_vendas: dados.qtdVendas || null,
-      banco: dados.banco || null,
-      meio_pagamento: dados.meio_pagamento || null,
-    }).eq('id', id);
-
-    if (!error) {
-      carregarLancamentos(empresaAtualObj.id);
-    }
-  }
-
-  async function salvarEstoqueMensal(estoqueInicial, estoqueFinal) {
-    const dataInicial = formatDataISO(anoAtual, mesAtual, 1);
-    const dataFinal = formatDataISO(anoAtual, mesAtual, daysInMonth(mesAtual, anoAtual));
-
-    const idsParaDeletar = lancamentosEmpresa.filter(l => l.tipo === 'estoque').map(l => l.id);
-    if (idsParaDeletar.length > 0) {
-      await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).in('id', idsParaDeletar);
-    }
-
-    if (estoqueInicial !== null && estoqueInicial !== '') {
-      const { error: errIni } = await supabase.from('lancamentos').insert({
-        empresa_id: empresaAtualObj.id, tipo: 'estoque', categoria: 'inicial', descricao: 'Estoque Inicial', valor: parseFloat(estoqueInicial), data_lancamento: dataInicial
-      });
-      if (errIni) alert('Erro ao salvar estoque inicial: ' + errIni.message);
-    }
-    if (estoqueFinal !== null && estoqueFinal !== '') {
-      const { error: errFim } = await supabase.from('lancamentos').insert({
-        empresa_id: empresaAtualObj.id, tipo: 'estoque', categoria: 'final', descricao: 'Estoque Final', valor: parseFloat(estoqueFinal), data_lancamento: dataFinal
-      });
-      if (errFim) alert('Erro ao salvar estoque final: ' + errFim.message);
-    }
-    carregarLancamentos(empresaAtualObj.id);
-  }
-
-  function abrirEdicao(lancamento) {
-    setLancamentoEditando(lancamento);
-    setShowLancamentoModal(true);
-  }
-
-  function fecharModal() {
-    setShowLancamentoModal(false);
-    setLancamentoEditando(null);
-  }
-
-  function fecharAvisoModal() {
-    localStorage.setItem('avisoRegimeCaixaVisto', 'true');
-    setShowAvisoModal(false);
-  }
-
-  async function fazerLogin(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email, password: senha });
-    if (error) {
-      if (error.message.includes('Invalid login')) return { ok: false, erro: 'E-mail ou senha incorretos.' };
-      return { ok: false, erro: error.message };
-    }
-    return { ok: true };
-  }
-
-  async function fazerLoginAdmin(usuario, senha) {
-    if (usuario.trim().toLowerCase() === ADMIN_CREDENCIAIS.usuario && senha.trim() === ADMIN_CREDENCIAIS.senha) {
-      setSessao({ tipo: 'admin' });
-      carregarPainelAdmin();
-      return { ok: true };
-    }
-    return { ok: false, erro: 'Usuário ou senha incorretos.' };
-  }
-
-  async function criarAssinatura(dados) {
-    const cpfLimpo = somenteDigitos(dados.cpf);
-
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: dados.email,
-      password: dados.senha,
-      options: {
-        data: { nome: dados.nome || '', cpf: cpfLimpo, telefone: dados.telefone || '' }
-      }
-    });
-
-    if (authError) return { ok: false, erro: authError.message };
-
-    // Se a conta já existir ou por algum motivo a sessão vier vazia:
-    if (!authData.session) {
-      return { ok: false, erro: 'Conta criada, mas não foi possível fazer login automático. Tente usar um e-mail diferente (este pode já estar em uso).' };
-    }
-
-    const novaEmpresaId = crypto.randomUUID();
-
-    const { error: empError } = await supabase.from('empresas').insert({
-      id: novaEmpresaId,
-      razao_social: dados.empresa,
-      nome_fantasia: dados.fantasia || dados.empresa,
-      cpf_titular: cpfLimpo,
-      email_contato: dados.email || '',
-      telefone_contato: dados.telefone || '',
-      status: 'teste'
-    });
-
-    if (empError) return { ok: false, erro: 'Erro banco de dados (Empresa): ' + empError.message };
-
-    const { error: vincError } = await supabase.from('empresa_usuarios').insert({
-      empresa_id: novaEmpresaId,
-      usuario_id: authData.user.id,
-      papel: 'dono'
-    });
-
-    if (vincError) return { ok: false, erro: 'Erro ao vincular: ' + vincError.message };
-
-    isNovoCadastroRef.current = true;
-    
-    // Forçar o recarregamento da sessão agora que a empresa já existe no banco.
-    // Isso evita o bug de a tela ficar travada esperando o evento do Auth.
-    await carregarDadosIniciais(authData.user.id);
-    
-    return { ok: true };
-  }
-
-  async function redefinirSenha(email) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
-    });
-    if (error) {
-      alert('Erro ao enviar recuperação: ' + error.message);
-    } else {
-      alert('Um e-mail de recuperação foi enviado para ' + email);
-    }
-  }
-
-  async function salvarNovaSenha(novaSenha) {
-    const { error } = await supabase.auth.updateUser({ password: novaSenha });
-    if (error) {
-      alert('Erro ao redefinir a senha: ' + error.message);
-    } else {
-      alert('Senha alterada com sucesso! Você já pode acessar a plataforma.');
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        carregarDadosIniciais(data.session.user.id);
-      } else {
-        setTelaAuth('login');
-      }
-    }
-  }
-
-  async function atualizarDadosAssinante(id, dados) {
-    const { error } = await supabase.from('empresas').update(dados).eq('id', id);
-    if (!error) {
-      setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, ...dados } : a));
-      return { ok: true };
-    } else {
-      return { ok: false, erro: error.message };
-    }
-  }
-
-  async function sair() {
-    await supabase.auth.signOut();
-    setSessao(null);
-    setTelaAuth('login');
-    setTela('dashboard');
-  }
-
-  if (!sessao) {
-    if (telaAuth === 'assinatura') {
-      return <AssinaturaScreen onCriar={criarAssinatura} onVoltarLogin={() => setTelaAuth('login')} />;
-    }
-    if (telaAuth === 'recuperar') {
-      return <RecuperarSenhaScreen onEnviar={(email) => { redefinirSenha(email); setTelaAuth('login'); }} onVoltarLogin={() => setTelaAuth('login')} />;
-    }
-    if (telaAuth === 'redefinir') {
-      return <RedefinirSenhaScreen email={emailRecuperacao} onRedefinir={salvarNovaSenha} />;
-    }
-    if (telaAuth === 'admin-login') {
-      return <AdminLoginScreen onLogin={fazerLoginAdmin} onVoltar={() => setTelaAuth('login')} />;
-    }
-    return <LoginScreen onLogin={fazerLogin} onIrParaAssinatura={() => setTelaAuth('assinatura')} onIrParaRecuperar={() => setTelaAuth('recuperar')} onIrParaAdmin={() => setTelaAuth('admin-login')} />;
-  }
-
-  if (sessao.tipo === 'admin') {
-    return <AdminPanel assinantes={assinantesAdmin} onAtualizarDados={atualizarDadosAssinante} onSair={sair} onRecuperarSenha={redefinirSenha} />;
-  }
-
-  if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
 
   return (
-    <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
-      <TopBar empresa={{ nome: empresaAtualObj.fantasia || empresaAtualObj.razao_social }} usuario={empresaAtualObj.nome || empresaAtualObj.email_contato} onLogout={sair} mesAtual={mesAtual} setMesAtual={setMesAtual} />
+    <div className={`min-h-screen font-sans antialiased transition-colors duration-200 ${
+      isDark ? 'bg-[#0B0F19] text-slate-100 selection:bg-[#0052D9] selection:text-white' : 'bg-white text-slate-900 selection:bg-blue-100 selection:text-[#0052D9]'
+    }`}>
+      {/* 1. Header & Navigation */}
+      <AmpNavbar />
 
-      <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
-        {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} onIrGestaoAVista={() => setTela('gestaoavista')} />}
-        {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
-        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onSalvarEstoque={salvarEstoqueMensal} />}
-        {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
-        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} />}
-        {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
-        {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
-        {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onVoltar={() => setTela('dashboard')} />}
-      </div>
+      {/* Main Flow: Exact Scroll Sequence */}
+      <main>
+        {/* Hero Section with Cropped AMP Globe Watermark & 100vw Fluid Wave */}
+        <AmpHero />
 
-      <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} />
+        {/* Full-Stack Layered Architecture */}
+        <AmpFullStackSection />
 
-      {showLancamentoModal && (
-        <NovoLancamentoModal
-          tipoInicial={tipoNovoLancamento}
-          diasNoMes={daysInMonth(mesAtual, anoAtual)}
-          mesAtual={mesAtual}
-          anoAtual={anoAtual}
-          lancamentoEditando={lancamentoEditando}
-          historicoCompleto={lancamentosGeral}
-          onClose={fecharModal}
-          onSave={(l) => { addLancamento(l); fecharModal(); }}
-          onUpdate={(dados) => { updateLancamento(lancamentoEditando.id, dados); fecharModal(); }}
-          onDelete={() => { removeLancamento(lancamentoEditando.id); fecharModal(); }}
-        />
+        {/* Ecosystem Catalog & Hairline Grid */}
+        <AmpEcosystemSection />
+
+        {/* End-to-End Solutions & Fluid Organic Industry Cases */}
+        <AmpSolutionsAndCasesSection />
+
+        {/* Leadership Status, Social Proof & 24/7 Continuous Operation */}
+        <AmpLeadershipUptimeSection />
+
+        {/* Interactive 360° Diagnostic Simulator */}
+        <AmpDiagnosticSection />
+
+        {/* Client Portal Hub (Continuous Hairline Grid) */}
+        <AmpClientPortalSection />
+      </main>
+
+      {/* Multi-Column Enterprise Footer */}
+      <AmpFooter />
+
+      {/* Modals & Live Radio Player Dock */}
+      <AmpModals />
+      <AmpRadioBar />
+
+      {/* Toast Notifications */}
+      {toast && (
+        <div className="fixed bottom-20 right-6 z-50 animate-fadeIn">
+          <div className={`px-5 py-3 rounded-xl shadow-xl border text-xs font-normal ${
+            toast.type === 'error' ? 'bg-rose-900 text-white border-rose-700' :
+            toast.type === 'warning' ? 'bg-amber-800 text-white border-amber-600' :
+            'bg-[#0052D9] text-white border-[#003B99]'
+          }`}>
+            {toast.message}
+          </div>
+        </div>
       )}
-      {showAvisoModal && <AvisoRegimeCaixaModal onClose={fecharAvisoModal} />}
     </div>
+  );
+}
+
+export default function App() {
+  const [isRadio, setIsRadio] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const hostname = window.location.hostname.toLowerCase();
+    const params = new URLSearchParams(window.location.search);
+    return hostname.includes('amplificadora') || params.get('app') === 'radio';
+  });
+
+  useEffect(() => {
+    const checkRoute = () => {
+      const hostname = window.location.hostname.toLowerCase();
+      const params = new URLSearchParams(window.location.search);
+      setIsRadio(hostname.includes('amplificadora') || params.get('app') === 'radio');
+    };
+    window.addEventListener('popstate', checkRoute);
+    return () => window.removeEventListener('popstate', checkRoute);
+  }, []);
+
+  if (isRadio) {
+    return <RadioApp />;
+  }
+
+  return (
+    <AmpProvider>
+      <MainPortal />
+    </AmpProvider>
   );
 }

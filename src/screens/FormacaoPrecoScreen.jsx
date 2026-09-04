@@ -533,9 +533,9 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
 
       {/* Modal Calculadora de ROI & Depreciação de Máquina */}
       {showCalculadoraDepreciacao && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(6px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div style={{ background: '#FAF8F3', borderRadius: 20, width: '100%', maxWidth: 500, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #EFEBE0' }}>
-            <div style={{ padding: '18px 24px', background: '#fff', borderBottom: '1px solid #EFEBE0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(6px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#FAF8F3', borderRadius: 20, width: '100%', maxWidth: 520, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid #EFEBE0' }}>
+            <div style={{ padding: '16px 20px', background: '#fff', borderBottom: '1px solid #EFEBE0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#7B341E', fontWeight: 700, fontSize: 16 }}>
                 <HardDrive size={20} color="#C05621" />
                 <span>Calculadora de ROI & Depreciação de Equipamento</span>
@@ -543,7 +543,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
               <button onClick={() => setShowCalculadoraDepreciacao(false)} style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: '#9C9A8F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
             </div>
 
-            <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ padding: '20px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ background: '#FEEBC8', border: '1px solid #FBD38D', borderRadius: 12, padding: 12, fontSize: 12, color: '#7B341E', lineHeight: 1.4 }}>
                 💡 <strong>Retorno sobre o Investimento (ROI) & Depreciação:</strong> Ao incluir esse valor no preço de venda do seu produto ou hora técnica, a cada hora de uso da máquina você recupera uma parcela do investimento inicial, formando o caixa para a compra de uma nova máquina.
               </div>

@@ -18,10 +18,113 @@ export const CATEGORIAS = {
 
 export const SUBCATEGORIAS_SUGERIDAS = {
   cmv: ['Mercadoria para revenda', 'Matéria-prima', 'Embalagens do produto', 'Frete de compra de mercadoria'],
-  variavel: ['Impostos sobre venda', 'Comissão sobre vendas', 'Taxa de cartão', 'Frete de entrega ao cliente'],
+  variavel: ['Impostos sobre venda', 'Comissão sobre vendas', 'Taxa de cartão', 'Frete de entrega ao cliente', 'Mão de Obra Extra / Diárias de Pico'],
   fixa: ['Aluguel', 'Salários', 'Pró-labore', 'Água', 'Energia elétrica', 'Telefone e internet', 'Contador', 'Combustível (uso geral)', 'Manutenção de veículo', 'Material de escritório'],
   financeira: ['Juros bancários', 'Tarifa bancária', 'Amortização de empréstimo'],
 };
+
+export const PLANO_DE_CONTAS_SUGERIDO = [
+  {
+    id: 'custos_diretos',
+    grupo: '📦 Custos Diretos (CMV / Insumos)',
+    categoria: 'cmv',
+    tipoLabel: 'Custo Direto (CMV)',
+    badgeColor: '#B05A2E',
+    badgeBg: '#F5E4D8',
+    descricao: 'Gastos essenciais de produtos comprados para revender ou produzir',
+    itens: [
+      { nome: 'Mercadoria para revenda', sub: 'Mercadoria para revenda' },
+      { nome: 'Matéria-prima / Ingredientes', sub: 'Matéria-prima' },
+      { nome: 'Embalagens do produto', sub: 'Embalagens do produto' },
+      { nome: 'Frete de compra de mercadoria', sub: 'Frete de compra de mercadoria' },
+      { nome: 'Terceirização direta de produção', sub: 'Matéria-prima' },
+    ]
+  },
+  {
+    id: 'despesas_variaveis',
+    grupo: '⚡ Despesas Variáveis de Vendas',
+    categoria: 'variavel',
+    tipoLabel: 'Despesa Variável',
+    badgeColor: '#8A6D1A',
+    badgeBg: '#F3EAC9',
+    descricao: 'Gastos que oscilam diretamente de acordo com o volume de vendas',
+    itens: [
+      { nome: 'Impostos sobre venda (Simples / ICMS)', sub: 'Impostos sobre venda' },
+      { nome: 'Taxa de cartão e maquininhas', sub: 'Taxa de cartão' },
+      { nome: 'Comissão sobre vendas', sub: 'Comissão sobre vendas' },
+      { nome: 'Taxas de plataformas / Apps de entrega', sub: 'Taxa de cartão' },
+      { nome: 'Frete e entregas ao cliente (Motoboy)', sub: 'Frete de entrega ao cliente' },
+      { nome: 'Mão de Obra Extra / Diárias de Pico', sub: 'Mão de Obra Extra / Diárias de Pico' },
+    ]
+  },
+  {
+    id: 'estrutura_ocupacao',
+    grupo: '🏢 Despesas Fixas - Estrutura & Ocupação',
+    categoria: 'fixa',
+    tipoLabel: 'Despesa Fixa',
+    badgeColor: '#1F5C52',
+    badgeBg: '#D9EBE6',
+    descricao: 'Gastos regulares de infraestrutura para manter as portas abertas',
+    itens: [
+      { nome: 'Aluguel do imóvel / ponto comercial', sub: 'Aluguel' },
+      { nome: 'Condomínio e IPTU', sub: 'Aluguel' },
+      { nome: 'Energia elétrica', sub: 'Energia elétrica' },
+      { nome: 'Água e esgoto', sub: 'Água' },
+      { nome: 'Telefone e internet', sub: 'Telefone e internet' },
+      { nome: 'Segurança e monitoramento', sub: 'Material de escritório' },
+      { nome: 'Limpeza e conservação predial', sub: 'Material de escritório' },
+    ]
+  },
+  {
+    id: 'pessoal_gestao',
+    grupo: '👥 Despesas Fixas - Pessoal & Administrativo',
+    categoria: 'fixa',
+    tipoLabel: 'Despesa Fixa',
+    badgeColor: '#1F5C52',
+    badgeBg: '#D9EBE6',
+    descricao: 'Folha de pagamento da equipe fixa, sócios e assessoria',
+    itens: [
+      { nome: 'Salários da equipe fixa', sub: 'Salários' },
+      { nome: 'Pró-labore dos sócios', sub: 'Pró-labore' },
+      { nome: 'Benefícios (VT, VR, Alimentação)', sub: 'Salários' },
+      { nome: 'Honorários do contador', sub: 'Contador' },
+      { nome: 'Sistemas e softwares de gestão', sub: 'Material de escritório' },
+      { nome: 'Material de escritório e papelaria', sub: 'Material de escritório' },
+      { nome: 'Combustível e manutenção de veículo', sub: 'Combustível (uso geral)' },
+      { nome: 'Treinamentos e capacitações', sub: 'Material de escritório' },
+    ]
+  },
+  {
+    id: 'marketing_comercial',
+    grupo: '📣 Despesas Fixas - Marketing & Divulgação',
+    categoria: 'fixa',
+    tipoLabel: 'Despesa Fixa',
+    badgeColor: '#1F5C52',
+    badgeBg: '#D9EBE6',
+    descricao: 'Investimentos em anúncios, marcas e atração de clientes',
+    itens: [
+      { nome: 'Anúncios online (Meta / Google Ads)', sub: 'Material de escritório' },
+      { nome: 'Agência / Gestão de redes sociais', sub: 'Material de escritório' },
+      { nome: 'Material gráfico, brindes e fachada', sub: 'Material de escritório' },
+      { nome: 'Eventos e feiras comerciais', sub: 'Material de escritório' },
+    ]
+  },
+  {
+    id: 'financeiras_bancos',
+    grupo: '🏦 Despesas Financeiras & Bancárias',
+    categoria: 'financeira',
+    tipoLabel: 'Despesa Financeira',
+    badgeColor: '#7A2E3D',
+    badgeBg: '#F2DDE1',
+    descricao: 'Taxas bancárias, juros de empréstimos e encargos',
+    itens: [
+      { nome: 'Tarifa de conta e pacotes bancários', sub: 'Tarifa bancária' },
+      { nome: 'Juros de empréstimo / financiamento', sub: 'Juros bancários' },
+      { nome: 'Parcela / Amortização de empréstimo', sub: 'Amortização de empréstimo' },
+      { nome: 'IOF e taxas de antecipação', sub: 'Tarifa bancária' },
+    ]
+  },
+];
 
 export const WIZARD = {
   start: {

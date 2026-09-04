@@ -10,7 +10,16 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
     return val !== null ? val : defaultVal;
   };
 
-  const [salarioBrutoStr, setSalarioBrutoStr] = useState(() => getStorage('salario', '1000'));
+  const [salariosLista, setSalariosLista] = useState(() => {
+    const salvo = localStorage.getItem(`rh_calc_${empresaId}_salarios_lista`);
+    if (salvo) {
+      try { return JSON.parse(salvo); } catch(e) {}
+    }
+    const unico = getStorage('salario', '1800');
+    return [unico];
+  });
+  const [salarioAtivoIndex, setSalarioAtivoIndex] = useState(0);
+
   const [regime, setRegime] = useState(() => getStorage('regime', 'simples'));
   const [feriados, setFeriados] = useState(() => Number(getStorage('feriados', 0)));
   const [horasDia, setHorasDia] = useState(() => Number(getStorage('horasDia', 7.33)));
@@ -47,19 +56,63 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
 
   // Salvar no localStorage sempre que mudar
   useEffect(() => {
-    localStorage.setItem(`rh_calc_${empresaId}_salario`, salarioBrutoStr);
+    localStorage.setItem(`rh_calc_${empresaId}_salarios_lista`, JSON.stringify(salariosLista));
+    localStorage.setItem(`rh_calc_${empresaId}_salario`, salariosLista[0] || '1800');
     localStorage.setItem(`rh_calc_${empresaId}_regime`, regime);
     localStorage.setItem(`rh_calc_${empresaId}_feriados`, feriados);
     localStorage.setItem(`rh_calc_${empresaId}_horasDia`, horasDia);
     localStorage.setItem(`rh_calc_${empresaId}_pausas`, horasNaoTrabalhadas);
     localStorage.setItem(`rh_calc_${empresaId}_ociosidade`, horasOciosas);
     localStorage.setItem(`rh_calc_${empresaId}_escala`, escala);
-  }, [empresaId, salarioBrutoStr, regime, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala]);
+  }, [empresaId, salariosLista, regime, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala]);
 
+  const salarioBrutoStr = salariosLista[salarioAtivoIndex] || salariosLista[0] || '1800';
   const salarioBruto = parseFloat(salarioBrutoStr) || 0;
   
   const calc = useMemo(() => {
-    // CÁLCULO salário
+    // ENCARGOS SOCIAIS baseados no Regime
+    let totalEncargosPct = 0;
+    if (regime === 'lucro') {
+      totalEncargosPct = 28.80; // INSS 20% + RAT 3% + Terceiros 5.8%
+    } else if (regime === 'mei') {
+      totalEncargosPct = 3.00;
+    } else {
+      totalEncargosPct = 0.00;
+    }
+
+    // Dias Úteis e Horas
+    const trabalhaSab = escala === '6x1';
+    const diasInativos = (trabalhaSab ? 0 : sabados) + domingos + feriados;
+    const diasUteis = Math.max(diasNoMes - diasInativos, 0);
+    const horasProdutivas = Math.max(horasDia - horasNaoTrabalhadas, 0.1);
+
+    // Tabela completa de todos os salários cadastrados
+    const tabelaSalarios = salariosLista.map((sStr, idx) => {
+      const sVal = parseFloat(sStr) || 0;
+      const f112 = sVal / 12;
+      const f13 = f112 / 3;
+      const dec13 = sVal / 12;
+      const tBase = sVal + f112 + f13 + dec13;
+      const fg8 = tBase * 0.08;
+      const fgM = fg8 * 0.40;
+      const tSal = tBase + fg8 + fgM;
+      const enc = tSal * (totalEncargosPct / 100);
+      const cDia = diasUteis > 0 ? (tSal + enc) / diasUteis : 0;
+      const cHora = horasProdutivas > 0 ? cDia / horasProdutivas : 0;
+      const cMin = cHora / 60;
+      return {
+        id: idx,
+        salario: sVal,
+        totalSalario: tSal,
+        encargos: enc,
+        custoTotalMes: tSal + enc,
+        custoDia: cDia,
+        custoHora: cHora,
+        custoMinuto: cMin,
+      };
+    });
+
+    // CÁLCULO do salário ativo na tela
     const baseCalculo = salarioBruto;
     const ferias112 = baseCalculo / 12;
     const ferias13 = ferias112 / 3;
@@ -70,30 +123,8 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
     const fgtsMulta = fgts8 * 0.40;
     const totalSalario = totalBase + fgts8 + fgtsMulta;
     const pctAumento = salarioBruto > 0 ? ((totalSalario / salarioBruto) - 1) * 100 : 0;
+    const encargoSoma = (totalSalario * (totalEncargosPct / 100));
 
-    // ENCARGOS SOCIAIS baseados no Regime
-    let totalEncargosPct = 0;
-    let encargoSoma = 0;
-    
-    if (regime === 'lucro') {
-      // SA / Lucro Real / Lucro Presumido
-      totalEncargosPct = 28.80; // INSS 20% + RAT 3% + Terceiros 5.8%
-    } else if (regime === 'mei') {
-      // MEI paga 3% INSS Patronal
-      totalEncargosPct = 3.00;
-    } else {
-      // Simples Nacional Anexo I, II, III não paga INSS Patronal
-      totalEncargosPct = 0.00;
-    }
-    
-    encargoSoma = (totalSalario * (totalEncargosPct / 100));
-
-    // Dias Úteis e Horas
-    const trabalhaSab = escala === '6x1';
-    const diasInativos = (trabalhaSab ? 0 : sabados) + domingos + feriados;
-    const diasUteis = Math.max(diasNoMes - diasInativos, 0);
-
-    const horasProdutivas = horasDia - horasNaoTrabalhadas;
     const custoDia = diasUteis > 0 ? (totalSalario + encargoSoma) / diasUteis : 0;
     const custoHora = horasProdutivas > 0 ? custoDia / horasProdutivas : 0;
     const custoMinuto = custoHora / 60;
@@ -102,17 +133,19 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
     const prejuizoOciosidadeDia = Math.max(horasOciosas, 0) * custoHora;
     const prejuizoOciosidadeMes = prejuizoOciosidadeDia * diasUteis;
 
-    // Salvar custoHora e custoMinuto globalmente
-    localStorage.setItem(`amp_rh_custos_${empresaId}`, JSON.stringify({ custoHora, custoMinuto, prejuizoOciosidadeMes }));
+    // Salvar tabela e custos globais
+    localStorage.setItem(`amp_rh_custos_${empresaId}`, JSON.stringify({
+      custoHora, custoMinuto, prejuizoOciosidadeMes, tabelaSalarios
+    }));
     
     return {
       baseCalculo, ferias112, ferias13, decimoTerceiro, totalBase,
       fgts8, fgtsMulta, totalSalario, pctAumento,
       totalEncargosPct, encargoSoma,
-      diasUteis, custoDia, custoHora, horasProdutivas,
-      prejuizoOciosidadeDia, prejuizoOciosidadeMes
+      diasUteis, custoDia, custoHora, custoMinuto, horasProdutivas,
+      prejuizoOciosidadeDia, prejuizoOciosidadeMes, tabelaSalarios
     };
-  }, [salarioBruto, regime, diasNoMes, sabados, domingos, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala, empresaId]);
+  }, [salarioBruto, salariosLista, regime, diasNoMes, sabados, domingos, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala, empresaId]);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -160,13 +193,88 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             
             <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #EFEBE0', overflow: 'hidden' }}>
-              <div style={{ background: '#F5F2E8', padding: '10px 16px', fontWeight: 600, fontSize: 13, color: '#5C5A4F', textAlign: 'center', textTransform: 'uppercase' }}>Cálculo do Salário e Provisões</div>
+              <div style={{ background: '#F5F2E8', padding: '10px 16px', fontWeight: 600, fontSize: 13, color: '#5C5A4F', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ textTransform: 'uppercase' }}>Salários Cadastrados</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSalariosLista(prev => [...prev, '2000']);
+                    setSalarioAtivoIndex(salariosLista.length);
+                  }}
+                  style={{ background: '#1F5C52', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  + Adicionar Salário
+                </button>
+              </div>
+
+              {/* Lista de Salários */}
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #EFEBE0', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {salariosLista.map((s, idx) => {
+                  const ativo = idx === salarioAtivoIndex;
+                  const itemCalc = calc.tabelaSalarios[idx] || {};
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setSalarioAtivoIndex(idx)}
+                      style={{
+                        padding: '8px 12px', borderRadius: 8, cursor: 'pointer',
+                        border: `1.5px solid ${ativo ? '#1F5C52' : '#EFEBE0'}`,
+                        background: ativo ? '#EAF4F1' : '#FAF8F3',
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontSize: 11, fontWeight: 700, color: ativo ? '#1F5C52' : '#9C9A8F' }}>Salário {idx + 1}:</span>
+                          <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1C2421' }}>{formatBRL(parseFloat(s) || 0)}</span>
+                        </div>
+                        <div style={{ fontSize: 11, color: ativo ? '#1F5C52' : '#5C5A4F', marginTop: 2 }}>
+                          Hora: <strong>{formatBRL(itemCalc.custoHora || 0)}</strong> · Minuto: <strong>{formatBRL(itemCalc.custoMinuto || 0)}</strong>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} onClick={e => e.stopPropagation()}>
+                        <input
+                          type="number"
+                          value={s}
+                          onChange={e => {
+                            const novoVal = e.target.value;
+                            setSalariosLista(prev => {
+                              const arr = [...prev];
+                              arr[idx] = novoVal;
+                              return arr;
+                            });
+                          }}
+                          placeholder="0"
+                          style={{ width: 85, textAlign: 'right', padding: '4px 6px', border: '1px solid #D1CFC7', borderRadius: 6, fontWeight: 600, fontSize: 12.5 }}
+                        />
+                        {salariosLista.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSalariosLista(prev => prev.filter((_, i) => i !== idx));
+                              if (salarioAtivoIndex >= salariosLista.length - 1) {
+                                setSalarioAtivoIndex(Math.max(0, salariosLista.length - 2));
+                              }
+                            }}
+                            title="Remover este valor de salário"
+                            style={{ background: 'none', border: 'none', color: '#B05A2E', cursor: 'pointer', fontSize: 15, padding: '0 4px' }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Detalhamento do Salário Ativo */}
               <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span>Valor Salário Bruto (Mês)</span>
-                  <input type="number" value={salarioBrutoStr} onChange={e => setSalarioBrutoStr(e.target.value)} style={{ width: 100, textAlign: 'right', padding: '4px 8px', border: '1px solid #D1CFC7', borderRadius: 6, fontWeight: 600 }} />
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#1F5C52', marginBottom: 2 }}>
+                  Detalhamento de Provisões: {formatBRL(calc.baseCalculo)}/mês
                 </div>
-                
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#9C9A8F', fontSize: 12 }}>
                   <span>Base de Cálculo</span>
                   <span>{formatBRL(calc.baseCalculo)}</span>

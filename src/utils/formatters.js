@@ -4,6 +4,26 @@ export function formatBRL(v) {
   return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+export function formatBRLPrecision(v, maxDecimals = 4) {
+  const num = parseFloat(v) || 0;
+  if (num === 0) return 'R$ 0,00';
+  const abs = Math.abs(num);
+  if (abs < 1 && abs > 0) {
+    return num.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: maxDecimals
+    });
+  }
+  return num.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
 export function formatCompactoBRL(v) {
   const abs = Math.abs(v);
   const sinal = v < 0 ? '-' : '';

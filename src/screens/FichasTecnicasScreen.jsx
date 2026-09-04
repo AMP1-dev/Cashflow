@@ -2,7 +2,7 @@ import { AlertCircle, ChevronLeft, ChevronRight, Plus, Scale, X, HelpCircle, Tru
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState, FieldLabel, inputStyle, ModalShell } from '../components/UIComponents';
 import { supabase } from '../lib/supabase';
-import { formatBRL } from '../utils/formatters';
+import { formatBRL, formatBRLPrecision } from '../utils/formatters';
 import { ConceitoAjudaModal } from '../components/ConceitoAjudaModal';
 import * as XLSX from 'xlsx';
 
@@ -209,12 +209,12 @@ export function FichasTecnicasScreen({ empresaId }) {
                                         <div>
                                             <div style={{ fontSize: 14, fontWeight: 600, color: '#1C2421' }}>{f.nome}</div>
                                             <div style={{ fontSize: 11.5, color: '#9C9A8F', marginTop: 2 }}>
-                                                Custo/porção {formatBRL(calc.custoPorcao)}
+                                                Custo/porção {formatBRLPrecision(calc.custoPorcao, 4)}
                                             </div>
                                         </div>
                                         <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 10 }}>
                                             <div style={{ fontSize: 10.5, color: '#9C9A8F' }}>Custo da receita</div>
-                                            <div style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoReceita)}</div>
+                                            <div style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>{formatBRLPrecision(calc.custoReceita, 4)}</div>
                                         </div>
                                     </div>
                                 </button>
@@ -389,64 +389,65 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
                 <div style={{ background: '#EAF6EE', border: '1px solid #CFEAD9', borderRadius: 12, padding: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                     <div style={{ fontSize: 11.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 8 }}>Resultado calculado</div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <div style={{ fontSize: 11.5, color: '#5C8A71' }}>Custo/porção</div>
-                            <div style={{ fontSize: 17, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoPorcao)}</div>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 11.5, color: '#5C8A71' }}>Custo da receita</div>
-                            <div style={{ fontSize: 17, fontWeight: 700, color: '#1C2421' }}>{formatBRL(calc.custoReceita)}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                         <div>
+                             <div style={{ fontSize: 11.5, color: '#5C8A71' }}>Custo/porção</div>
+                             <div style={{ fontSize: 17, fontWeight: 700, color: '#1C2421' }}>{formatBRLPrecision(calc.custoPorcao, 4)}</div>
+                         </div>
+                         <div style={{ textAlign: 'right' }}>
+                             <div style={{ fontSize: 11.5, color: '#5C8A71' }}>Custo da receita</div>
+                             <div style={{ fontSize: 17, fontWeight: 700, color: '#1C2421' }}>{formatBRLPrecision(calc.custoReceita, 4)}</div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
 
-            <div style={{ padding: '16px 16px 0' }}>
-                <FieldLabel>Nome do produto/prato</FieldLabel>
-                <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Frango Caipira, X-Burguer, Bolo de Cenoura..." style={inputStyle} />
+             <div style={{ padding: '16px 16px 0' }}>
+                 <FieldLabel>Nome do produto/prato</FieldLabel>
+                 <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Ex: Frango Caipira, X-Burguer, Bolo de Cenoura..." style={inputStyle} />
 
-                <div style={{ display: 'flex', gap: 10 }}>
-                    <div style={{ flex: 1 }}>
-                        <FieldLabel>Rendimento (porções)</FieldLabel>
-                        <input value={rendimentoPorcoes} onChange={e => setRendimentoPorcoes(e.target.value.replace(/[^0-9]/g, ''))} placeholder="1" inputMode="numeric" style={{ ...inputStyle, marginTop: 0 }} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <FieldLabel>Peso da porção (g) — opcional</FieldLabel>
-                        <input value={pesoPorcao} onChange={e => setPesoPorcao(e.target.value.replace(/[^0-9,.-]/g, ''))} placeholder="150" inputMode="decimal" style={{ ...inputStyle, marginTop: 0 }} />
-                    </div>
-                </div>
+                 <div style={{ display: 'flex', gap: 10 }}>
+                     <div style={{ flex: 1 }}>
+                         <FieldLabel>Rendimento (porções)</FieldLabel>
+                         <input value={rendimentoPorcoes} onChange={e => setRendimentoPorcoes(e.target.value.replace(/[^0-9]/g, ''))} placeholder="1" inputMode="numeric" style={{ ...inputStyle, marginTop: 0 }} />
+                     </div>
+                     <div style={{ flex: 1 }}>
+                         <FieldLabel>Peso da porção (g) — opcional</FieldLabel>
+                         <input value={pesoPorcao} onChange={e => setPesoPorcao(e.target.value.replace(/[^0-9,.-]/g, ''))} placeholder="150" inputMode="decimal" style={{ ...inputStyle, marginTop: 0 }} />
+                     </div>
+                 </div>
 
-                {/* Banner Orientativo de Rendimento */}
-                <div style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', borderRadius: 10, padding: '10px 14px', marginTop: 10, fontSize: 12, color: '#1F5C52', lineHeight: 1.4 }}>
-                    💡 <strong>Como lançar os ingredientes para esta receita?</strong><br />
-                    • <strong>Se Rendimento = {rendimentoPorcoes || '1'} {parseInt(rendimentoPorcoes || 1) > 1 ? 'porções' : 'porção'}:</strong> Informe nos ingredientes a quantidade <u>total consumida para fazer a receita inteira (o lote de {rendimentoPorcoes || '1'} porções)</u>. O sistema divide automaticamente o custo total por {rendimentoPorcoes || '1'} para obter o custo de 1 porção ({formatBRL(calc.custoPorcao)}).<br />
-                    • <strong>Ou se preferir:</strong> Mantenha Rendimento = 1 e informe apenas as quantidades gastas em 1 porção individual.
-                </div>
+                 {/* Banner Orientativo de Rendimento */}
+                 <div style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', borderRadius: 10, padding: '10px 14px', marginTop: 10, fontSize: 12, color: '#1F5C52', lineHeight: 1.4 }}>
+                     💡 <strong>Como lançar os ingredientes para esta receita?</strong><br />
+                     • <strong>Se Rendimento = {rendimentoPorcoes || '1'} {parseInt(rendimentoPorcoes || 1) > 1 ? 'porções' : 'porção'}:</strong> Informe nos ingredientes a quantidade <u>total consumida para fazer a receita inteira (o lote de {rendimentoPorcoes || '1'} porções)</u>. O sistema divide automaticamente o custo total por {rendimentoPorcoes || '1'} para obter o custo de 1 porção ({formatBRLPrecision(calc.custoPorcao, 4)}).<br />
+                     • <strong>Ou se preferir:</strong> Mantenha Rendimento = 1 e informe apenas as quantidades gastas em 1 porção individual.
+                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 8 }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Ingredientes {ingredientes.length > 0 && `(${ingredientes.length})`}</span>
-                    <button onClick={addIngrediente} style={{ background: 'none', border: '1px dashed #C9C5B6', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#5C5A4F', fontSize: 11.5 }}>
-                        <Plus size={12} /> ingrediente
-                    </button>
-                </div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 20, marginBottom: 8 }}>
+                     <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Ingredientes {ingredientes.length > 0 && `(${ingredientes.length})`}</span>
+                     <button onClick={addIngrediente} style={{ background: 'none', border: '1px dashed #C9C5B6', borderRadius: 8, padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', color: '#5C5A4F', fontSize: 11.5 }}>
+                         <Plus size={12} /> ingrediente
+                     </button>
+                 </div>
 
-                {ingredientes.length === 0 ? (
-                    <EmptyState text="Adicione os ingredientes que compõem a receita." />
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {ingredientes.map(ing => (
-                            <IngredienteRow
-                                key={ing.id}
-                                ingrediente={ing}
-                                expandido={expandidos.has(ing.id)}
-                                onToggleExpandido={() => toggleExpandido(ing.id)}
-                                onChange={(campo, valor) => atualizarIngrediente(ing.id, campo, valor)}
-                                onRemover={() => removerIngrediente(ing.id)}
-                                onAbrirWizard={() => setWizardIngredienteId(ing.id)}
-                            />
-                        ))}
-                    </div>
-                )}
+                 {ingredientes.length === 0 ? (
+                     <EmptyState text="Adicione os ingredientes que compõem a receita." />
+                 ) : (
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                         {ingredientes.map(ing => (
+                             <IngredienteRow
+                                 key={ing.id}
+                                 ingrediente={ing}
+                                 rhCustos={rhCustos}
+                                 expandido={expandidos.has(ing.id)}
+                                 onToggleExpandido={() => toggleExpandido(ing.id)}
+                                 onChange={(campo, valor) => atualizarIngrediente(ing.id, campo, valor)}
+                                 onRemover={() => removerIngrediente(ing.id)}
+                                 onAbrirWizard={() => setWizardIngredienteId(ing.id)}
+                             />
+                         ))}
+                     </div>
+                 )}
 
                 {onExcluir && (
                     confirmandoExclusao ? (
@@ -497,13 +498,18 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
 
 // ---------- Linha de ingrediente (colapsável) ----------
 
-function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, onRemover, onAbrirWizard }) {
+function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, onRemover, onAbrirWizard, rhCustos }) {
     const { qtdLiquida, custoTotal, custoPorBase } = calcularIngrediente(ingrediente);
     const temPerda = (parseFloat(ingrediente.fatorCorrecao) || 1) > 1;
     const unidadeUso = ingrediente.unidadeUso || 'g';
     const baseLabel = ingrediente.unidadeCompra === 'un' ? 'un' 
                     : (['l', 'ml'].includes(ingrediente.unidadeCompra) ? 'l' 
                     : (['h', 'min'].includes(ingrediente.unidadeCompra) ? 'min' : 'kg'));
+
+    const isLabor = ['h', 'min'].includes(ingrediente.unidadeCompra);
+    const salariosDisponiveis = (rhCustos && Array.isArray(rhCustos.tabelaSalarios) && rhCustos.tabelaSalarios.length > 0)
+        ? rhCustos.tabelaSalarios
+        : (rhCustos?.custoHora > 0 ? [{ salario: 'Base', custoHora: rhCustos.custoHora, custoMinuto: rhCustos.custoMinuto }] : []);
 
     if (!expandido) {
         return (
@@ -520,7 +526,7 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, marginLeft: 8 }}>
-                    <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>{formatBRL(custoTotal)}</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>{formatBRLPrecision(custoTotal, 4)}</span>
                     <ChevronRight size={14} color="#C9C5B6" />
                 </div>
             </button>
@@ -544,6 +550,44 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                     <X size={15} />
                 </button>
             </div>
+
+            {/* Seletor rápido de valor de funcionário para Mão de Obra (Item 3) */}
+            {isLabor && (
+                <div style={{ background: '#EAF6EE', border: '1px solid #B8E0D7', borderRadius: 8, padding: '8px 10px', marginBottom: 10 }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: '#1F5C52', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <AlertCircle size={13} />
+                        <span>Selecione o funcionário pelo valor do salário:</span>
+                    </div>
+                    {salariosDisponiveis.length > 0 ? (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {salariosDisponiveis.map((itemSal, idxSal) => {
+                                const taxa = ingrediente.unidadeCompra === 'h' ? itemSal.custoHora : itemSal.custoMinuto;
+                                const taxaStr = taxa > 0 ? (taxa < 1 ? taxa.toFixed(4).replace('.', ',') : taxa.toFixed(2).replace('.', ',')) : '0';
+                                return (
+                                    <button
+                                        key={idxSal}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange('precoCompra', taxaStr);
+                                            onChange('nome', ingrediente.nome && ingrediente.nome !== 'Mão de obra' ? ingrediente.nome : `Mão de obra (Salário R$ ${itemSal.salario})`);
+                                        }}
+                                        style={{
+                                            padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+                                            border: '1px solid #1F5C52', background: '#fff', color: '#1F5C52', cursor: 'pointer'
+                                        }}
+                                    >
+                                        Salário R$ {itemSal.salario} ({formatBRLPrecision(taxa, 4)}/{ingrediente.unidadeCompra})
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div style={{ fontSize: 10.5, color: '#5C8A71' }}>
+                            Cadastre os salários na Calculadora RH para carregar os valores automáticos.
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div style={{ fontSize: 10.5, fontWeight: 600, color: '#9C9A8F', marginBottom: 5 }}>Preço de compra</div>
             <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
@@ -575,31 +619,27 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
             </div>
             {custoPorBase > 0 && (
                 <div style={{ fontSize: 10.5, color: '#9C9A8F', marginTop: -4, marginBottom: 8 }}>
-                    ≈ {formatBRL(custoPorBase)} por {baseLabel} {ingrediente.pctFrete > 0 ? `(inclui +${ingrediente.pctFrete}% de frete/taxas)` : ''}
+                    ≈ {formatBRLPrecision(custoPorBase, 4)} por {baseLabel} {ingrediente.pctFrete > 0 ? `(inclui +${ingrediente.pctFrete}% de frete/taxas)` : ''}
                 </div>
             )}
 
             {/* Rateio de Frete & Taxas do Insumo */}
-            <div style={{ background: '#FFFDF9', border: '1px solid #E8C896', borderRadius: 8, padding: '6px 10px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ fontSize: 11, color: '#8A6D1A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
-                    <Truck size={14} color="#C05621" />
-                    <span>Rateio Frete/Taxas do Lote (%)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <input
-                        value={ingrediente.pctFrete || ''}
-                        onChange={e => onChange('pctFrete', e.target.value.replace(/[^0-9,.-]/g, ''))}
-                        placeholder="Ex: 10"
-                        inputMode="decimal"
-                        style={{ ...inputStyle, marginTop: 0, width: 60, padding: '4px 6px', fontSize: 12, textAlign: 'right', border: '1px solid #E8C896', background: '#fff' }}
-                    />
-                    <span style={{ fontSize: 11, color: '#8A6D1A', fontWeight: 600 }}>%</span>
-                </div>
-            </div>
-            
-            {['h', 'min'].includes(ingrediente.unidadeCompra) && (
-                <div style={{ background: '#EAF6EE', padding: '6px 10px', borderRadius: 6, fontSize: 11, color: '#1F5C52', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <AlertCircle size={12} /> Valor inicial importado da sua Calculadora RH (editável)
+            {!isLabor && (
+                <div style={{ background: '#FFFDF9', border: '1px solid #E8C896', borderRadius: 8, padding: '6px 10px', marginBottom: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ fontSize: 11, color: '#8A6D1A', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <Truck size={14} color="#C05621" />
+                        <span>Rateio Frete/Taxas do Lote (%)</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <input
+                            value={ingrediente.pctFrete || ''}
+                            onChange={e => onChange('pctFrete', e.target.value.replace(/[^0-9,.-]/g, ''))}
+                            placeholder="Ex: 10"
+                            inputMode="decimal"
+                            style={{ ...inputStyle, marginTop: 0, width: 60, padding: '4px 6px', fontSize: 12, textAlign: 'right', border: '1px solid #E8C896', background: '#fff' }}
+                        />
+                        <span style={{ fontSize: 11, color: '#8A6D1A', fontWeight: 600 }}>%</span>
+                    </div>
                 </div>
             )}
 
@@ -621,7 +661,7 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                 </select>
             </div>
 
-            {!['h', 'min'].includes(ingrediente.unidadeCompra) && (
+            {!isLabor && (
                 <button
                     onClick={onAbrirWizard}
                     style={{ width: '100%', textAlign: 'left', padding: '8px 10px', borderRadius: 8, border: `1px solid ${temPerda ? '#C9A063' : '#E5E0D5'}`, background: temPerda ? '#FBF3E5' : '#FBFAF6', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
@@ -636,7 +676,7 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 11, color: '#9C9A8F' }}>
                 <span>Qtd líquida: {qtdLiquida.toFixed(2)} {unidadeUso}</span>
-                <span style={{ fontWeight: 600, color: '#5C5A4F' }}>Custo: {formatBRL(custoTotal)}</span>
+                <span style={{ fontWeight: 600, color: '#5C5A4F' }}>Custo: {formatBRLPrecision(custoTotal, 4)}</span>
             </div>
         </div>
     );

@@ -7,10 +7,18 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  function tentarEntrar() {
-    const resultado = onLogin(usuario, senha);
-    if (!resultado.ok) setErro(resultado.erro);
+  async function tentarEntrar() {
+    if (!usuario.trim() || !senha) {
+      setErro('Informe usuário e senha.');
+      return;
+    }
+    setLoading(true);
+    setErro('');
+    const resultado = await onLogin(usuario, senha);
+    setLoading(false);
+    if (resultado && !resultado.ok) setErro(resultado.erro);
   }
 
   return (
@@ -53,6 +61,9 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
         </div>
         <div style={{ textAlign: 'center', fontSize: 11, color: '#5C636D', marginTop: 14 }}>
           Protótipo — usuário: admin / senha: admin123
+        </div>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#5C636D', fontWeight: 600, letterSpacing: 0.5 }}>
+          AMP Flow • Versão 2.5
         </div>
       </div>
     </div>
@@ -211,6 +222,9 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
   const [salvando, setSalvando] = useState(false);
+  const [enviandoLink, setEnviandoLink] = useState(false);
+  const [msgLink, setMsgLink] = useState('');
+  const [erroLink, setErroLink] = useState('');
 
   async function handleSalvar() {
     setSalvando(true);
@@ -225,9 +239,24 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   }
 
   async function handleRecuperarSenha() {
-    if (!assinante.email) { alert('Este assinante não possui e-mail cadastrado.'); return; }
-    if (window.confirm(`Deseja enviar um e-mail de redefinição de senha para ${assinante.email}?`)) {
-       await onRecuperarSenha(assinante.email);
+    if (!assinante.email || !assinante.email.includes('@')) {
+      setErroLink('Este assinante não possui e-mail cadastrado.');
+      return;
+    }
+    setEnviandoLink(true);
+    setMsgLink('');
+    setErroLink('');
+    try {
+      const res = await onRecuperarSenha(assinante.email.trim());
+      if (res && !res.ok) {
+        setErroLink('Erro ao enviar: ' + (res.erro || 'Falha no envio'));
+      } else {
+        setMsgLink(`✅ Link enviado com sucesso para ${assinante.email}!`);
+      }
+    } catch (e) {
+      setErroLink('Erro inesperado: ' + (e.message || String(e)));
+    } finally {
+      setEnviandoLink(false);
     }
   }
 
@@ -292,12 +321,25 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       >
         {salvando ? 'Salvando...' : 'Salvar alterações'}
       </button>
-      
+
+      {msgLink && (
+        <div style={{ padding: '12px 14px', background: '#E6F4EA', color: '#137333', border: '1px solid #CEEAD6', borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 12, textAlign: 'center' }}>
+          {msgLink}
+        </div>
+      )}
+
+      {erroLink && (
+        <div style={{ padding: '12px 14px', background: '#FCE8E6', color: '#C5221F', border: '1px solid #FAD2CF', borderRadius: 10, fontSize: 13, fontWeight: 600, marginBottom: 12, textAlign: 'center' }}>
+          {erroLink}
+        </div>
+      )}
+
       <button
         onClick={handleRecuperarSenha}
-        style={{ width: '100%', padding: '14px', borderRadius: 10, border: '1px solid #E1E3E6', background: '#fff', color: '#1F5C52', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+        disabled={enviandoLink}
+        style={{ width: '100%', padding: '14px', borderRadius: 10, border: '1px solid #CBD5E1', background: enviandoLink ? '#F1F5F9' : '#fff', color: enviandoLink ? '#94A3B8' : '#1F5C52', fontSize: 14, fontWeight: 600, cursor: enviandoLink ? 'wait' : 'pointer' }}
       >
-        Enviar link de redefinição de senha
+        {enviandoLink ? 'Enviando e-mail de recuperação...' : 'Enviar link de redefinição de senha'}
       </button>
     </ModalShell>
   );
