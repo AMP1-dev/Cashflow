@@ -11,6 +11,14 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
   const [descricao, setDescricao] = useState(editando ? lancamentoEditando.descricao : '');
   const [valor, setValor] = useState(editando ? String(lancamentoEditando.valor).replace('.', ',') : '');
   const [mes, setMes] = useState(editando ? (lancamentoEditando.mes !== undefined ? lancamentoEditando.mes : mesAtual) : mesAtual);
+  const [mesCompetencia, setMesCompetencia] = useState(
+    editando 
+      ? (lancamentoEditando.mesCompetencia !== undefined ? lancamentoEditando.mesCompetencia : (lancamentoEditando.mes !== undefined ? lancamentoEditando.mes : mesAtual)) 
+      : mesAtual
+  );
+  const [personalizarCompetencia, setPersonalizarCompetencia] = useState(
+    editando && lancamentoEditando.mesCompetencia !== undefined && lancamentoEditando.mesCompetencia !== lancamentoEditando.mes
+  );
   const totalDiasMes = daysInMonth(mes, anoAtual);
   const [dia, setDia] = useState(editando ? lancamentoEditando.dia : (new Date().getDate() > totalDiasMes ? totalDiasMes : new Date().getDate()));
   const [formaRecebimento, setFormaRecebimento] = useState(
@@ -117,6 +125,8 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
   function montarDados() {
     return {
       tipo, descricao: descricao.trim(), valor: valorNum, mes, dia,
+      mesCompetencia: personalizarCompetencia ? mesCompetencia : mes,
+      anoCompetencia: anoAtual,
       categoria: tipo === 'despesa' ? categoria : null,
       subcategoria: tipo === 'despesa' ? subcategoria : null,
       formaRecebimento: tipo === 'receita' ? (formaRecebimento === 'avista' ? 'À vista/PIX' : 'À prazo') : null,
@@ -234,8 +244,12 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
 
       <div style={{ display: 'flex', gap: 10 }}>
         <div style={{ flex: 1 }}>
-          <FieldLabel>Mês do lançamento</FieldLabel>
-          <select value={mes} onChange={e => setMes(parseInt(e.target.value))} style={inputStyle}>
+          <FieldLabel>Mês do lançamento (Pagamento/Caixa)</FieldLabel>
+          <select value={mes} onChange={e => {
+            const novoMes = parseInt(e.target.value);
+            setMes(novoMes);
+            if (!personalizarCompetencia) setMesCompetencia(novoMes);
+          }} style={inputStyle}>
             {MESES.map((nomeMes, idx) => (
               <option key={idx} value={idx}>{nomeMes}</option>
             ))}
@@ -249,6 +263,36 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
             ))}
           </select>
         </div>
+      </div>
+
+      {/* Alternar Mês de Competência Contábil (DRE) */}
+      <div style={{ marginTop: 6, marginBottom: 10 }}>
+        <div 
+          onClick={() => setPersonalizarCompetencia(!personalizarCompetencia)}
+          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: '#1F5C52', cursor: 'pointer', fontWeight: 600, userSelect: 'none' }}
+        >
+          <input 
+            type="checkbox" 
+            checked={personalizarCompetencia} 
+            onChange={e => setPersonalizarCompetencia(e.target.checked)} 
+            style={{ cursor: 'pointer', accentColor: '#1F5C52' }} 
+          />
+          <span>Competência contábil em mês diferente do pagamento</span>
+        </div>
+
+        {personalizarCompetencia && (
+          <div style={{ marginTop: 6, padding: '10px 12px', background: '#F4F8F7', borderRadius: 8, border: '1px solid #C5DFD8' }}>
+            <FieldLabel>Mês de Competência Contábil (DRE)</FieldLabel>
+            <select value={mesCompetencia} onChange={e => setMesCompetencia(parseInt(e.target.value))} style={{ ...inputStyle, background: '#fff' }}>
+              {MESES.map((nomeMes, idx) => (
+                <option key={idx} value={idx}>{nomeMes} (Pertence ao custo/receita de {nomeMes})</option>
+              ))}
+            </select>
+            <div style={{ fontSize: 10.5, color: '#5C5A4F', marginTop: 4, lineHeight: 1.3 }}>
+              O valor afetará o fluxo de caixa em <strong>{MESES[mes]}</strong>, mas impactará a apuração do DRE contábil de <strong>{MESES[mesCompetencia]}</strong>.
+            </div>
+          </div>
+        )}
       </div>
 
       {tipo === 'receita' && (

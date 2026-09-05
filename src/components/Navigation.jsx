@@ -1,7 +1,7 @@
-import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp, Users } from 'lucide-react';
 import { MESES } from '../utils/constants';
 
-export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
+export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAbrirEquipe, ehDono }) {
   return (
     <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10, borderRadius: '0 0 20px 20px', boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -9,9 +9,17 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
           <div style={{ fontSize: 11, color: '#9FBDB5' }}>{usuario}</div>
           <div style={{ fontSize: 15, fontWeight: 500 }}>{empresa.nome}</div>
         </div>
-        <button onClick={onLogout} aria-label="Sair" style={{ background: 'none', border: 'none', color: '#9FBDB5', cursor: 'pointer', padding: 8 }}>
-          <LogOut size={18} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {ehDono && onAbrirEquipe && (
+            <button onClick={onAbrirEquipe} title="Gerenciar Equipe" aria-label="Gerenciar Equipe" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, color: '#9FE0C8', cursor: 'pointer', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600 }}>
+              <Users size={16} />
+              <span>Equipe</span>
+            </button>
+          )}
+          <button onClick={onLogout} aria-label="Sair" style={{ background: 'none', border: 'none', color: '#9FBDB5', cursor: 'pointer', padding: 8 }}>
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 12 }}>
         <button onClick={() => setMesAtual(m => (m + 11) % 12)} aria-label="Mês anterior" style={{ background: 'none', border: 'none', color: '#E8A33D', cursor: 'pointer', padding: 4 }}>
@@ -26,16 +34,20 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
   );
 }
 
-export function BottomNav({ tela, setTela, onAdd }) {
-  const items = [
-    { id: 'dashboard',   label: 'Resumo',    icon: LayoutDashboard },
-    { id: 'fluxo',       label: 'Fluxo',     icon: ListChecks },
-    { id: 'dre',         label: 'DRE',       icon: FileBarChart },
-    { id: 'anual',       label: 'Anual',     icon: TrendingUp },
-    { id: 'preco',       label: 'Preço',     icon: Tag },
-    { id: 'fichas',      label: 'Fichas',    icon: ClipboardList },
-    { id: 'diagnostico', label: 'Avaliação', icon: Activity },
+export function BottomNav({ tela, setTela, onAdd, papel = 'dono' }) {
+  const todosItems = [
+    { id: 'dashboard',   label: 'Resumo',    icon: LayoutDashboard, apenasDono: false },
+    { id: 'fluxo',       label: 'Fluxo',     icon: ListChecks, apenasDono: false },
+    { id: 'dre',         label: 'DRE',       icon: FileBarChart, apenasDono: true },
+    { id: 'anual',       label: 'Anual',     icon: TrendingUp, apenasDono: true },
+    { id: 'preco',       label: 'Preço',     icon: Tag, apenasDono: true },
+    { id: 'fichas',      label: 'Fichas',    icon: ClipboardList, apenasDono: true },
+    { id: 'diagnostico', label: 'Avaliação', icon: Activity, apenasDono: true },
   ];
+
+  const items = papel === 'funcionario' 
+    ? todosItems.filter(it => !it.apenasDono) 
+    : todosItems;
   return (
     <div className="no-print" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: 480, background: '#FAF8F3', borderTop: '1px solid #E5E0D5', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 8px calc(9px + env(safe-area-inset-bottom))', boxSizing: 'border-box', boxShadow: '0 -4px 12px rgba(0,0,0,0.04)' }}>
       {items.map(it => <NavButton key={it.id} item={it} active={tela === it.id} onClick={() => setTela(it.id)} />)}

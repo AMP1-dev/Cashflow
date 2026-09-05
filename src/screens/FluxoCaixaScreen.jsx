@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import { UploadCloud } from 'lucide-react';
 import { formatBRL, formatCompacto, daysInMonth } from '../utils/formatters';
 import { LancamentoRow } from './DashboardScreen';
 import { IndicadorCard } from './AnualScreen';
 
-export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar }) {
+export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar, onAbrirImportacao }) {
   const dias = daysInMonth(mesAtual, anoAtual);
   const porDia = useMemo(() => {
     const acc = {};
@@ -61,8 +62,33 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
 
   return (
     <div style={{ padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 4 }}>Fluxo de caixa do mês</div>
-      <div style={{ fontSize: 11.5, color: '#9C9A8F', marginBottom: 12 }}>Toque em um dia para ver os detalhes</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 2 }}>Fluxo de caixa do mês</div>
+          <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Toque em um dia para ver os detalhes</div>
+        </div>
+        {onAbrirImportacao && (
+          <button
+            onClick={onAbrirImportacao}
+            style={{
+              padding: '6px 10px',
+              borderRadius: 8,
+              border: '1px solid #1F5C52',
+              background: '#D9EBE6',
+              color: '#1F5C52',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5
+            }}
+          >
+            <UploadCloud size={14} />
+            <span>Importar Extrato</span>
+          </button>
+        )}
+      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5, marginBottom: 8 }}>
         {diasSemana.map((d, i) => (

@@ -8,6 +8,19 @@ import * as XLSX from 'xlsx';
 
 export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, empresaId, onSalvarEstoque }) {
 
+  // ─── Regime de Apuração (Caixa vs Competência) ──────────────────────────
+  const [regime, setRegime] = useState('caixa'); // 'caixa' | 'competencia'
+
+  // ─── Provisão Trabalhista (13º e Férias - 19.44% sobre folha de salários) ─
+  const [provisaoAtiva, setProvisaoAtiva] = useState(() => {
+    return localStorage.getItem('amp_provisao_trabalhista') === 'true';
+  });
+
+  function alternarProvisao(ativa) {
+    setProvisaoAtiva(ativa);
+    localStorage.setItem('amp_provisao_trabalhista', String(ativa));
+  }
+
   // ─── CMV Config (salvo no Supabase por mês) ───────────────────────────────
   const [pctCmvConfig, setPctCmvConfig] = useState(0);
   const [pctCmvStr, setPctCmvStr] = useState('');
@@ -49,21 +62,34 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     setSalvandoCmv(false);
   }
 
+  // Filtrar lançamentos baseado no regime
+  const baseLancamentos = useMemo(() => {
+    if (regime === 'competencia') {
+      // Pega todos os lançamentos do ano onde o mês de competência bate com mesAtual
+      const fonte = lancamentosAno || lancamentos;
+      return fonte.filter(l => {
+        const mesComp = l.mesCompetencia !== undefined ? l.mesCompetencia : l.mes;
+        return mesComp === mesAtual;
+      });
+    }
+    return lancamentos;
+  }, [regime, lancamentos, lancamentosAno, mesAtual]);
+
   // ─── Cálculo DRE ─────────────────────────────────────────────────────────
   const calc = useMemo(() => {
-    const receitas    = lancamentos.filter(l => l.tipo === 'receita');
-    const despesasCmv = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv');
-    const despesasVar = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel');
-    const despesasFix = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa');
-    const despesasFin = lancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira');
+    const receitas    = baseLancamentos.filter(l => l.tipo === 'receita');
+    const despesasCmv = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv');
+    const despesasVar = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel');
+    const despesasFix = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa');
+    const despesasFin = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira');
     // fornecedor não entra no DRE — aparece só no Fluxo de Caixa
 
     const faturamento = receitas.reduce((s, l) => s + l.valor, 0);
     const cmvCompras  = despesasCmv.reduce((s, l) => s + l.valor, 0);
 
     // Estoque (Modo 1)
-    const lInicial = lancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
-    const lFinal   = lancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'final');
+    const lInicial = baseLancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal   = baseLancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'final');
     const estoqueInicial = lInicial ? lInicial.valor : null;
     const estoqueFinal   = lFinal   ? lFinal.valor   : null;
     const temEstoque     = estoqueInicial !== null || estoqueFinal !== null;
@@ -97,16 +123,24 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     const maoDeObraTotal = maoDeObraExtraTotal + maoDeObraFixaTotal;
     const custoPrimario = cmv + maoDeObraTotal;
 
+    // Cálculo da Provisão Trabalhista: 1/12 (8.333%) 13º + 1/12 + 1/3 (11.111%) férias = 19.444%
+    const provisao13 = maoDeObraFixaTotal * (1 / 12);
+    const provisaoFerias = maoDeObraFixaTotal * (1 / 12) * (4 / 3);
+    const provisaoTotal = provisaoAtiva ? (provisao13 + provisaoFerias) : 0;
+
+    const fixasComProvisao = fixas + provisaoTotal;
+
     const resultadoComVendas  = faturamento - cmv;
     const margemContribuicao  = resultadoComVendas - variaveis;
-    const resultadoOperacional = margemContribuicao - fixas;
+    const resultadoOperacional = margemContribuicao - fixasComProvisao;
     const resultadoLiquido    = resultadoOperacional - financeiras;
     const pctMC = faturamento > 0 ? margemContribuicao / faturamento : 0;
-    const pontoEquilibrio = pctMC > 0 ? fixas / pctMC : 0;
-    const pontoEquilibrioFinanceiro = pctMC > 0 ? (fixas + financeiras) / pctMC : 0;
+    const pontoEquilibrio = pctMC > 0 ? fixasComProvisao / pctMC : 0;
+    const pontoEquilibrioFinanceiro = pctMC > 0 ? (fixasComProvisao + financeiras) / pctMC : 0;
 
     return {
       faturamento, cmv, cmvCompras, modoCmv, variaveis, fixas, financeiras,
+      fixasComProvisao, provisao13, provisaoFerias, provisaoTotal, provisaoAtiva,
       resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoLiquido,
       pontoEquilibrio, pontoEquilibrioFinanceiro, pctMC,
       maoDeObraExtraTotal, maoDeObraFixaTotal, maoDeObraTotal, custoPrimario,
@@ -114,7 +148,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
       itensVariaveis: despesasVar, itensFixas: despesasFix, itensFinanceiras: despesasFin,
       estoqueInicial, estoqueFinal, temEstoque,
     };
-  }, [lancamentos, pctCmvConfig]);
+  }, [baseLancamentos, pctCmvConfig, provisaoAtiva]);
 
   const semDados = calc.faturamento === 0 && calc.cmv === 0 && calc.variaveis === 0 && calc.fixas === 0;
   const fat = calc.faturamento;
@@ -157,6 +191,9 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     dadosExcel.push({ Data: 'CMV', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.cmv });
     dadosExcel.push({ Data: 'Despesas Variáveis', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.variaveis });
     dadosExcel.push({ Data: 'Despesas Fixas', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.fixas });
+    if (calc.provisaoAtiva && calc.provisaoTotal > 0) {
+      dadosExcel.push({ Data: 'Provisão Trabalhista (13º + Férias)', Descrição: 'Provisão contábil 1/12', Categoria: 'fixa', Tipo: 'Despesa', Valor: calc.provisaoTotal });
+    }
     dadosExcel.push({ Data: 'Despesas Financeiras', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.financeiras });
     dadosExcel.push({ Data: 'Resultado Líquido', Descrição: '', Categoria: '', Tipo: '', Valor: calc.resultadoLiquido });
     dadosExcel.push({ Data: '', Descrição: '', Categoria: '', Tipo: '', Valor: '' });
@@ -192,8 +229,55 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
 
   return (
     <div style={{ padding: 16 }}>
-      <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F', marginBottom: 2 }}>DRE — {MESES[mesAtual]}</div>
-      <div style={{ fontSize: 11.5, color: '#9C9A8F', marginBottom: 16 }}>Gerada automaticamente · % sobre o faturamento · toque numa linha para ver os lançamentos</div>
+      {/* ── SELETOR DE REGIME (CAIXA vs COMPETÊNCIA) ── */}
+      <div style={{ background: '#fff', padding: 4, borderRadius: 12, border: '1px solid #E5E0D5', display: 'flex', gap: 4, marginBottom: 12 }}>
+        <button
+          onClick={() => setRegime('caixa')}
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: 9, border: 'none',
+            background: regime === 'caixa' ? '#0F2B27' : 'transparent',
+            color: regime === 'caixa' ? '#FAF8F3' : '#5C5A4F',
+            fontWeight: regime === 'caixa' ? 700 : 500,
+            fontSize: 12, cursor: 'pointer', transition: 'all 0.15s'
+          }}
+        >
+          Regime de Caixa (Pagamento)
+        </button>
+        <button
+          onClick={() => setRegime('competencia')}
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: 9, border: 'none',
+            background: regime === 'competencia' ? '#0F2B27' : 'transparent',
+            color: regime === 'competencia' ? '#FAF8F3' : '#5C5A4F',
+            fontWeight: regime === 'competencia' ? 700 : 500,
+            fontSize: 12, cursor: 'pointer', transition: 'all 0.15s'
+          }}
+        >
+          Regime de Competência (Contábil)
+        </button>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: '#5C5A4F' }}>
+          DRE — {MESES[mesAtual]} ({regime === 'caixa' ? 'Visão Financeira/Caixa' : 'Visão Econômica/Competência'})
+        </div>
+        <button 
+          onClick={() => alternarProvisao(!provisaoAtiva)}
+          style={{
+            background: provisaoAtiva ? '#D9EBE6' : '#F0EDE3',
+            color: provisaoAtiva ? '#1F5C52' : '#5C5A4F',
+            border: `1px solid ${provisaoAtiva ? '#1F5C52' : '#D1CFC7'}`,
+            padding: '3px 8px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, cursor: 'pointer'
+          }}
+        >
+          {provisaoAtiva ? '✓ Provisão 13º/Férias Ativa' : '+ Prover 13º/Férias'}
+        </button>
+      </div>
+      <div style={{ fontSize: 11.5, color: '#9C9A8F', marginBottom: 14 }}>
+        {regime === 'caixa' 
+          ? 'Registra movimentações no dia em que saíram ou entraram na conta bancária.'
+          : 'Registra receitas e despesas vinculadas ao mês contábil correspondente.'}
+      </div>
 
       {semDados && <EmptyState text="Lance receitas e despesas neste mês para ver a DRE calculada." />}
 
@@ -294,6 +378,25 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
           <DRELine label="(–) Despesas variáveis" valor={-calc.variaveis} pct={pct(-calc.variaveis)} itens={calc.itensVariaveis} aberto={linhaAberta === 'variavel'} onToggle={() => toggleLinha('variavel')} fat={fat} negativo />
           <DRELine label="Margem de contribuição" valor={calc.margemContribuicao} pct={pct(calc.margemContribuicao)} sub />
           <DRELine label="(–) Despesas fixas" valor={-calc.fixas} pct={pct(-calc.fixas)} itens={calc.itensFixas} aberto={linhaAberta === 'fixa'} onToggle={() => toggleLinha('fixa')} fat={fat} negativo />
+          
+          {calc.provisaoAtiva && calc.provisaoTotal > 0 && (
+            <div style={{ background: '#FBF9F4', borderLeft: '3px solid #1F5C52', padding: '6px 10px', margin: '3px 0', borderRadius: '0 8px 8px 0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: '#1F5C52', fontWeight: 600 }}>
+                  (–) Provisão Trabalhista (13º + Férias)
+                </span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                  <span style={{ fontSize: 11, color: '#9C9A8F' }}>{pct(-calc.provisaoTotal).toFixed(1)}%</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: '#B05A2E' }}>{formatBRL(-calc.provisaoTotal)}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 10.5, color: '#666', marginTop: 2, display: 'flex', gap: 12 }}>
+                <span>13º Salário (1/12): <strong>{formatBRL(calc.provisao13)}</strong></span>
+                <span>Férias + 1/3 (1/12): <strong>{formatBRL(calc.provisaoFerias)}</strong></span>
+              </div>
+            </div>
+          )}
+
           <DRELine label="Resultado operacional" valor={calc.resultadoOperacional} pct={pct(calc.resultadoOperacional)} sub />
           <DRELine label="(–) Despesas financeiras" valor={-calc.financeiras} pct={pct(-calc.financeiras)} itens={calc.itensFinanceiras} aberto={linhaAberta === 'financeira'} onToggle={() => toggleLinha('financeira')} fat={fat} negativo />
           <DRELine label={calc.resultadoLiquido < 0 ? "Prejuízo líquido do mês" : "Lucro líquido do mês"} valor={calc.resultadoLiquido} pct={pct(calc.resultadoLiquido)} sub destaque resultadoFinal />

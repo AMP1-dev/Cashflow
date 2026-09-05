@@ -6,7 +6,8 @@ import { RelatorioBancosModal } from '../components/RelatorioBancosModal';
 import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, onEditar, onIrGestaoAVista }) {
+export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 'dono', onNovo, onEditar, onIrGestaoAVista }) {
+  const ehDono = papel !== 'funcionario';
   const [pctCmv, setPctCmv] = useState(0);
   const [peExpandido, setPeExpandido] = useState(false);
 
@@ -113,8 +114,8 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
           {formatBRL(saldoCaixa)}
         </div>
 
-        {/* Pílula Centralizada da DRE Econômica */}
-        {peCalculo.temCustos && (
+        {/* Pílula Centralizada da DRE Econômica (apenas dono/gestor) */}
+        {ehDono && peCalculo.temCustos && (
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
             <div style={{ 
               display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -224,21 +225,22 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
         </button>
       </div>
 
-      {/* ── CARD DO PONTO DE EQUILÍBRIO: COMPACTO & INTELIGENTE (ACCORDION) ── */}
-      <div style={{ 
-        background: '#fff', 
-        border: `1px solid ${
-          !peCalculo.temCustos 
-            ? '#E5E0D5' 
-            : !peCalculo.mcPositiva 
-            ? '#FDE68A' 
-            : (peCalculo.atingiu ? '#CFEAD9' : '#FCA5A5')
-        }`, 
-        borderRadius: 14, 
-        marginBottom: 14, 
-        overflow: 'hidden', 
-        boxShadow: '0 2px 6px rgba(0,0,0,0.02)' 
-      }}>
+      {/* ── CARD DO PONTO DE EQUILÍBRIO: COMPACTO & INTELIGENTE (ACCORDION - APENAS DONO) ── */}
+      {ehDono && (
+        <div style={{ 
+          background: '#fff', 
+          border: `1px solid ${
+            !peCalculo.temCustos 
+              ? '#E5E0D5' 
+              : !peCalculo.mcPositiva 
+              ? '#FDE68A' 
+              : (peCalculo.atingiu ? '#CFEAD9' : '#FCA5A5')
+          }`, 
+          borderRadius: 14, 
+          marginBottom: 14, 
+          overflow: 'hidden', 
+          boxShadow: '0 2px 6px rgba(0,0,0,0.02)' 
+        }}>
         {/* Cabeçalho Clicável */}
         <div 
           onClick={() => setPeExpandido(e => !e)}
@@ -369,6 +371,7 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
           </div>
         )}
       </div>
+      )}
 
       {/* ── LANÇAMENTOS RECENTES & RELATÓRIO ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginTop: 4 }}>
