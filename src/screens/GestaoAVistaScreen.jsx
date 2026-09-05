@@ -5,7 +5,7 @@ import { MESES, CATEGORIAS } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 import { RadarChart, AREAS } from './DiagnosticoScreen';
 
-export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresaId, onVoltar }) {
+export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().getMonth(), anoAtual = new Date().getFullYear(), empresaId, onVoltar }) {
   const [pctCmv, setPctCmv] = useState(0);
 
   useEffect(() => {
@@ -32,24 +32,24 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
   }
 
   // Cálculos do mês atual
-  const lancamentosMes = useMemo(() => lancamentosAno.filter(l => l.mes === mesAtual), [lancamentosAno, mesAtual]);
+  const lancamentosMes = useMemo(() => (lancamentosAno || []).filter(l => l && l.mes === mesAtual), [lancamentosAno, mesAtual]);
 
   const calcAtual = useMemo(() => {
-    const faturamento = lancamentosMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
-    const cmvCompras = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + l.valor, 0);
+    const faturamento = lancamentosMes.filter(l => l && l.tipo === 'receita').reduce((s, l) => s + (l.valor || 0), 0);
+    const cmvCompras = lancamentosMes.filter(l => l && l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + (l.valor || 0), 0);
     const cmvEstimado = pctCmv > 0 ? faturamento * (pctCmv / 100) : 0;
     
     // Lógica de Estoque e CMV (Excludente para não duplicar valores)
-    const lInicial = lancamentosMes.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
-    const lFinal = lancamentosMes.find(l => l.tipo === 'estoque' && l.categoria === 'final');
-    const temEstoque = lInicial || lFinal;
+    const lInicial = lancamentosMes.find(l => l && l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal = lancamentosMes.find(l => l && l.tipo === 'estoque' && l.categoria === 'final');
+    const temEstoque = !!(lInicial || lFinal);
     const cmv = temEstoque 
       ? ((lInicial?.valor || 0) + cmvCompras - (lFinal?.valor || 0)) 
       : (pctCmv > 0 ? cmvEstimado : cmvCompras);
 
-    const variaveis = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + l.valor, 0);
-    const fixas = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
-    const financeiras = lancamentosMes.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira').reduce((s, l) => s + l.valor, 0);
+    const variaveis = lancamentosMes.filter(l => l && l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + (l.valor || 0), 0);
+    const fixas = lancamentosMes.filter(l => l && l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + (l.valor || 0), 0);
+    const financeiras = lancamentosMes.filter(l => l && l.tipo === 'despesa' && l.categoria === 'financeira').reduce((s, l) => s + (l.valor || 0), 0);
 
     const custosFixosTotais = fixas + financeiras;
     const despesasVariaveisTotais = cmv + variaveis;
@@ -58,20 +58,28 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
     const pctMC = faturamento > 0 ? margemContribuicao / faturamento : (pctCmv > 0 ? ((100 - pctCmv) / 100) : 0.30);
     const lucroLiquido = margemContribuicao - custosFixosTotais;
 
-    const totalDespesa = lancamentosMes.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
+    const totalDespesa = lancamentosMes.filter(l => l && l.tipo === 'despesa').reduce((s, l) => s + (l.valor || 0), 0);
     
     // Despesas por Categoria para o Gráfico
     const porCategoria = { cmv: 0, variavel: 0, fixa: 0, financeira: 0 };
-    lancamentosMes.filter(l => l.tipo === 'despesa').forEach(l => { porCategoria[l.categoria] = (porCategoria[l.categoria] || 0) + l.valor; });
+    lancamentosMes.filter(l => l && l.tipo === 'despesa').forEach(l => { 
+      if (l.categoria && porCategoria[l.categoria] !== undefined) {
+        porCategoria[l.categoria] += (l.valor || 0); 
+      }
+    });
     if (pctCmv > 0 && !temEstoque) {
       porCategoria.cmv = cmvEstimado;
     }
     const totalDespesasCategoria = Object.values(porCategoria).reduce((s, v) => s + v, 0);
 
     // Qtd Vendas e Dias Negativos (para Indicadores)
-    const qtdVendas = lancamentosMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + (l.qtdVendas || 0), 0);
+    const qtdVendas = lancamentosMes.filter(l => l && l.tipo === 'receita').reduce((s, l) => s + (l.qtdVendas || 0), 0);
     const porDia = {};
-    lancamentosMes.forEach(l => { porDia[l.dia] = (porDia[l.dia] || 0) + (l.tipo === 'receita' ? l.valor : -l.valor); });
+    lancamentosMes.forEach(l => { 
+      if (l && l.dia) {
+        porDia[l.dia] = (porDia[l.dia] || 0) + (l.tipo === 'receita' ? (l.valor || 0) : -(l.valor || 0)); 
+      }
+    });
     const diasNegativos = Object.values(porDia).filter(v => v < 0).length;
 
     return {
@@ -98,20 +106,20 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
       m = 11;
       a -= 1;
     }
-    const lancsAnt = lancamentosAno.filter(l => l.mes === m && l.ano === a);
-    const fat = lancsAnt.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
-    const fixas = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
-    const financeiras = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira').reduce((s, l) => s + l.valor, 0);
+    const lancsAnt = (lancamentosAno || []).filter(l => l && l.mes === m && l.ano === a);
+    const fat = lancsAnt.filter(l => l && l.tipo === 'receita').reduce((s, l) => s + (l.valor || 0), 0);
+    const fixas = lancsAnt.filter(l => l && l.tipo === 'despesa' && l.categoria === 'fixa').reduce((s, l) => s + (l.valor || 0), 0);
+    const financeiras = lancsAnt.filter(l => l && l.tipo === 'despesa' && l.categoria === 'financeira').reduce((s, l) => s + (l.valor || 0), 0);
     const custosFixos = fixas + financeiras;
 
-    const cmvCompras = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + l.valor, 0);
+    const cmvCompras = lancsAnt.filter(l => l && l.tipo === 'despesa' && l.categoria === 'cmv').reduce((s, l) => s + (l.valor || 0), 0);
     const cmvEstimado = pctCmv > 0 ? fat * (pctCmv / 100) : 0;
-    const lInicial = lancsAnt.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
-    const lFinal = lancsAnt.find(l => l.tipo === 'estoque' && l.categoria === 'final');
-    const temEstoque = lInicial || lFinal;
+    const lInicial = lancsAnt.find(l => l && l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal = lancsAnt.find(l => l && l.tipo === 'estoque' && l.categoria === 'final');
+    const temEstoque = !!(lInicial || lFinal);
     const cmv = temEstoque ? ((lInicial?.valor || 0) + cmvCompras - (lFinal?.valor || 0)) : (pctCmv > 0 ? cmvEstimado : cmvCompras);
     
-    const variaveis = lancsAnt.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + l.valor, 0);
+    const variaveis = lancsAnt.filter(l => l && l.tipo === 'despesa' && l.categoria === 'variavel').reduce((s, l) => s + (l.valor || 0), 0);
     const margemContribuicao = fat - (cmv + variaveis);
     const pctMC = fat > 0 ? margemContribuicao / fat : 0.30;
 
@@ -125,10 +133,11 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
   const baseCustosFixos = usandoProjecao ? calcAnterior.custosFixos : calcAtual.custosFixosTotais;
   const basePctMC = usandoProjecao ? calcAnterior.pctMC : calcAtual.pctMC;
 
-  const faturamentoMeta = basePctMC > 0 ? (baseCustosFixos + lucroDesejado) / basePctMC : 0;
-  const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
-  const metaDiaria = faturamentoMeta / diasNoMes;
-  const pctAtingido = faturamentoMeta > 0 ? (calcAtual.faturamento / faturamentoMeta) * 100 : 0;
+  const faturamentoMeta = (basePctMC > 0 && isFinite(baseCustosFixos)) ? Math.max(0, (baseCustosFixos + lucroDesejado) / basePctMC) : 0;
+  const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate() || 30;
+  const metaDiaria = diasNoMes > 0 ? faturamentoMeta / diasNoMes : 0;
+  const pctAtingidoCalc = faturamentoMeta > 0 ? (calcAtual.faturamento / faturamentoMeta) * 100 : 0;
+  const pctAtingido = isFinite(pctAtingidoCalc) && !isNaN(pctAtingidoCalc) ? pctAtingidoCalc : 0;
   const falta = Math.max(0, faturamentoMeta - calcAtual.faturamento);
   const atingiu = calcAtual.faturamento >= faturamentoMeta && faturamentoMeta > 0;
 
@@ -143,12 +152,13 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
         a -= 1;
       }
       
-      const lancs = lancamentosAno.filter(l => l.mes === m && l.ano === a);
-      const fat = lancs.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
-      const desp = lancs.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
+      const lancs = (lancamentosAno || []).filter(l => l && l.mes === m && l.ano === a);
+      const fat = lancs.filter(l => l && l.tipo === 'receita').reduce((s, l) => s + (l.valor || 0), 0);
+      const desp = lancs.filter(l => l && l.tipo === 'despesa').reduce((s, l) => s + (l.valor || 0), 0);
       const lucro = fat - desp;
       
-      dados.push({ mesLabel: MESES[m].substring(0, 3), faturamento: fat, lucro: lucro });
+      const mesNome = MESES[m] || 'Mês';
+      dados.push({ mesLabel: mesNome.substring(0, 3), faturamento: fat, lucro: lucro });
     }
     return dados;
   }, [lancamentosAno, mesAtual, anoAtual]);
@@ -156,12 +166,30 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
   const maxFatHist = Math.max(...historico.map(h => h.faturamento), faturamentoMeta, 1);
   const saldo = calcAtual.faturamento - calcAtual.totalDespesa;
 
-  // Diagnóstico salvo no LocalStorage
-  let diagRecente = null;
-  try {
-    const raw = localStorage.getItem('amp_diagnostico_recente');
-    if (raw) diagRecente = JSON.parse(raw);
-  } catch (e) {}
+  // Diagnóstico salvo no LocalStorage com validação rigorosa
+  const diagRecente = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('amp_diagnostico_recente');
+      if (!raw) return null;
+      const d = JSON.parse(raw);
+      if (!d || typeof d !== 'object') return null;
+      if (!Array.isArray(d.scores)) return null;
+      const scoresLimpos = d.scores.map(sc => {
+        if (typeof sc === 'number') return { pct: isFinite(sc) ? sc : 0 };
+        if (sc && typeof sc === 'object') return { ...sc, pct: typeof sc.pct === 'number' && isFinite(sc.pct) ? sc.pct : 0 };
+        return { pct: 0 };
+      });
+      return {
+        ...d,
+        scores: scoresLimpos,
+        scoreTotal: d.scoreTotal || 0,
+        maxTotal: d.maxTotal || 0,
+        nivel: d.nivel || { label: 'Avaliado', cor: '#1F5C52' }
+      };
+    } catch (e) {
+      return null;
+    }
+  }, []);
 
   return (
     <div style={{ padding: '12px 14px', background: '#FAF8F3', minHeight: '100vh', display: 'flex', flexDirection: 'column', boxSizing: 'border-box', width: '100%' }}>
@@ -429,16 +457,16 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: diagRecente?.scores ? '1fr 1.1fr' : '1fr', gap: 14, alignItems: 'center' }}>
-            {diagRecente?.scores ? (
+          <div style={{ display: 'grid', gridTemplateColumns: diagRecente && diagRecente.scores && diagRecente.scores.length > 0 ? '1fr 1.1fr' : '1fr', gap: 14, alignItems: 'center' }}>
+            {diagRecente && diagRecente.scores && diagRecente.scores.length > 0 ? (
               <>
                 <div style={{ display: 'flex', justifyContent: 'center', maxWidth: 260, margin: '0 auto', width: '100%' }}>
-                  <RadarChart ratios={diagRecente.scores.map(sc => sc.pct)} />
+                  <RadarChart ratios={diagRecente.scores.map(sc => sc?.pct ?? 0)} />
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {AREAS.map((area, idx) => {
                     const sc = diagRecente.scores[idx];
-                    const pctVal = sc ? (sc.pct * 100).toFixed(0) : 0;
+                    const pctVal = sc ? (sc.pct * 100).toFixed(0) : '0';
                     return (
                       <div key={area.id} style={{ background: area.fundo, border: `1px solid ${area.bg}`, borderRadius: 8, padding: '6px 10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div style={{ fontSize: 11, fontWeight: 600, color: area.cor }}>{area.label}</div>
@@ -652,9 +680,9 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
                 <Activity size={13} color="#1F5C52" />
                 Maturidade da Gestão (Radar)
               </div>
-              {diagRecente?.scores ? (
+              {diagRecente && diagRecente.scores && diagRecente.scores.length > 0 ? (
                 <div style={{ width: '100%', maxWidth: 220, height: 110, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <RadarChart ratios={diagRecente.scores.map(sc => sc.pct)} />
+                  <RadarChart ratios={diagRecente.scores.map(sc => sc?.pct ?? 0)} />
                 </div>
               ) : (
                 <div style={{ fontSize: 10.5, color: '#9C9A8F', textAlign: 'center', padding: '14px 0' }}>
@@ -667,7 +695,7 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
               <div style={{ fontSize: 10.5, fontWeight: 700, color: '#1C2421', marginBottom: 4 }}>Pilares de Maturidade</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {AREAS.map((area, idx) => {
-                  const sc = diagRecente?.scores ? diagRecente.scores[idx] : null;
+                  const sc = diagRecente && diagRecente.scores ? diagRecente.scores[idx] : null;
                   const pctVal = sc ? `${(sc.pct * 100).toFixed(0)}%` : '—';
                   return (
                     <div key={area.id} style={{ background: area.fundo, border: `1px solid ${area.bg}`, borderRadius: 5, padding: '2px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

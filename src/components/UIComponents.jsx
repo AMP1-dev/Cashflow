@@ -47,3 +47,44 @@ export function EmptyState({ text }) {
 }
 
 export const inputStyle = { width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E5E0D5', fontSize: 14, boxSizing: 'border-box', background: '#fff', color: '#1C2421' };
+
+export class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('ErrorBoundary caught:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 24, textAlign: 'center', background: '#FFF5F5', border: '1px solid #FED7D7', borderRadius: 14, margin: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#C53030', marginBottom: 8 }}>
+            ⚠️ Ocorreu um problema ao exibir esta tela
+          </div>
+          <p style={{ fontSize: 13, color: '#742A2A', marginBottom: 16, lineHeight: 1.5 }}>
+            {this.state.error?.message || 'Dados temporariamente indisponíveis.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              if (this.props.onReset) this.props.onReset();
+            }}
+            style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#1F5C52', color: '#fff', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+          >
+            Voltar ao Início
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}

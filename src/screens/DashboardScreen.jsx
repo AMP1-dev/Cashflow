@@ -354,7 +354,12 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
             )}
 
             <button 
-              onClick={onIrGestaoAVista} 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (onIrGestaoAVista) onIrGestaoAVista();
+              }} 
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #CFEAD9', background: '#F5FAF7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#1F5C52', fontSize: 12, fontWeight: 600 }}
             >
               <Presentation size={14} />

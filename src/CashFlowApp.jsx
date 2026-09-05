@@ -6,6 +6,7 @@ import { daysInMonth, somenteDigitos } from './utils/formatters';
 import { BottomNav, TopBar } from './components/Navigation';
 import { NovoLancamentoModal } from './components/NovoLancamentoModal';
 import { AvisoRegimeCaixaModal } from './components/AvisoRegimeCaixaModal';
+import { ErrorBoundary } from './components/UIComponents';
 
 import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
 import { AnualScreen } from './screens/AnualScreen';
@@ -388,14 +389,16 @@ export default function CashFlowApp() {
       <TopBar empresa={{ nome: empresaAtualObj.fantasia || empresaAtualObj.razao_social }} usuario={empresaAtualObj.nome || empresaAtualObj.email_contato} onLogout={sair} mesAtual={mesAtual} setMesAtual={setMesAtual} />
 
       <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
-        {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} onIrGestaoAVista={() => setTela('gestaoavista')} />}
-        {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
-        {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onSalvarEstoque={salvarEstoqueMensal} />}
-        {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
-        {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} />}
-        {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
-        {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
-        {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onVoltar={() => setTela('dashboard')} />}
+        <ErrorBoundary onReset={() => setTela('dashboard')}>
+          {tela === 'dashboard' && <Dashboard lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }} onEditar={abrirEdicao} onIrGestaoAVista={() => setTela('gestaoavista')} />}
+          {tela === 'fluxo' && <FluxoCaixa lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} onRemove={removeLancamento} onEditar={abrirEdicao} />}
+          {tela === 'dre' && <DREScreen lancamentos={lancamentosEmpresa} lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onSalvarEstoque={salvarEstoqueMensal} />}
+          {tela === 'anual' && <AnualScreen lancamentosAno={lancamentosAno} anoAtual={anoAtual} mesAtual={mesAtual} setTela={setTela} setMesAtual={setMesAtual} />}
+          {tela === 'preco' && <FormacaoPrecoScreen lancamentos={lancamentosEmpresa} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} />}
+          {tela === 'fichas' && <FichasTecnicasScreen empresaId={empresaAtualObj.id} />}
+          {tela === 'diagnostico' && <DiagnosticoScreen onVoltar={() => setTela('dashboard')} />}
+          {tela === 'gestaoavista' && <GestaoAVistaScreen lancamentosAno={lancamentosAno} mesAtual={mesAtual} anoAtual={anoAtual} empresaId={empresaAtualObj.id} onVoltar={() => setTela('dashboard')} />}
+        </ErrorBoundary>
       </div>
 
       <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} />
