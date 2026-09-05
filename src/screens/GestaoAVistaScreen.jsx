@@ -94,6 +94,7 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
       qtdVendas,
       diasNegativos,
       cmvCompras,
+      temEstoque,
       modoCmv: temEstoque ? 'estoque' : (pctCmv > 0 ? 'estimado' : 'lancamentos')
     };
   }, [lancamentosMes, pctCmv]);
@@ -418,7 +419,7 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
               <div style={{ fontSize: 12, fontWeight: 700, color: '#1C2421', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Distribuição de Despesas</span>
                 <span style={{ fontSize: 10, fontWeight: 500, color: '#7A7868' }}>
-                  {pctCmv > 0 && !temEstoque ? '(Base DRE)' : '(Base Lançamentos)'}
+                  {pctCmv > 0 && !calcAtual.temEstoque ? '(Base DRE)' : '(Base Lançamentos)'}
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4.5 }}>
@@ -650,7 +651,7 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
               <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1C2421', marginBottom: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>Distribuição de Despesas</span>
                 <span style={{ fontSize: 9.5, fontWeight: 500, color: '#7A7868' }}>
-                  {pctCmv > 0 && !temEstoque ? '(Base DRE)' : ''}
+                  {pctCmv > 0 && !calcAtual.temEstoque ? '(Base DRE)' : ''}
                 </span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
