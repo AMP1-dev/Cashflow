@@ -71,13 +71,13 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
   }, [totalReceita, porCategoria, pctCmv]);
 
   const recentes = [...lancamentos].sort((a, b) => b.dia - a.dia);
-  const [recentesAbertos, setRecentesAbertos] = useState(true);
+  const [recentesAbertos, setRecentesAbertos] = useState(false);
   const [showRelatorioModal, setShowRelatorioModal] = useState(false);
 
   return (
     <div style={{ padding: 16 }}>
       {/* ── CARD PRINCIPAL: SALDO DO CAIXA (COMPACTO & ELEGANTE) ── */}
-      <div style={{ background: '#0F2B27', borderRadius: 16, padding: '18px 16px 16px', color: '#FAF8F3', marginBottom: 12, boxShadow: '0 4px 14px rgba(15,43,39,0.15)', textAlign: 'center' }}>
+      <div style={{ background: '#0F2B27', borderRadius: 16, padding: '18px 16px 16px', color: '#FAF8F3', marginBottom: 14, boxShadow: '0 4px 14px rgba(15,43,39,0.15)', textAlign: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 }}>
           Saldo em Caixa (Financeiro)
         </div>
@@ -122,55 +122,77 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
         </div>
       </div>
 
-      {/* ── BOTÕES DE AÇÃO PRINCIPAL: DESIGN ERGONÔMICO & HARMONIOSO ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+      {/* ── BOTÕES DE AÇÃO COM MÁXIMA ÊNFASE VISUAL (PROTAGONISTAS DO DASHBOARD) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+        {/* Botão + Receita com Alta Visibilidade */}
         <button 
           onClick={() => onNovo('receita')} 
           style={{ 
-            padding: '10px 12px', 
-            borderRadius: 12, 
-            border: '1px solid #CFEAD9', 
-            background: '#EAF6EE', 
+            padding: '14px 14px', 
+            borderRadius: 14, 
+            border: 'none',
+            background: 'linear-gradient(135deg, #134E43 0%, #1F5C52 100%)', 
             display: 'flex', 
-            alignItems: 'center', 
-            gap: 10, 
+            flexDirection: 'column', 
+            justifyContent: 'space-between',
             cursor: 'pointer', 
             textAlign: 'left', 
-            boxShadow: '0 2px 5px rgba(31,92,82,0.05)',
-            transition: 'all 0.15s ease'
+            boxShadow: '0 4px 14px rgba(19, 78, 67, 0.25)',
+            minHeight: 82,
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease'
           }}
         >
-          <div style={{ background: '#1F5C52', borderRadius: 9, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-            <ArrowUpCircle size={18} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+              <ArrowUpCircle size={20} />
+            </div>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+              + ENTRADA
+            </span>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1F5C52', whiteSpace: 'nowrap' }}>+ Receita</div>
-            <div style={{ fontSize: 10, color: '#5C8A71', marginTop: 1 }}>Entrada / Venda</div>
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
+              Lançar Receita
+            </div>
+            <div style={{ fontSize: 11, color: '#CFEEE2', marginTop: 1, fontWeight: 500 }}>
+              Venda / Entrada
+            </div>
           </div>
         </button>
 
+        {/* Botão - Despesa com Alta Visibilidade */}
         <button 
           onClick={() => onNovo('despesa')} 
           style={{ 
-            padding: '10px 12px', 
-            borderRadius: 12, 
-            border: '1px solid #F7D6C8', 
-            background: '#FDF2EE', 
+            padding: '14px 14px', 
+            borderRadius: 14, 
+            border: 'none',
+            background: 'linear-gradient(135deg, #9C3814 0%, #B05A2E 100%)', 
             display: 'flex', 
-            alignItems: 'center', 
-            gap: 10, 
+            flexDirection: 'column', 
+            justifyContent: 'space-between',
             cursor: 'pointer', 
             textAlign: 'left', 
-            boxShadow: '0 2px 5px rgba(176,90,46,0.05)',
-            transition: 'all 0.15s ease'
+            boxShadow: '0 4px 14px rgba(176, 90, 46, 0.25)',
+            minHeight: 82,
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease'
           }}
         >
-          <div style={{ background: '#B05A2E', borderRadius: 9, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0 }}>
-            <ArrowDownCircle size={18} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+              <ArrowDownCircle size={20} />
+            </div>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#4A1D0B', background: '#FDD1B8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+              - SAÍDA
+            </span>
           </div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 12.5, fontWeight: 700, color: '#B05A2E', whiteSpace: 'nowrap' }}>- Despesa</div>
-            <div style={{ fontSize: 10, color: '#C07D5A', marginTop: 1 }}>Saída / Conta</div>
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
+              Lançar Despesa
+            </div>
+            <div style={{ fontSize: 11, color: '#FDE8DC', marginTop: 1, fontWeight: 500 }}>
+              Conta / Pagamento
+            </div>
           </div>
         </button>
       </div>
