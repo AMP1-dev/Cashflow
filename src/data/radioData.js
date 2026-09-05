@@ -41,16 +41,44 @@ export const timeBasedSchedule = [
   {
     id: "slot-3",
     startHour: 14,
-    endHour: 18,
-    title: "Tarde Sofisticada & Flashback de Ouro",
+    endHour: 15,
+    title: "Tarde Sofisticada • Pop & Soft Hits",
     slogan: "Ampliando sua onda musical",
     streamUrl: "https://s10.streamingcloud.online:13192/stream",
     backupUrl: "https://stream.zeno.fm/f3wvbbqmdg8uv",
-    genre: "Flashback 70s, 80s & 90s Hits",
-    currentTrack: "Os Maiores Sucessos das Décadas de Ouro",
-    artist: "Tears for Fears, A-ha, Simply Red, Whitney Houston",
-    badge: "14:00 - 18:00 • TARDE RETRÔ & POP",
+    genre: "Pop Internacional & Soft Hits",
+    currentTrack: "Grandes Clássicos & Pop Contemporâneo",
+    artist: "Sade, Phil Collins, George Michael, Coldplay",
+    badge: "14:00 - 15:00 • TARDE SOFISTICADA",
     cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1000&q=80"
+  },
+  {
+    id: "slot-3a",
+    startHour: 15,
+    endHour: 16.5,
+    title: "Flashback Gold • Os Clássicos Consagrados",
+    slogan: "A música nos acompanha",
+    streamUrl: "https://antenaone.crossradio.com.br/stream/1",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFMAAC.aac",
+    genre: "Flashback 70s, 80s & 90s Inesquecíveis",
+    currentTrack: "As Músicas Mais Amadas da Antena 1 & Alpha FM",
+    artist: "Tears for Fears, A-ha, George Michael, Phil Collins, Elton John, Sade",
+    badge: "15:00 - 16:30 • FLASHBACK GOLD",
+    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80"
+  },
+  {
+    id: "slot-3b",
+    startHour: 16.5,
+    endHour: 18,
+    title: "Super Flashback Anos 80 & 90 • Pura Nostalgia",
+    slogan: "Ampliando sua onda musical",
+    streamUrl: "https://live.hunter.fm/80s_high",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/JBFMAAC.aac",
+    genre: "Grandes Sucessos dos Anos 80 e 90",
+    currentTrack: "O Melhor da Era de Ouro: Pop, Rock e Baladas",
+    artist: "Michael Jackson, Madonna, Cyndi Lauper, Queen, Bon Jovi, Air Supply",
+    badge: "16:30 - 18:00 • SUPER 80s & 90s",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80"
   },
   {
     id: "slot-4",
@@ -82,12 +110,16 @@ export const timeBasedSchedule = [
   }
 ];
 
-export function getScheduledSlotForHour(hour) {
-  if (hour >= 6 && hour < 10) return timeBasedSchedule[0];
-  if (hour >= 10 && hour < 14) return timeBasedSchedule[1];
-  if (hour >= 14 && hour < 18) return timeBasedSchedule[2];
-  if (hour >= 18 && hour < 22) return timeBasedSchedule[3];
-  return timeBasedSchedule[4]; // 22h to 06h (Tomorrowland Direct MP3)
+export function getScheduledSlotForHour(hour, minute = 0) {
+  const current = hour + minute / 60;
+  for (const slot of timeBasedSchedule) {
+    if (slot.startHour < slot.endHour) {
+      if (current >= slot.startHour && current < slot.endHour) return slot;
+    } else {
+      if (current >= slot.startHour || current < slot.endHour) return slot;
+    }
+  }
+  return timeBasedSchedule[0];
 }
 
 export const initialRadioConfig = {
@@ -208,13 +240,25 @@ export const initialChannels = [
   },
   {
     id: "ch-4",
-    title: "Flashback & Clássicos de Ouro (80s & 90s)",
-    desc: "Os maiores clássicos dos anos 70, 80, 90 e 2000 que marcaram época.",
-    badge: "80s & 90s TIMELESS",
+    title: "Flashback Gold • Antena 1 & Alpha FM",
+    desc: "Os maiores clássicos mundiais dos anos 70, 80, 90 e 2000 consagrados no Brasil.",
+    badge: "FLASHBACK DE OURO",
     genre: "Flashback 70s, 80s, 90s & 2000s",
     cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
-    streamUrl: "https://s10.streamingcloud.online:13192/stream",
+    streamUrl: "https://antenaone.crossradio.com.br/stream/1",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFMAAC.aac",
     color: "from-blue-600 to-slate-900"
+  },
+  {
+    id: "ch-5",
+    title: "Super 80s & Nostalgia • Hunter FM",
+    desc: "Puro anos 80: Michael Jackson, Madonna, Cyndi Lauper, Queen, Bon Jovi e Air Supply sem intervalos.",
+    badge: "ANOS 80 PURA NOSTALGIA",
+    genre: "80s Pop, Rock & Ballads",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://live.hunter.fm/80s_high",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/JBFMAAC.aac",
+    color: "from-amber-600 to-rose-950"
   }
 ];
 
@@ -268,7 +312,9 @@ export const initialShows = [
 export const initialSchedule = [
   { day: "Segunda a Domingo", time: "06:00 - 10:00", show: "Manhã Alpha (Pop & Clássicos)", host: "Transmissão HD", genre: "Pop & Adult Contemporary" },
   { day: "Segunda a Domingo", time: "10:00 - 14:00", show: "Expediente Premium", host: "Seleção Diária", genre: "Hits Internacionais" },
-  { day: "Segunda a Domingo", time: "14:00 - 18:00", show: "Tarde Sofisticada & Flashback", host: "Equipe Musical", genre: "Flashback & Pop 80s/90s" },
+  { day: "Segunda a Domingo", time: "14:00 - 15:00", show: "Tarde Sofisticada • Pop & Soft Hits", host: "Equipe Musical", genre: "Pop Internacional & Soft Hits" },
+  { day: "Segunda a Domingo", time: "15:00 - 16:30", show: "Flashback Gold (Antena 1 & Alpha)", host: "Vozes Consagradas", genre: "Flashback 70s, 80s & 90s" },
+  { day: "Segunda a Domingo", time: "16:30 - 18:00", show: "Super Flashback Anos 80 & 90", host: "Especial Nostalgia", genre: "Hits Consagrados 80s e 90s" },
   { day: "Segunda a Domingo", time: "18:00 - 22:00", show: "Sunset Drive & Acústicos", host: "Vozes de Ouro", genre: "Acoustic & Soft Rock" },
   { day: "Segunda a Domingo", time: "22:00 - 06:00", show: "Tomorrowland One World Radio LIVE", host: "DJs Globais", genre: "Melodic Techno / Festival" },
 ];

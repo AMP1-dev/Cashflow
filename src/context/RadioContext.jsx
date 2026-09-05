@@ -8,21 +8,25 @@ const RadioContext = createContext();
 export function RadioProvider({ children }) {
   const [timeSchedule, setTimeScheduleState] = useState(() => radioStorage.getTimeSchedule());
 
-  // Calculate active slot based on custom time schedule
-  const getActiveSlotForHour = (hour, scheduleList = timeSchedule) => {
+  // Calculate active slot based on custom time schedule (supports fractional hours like 16.5 for 16:30)
+  const getActiveSlotForHour = (hour, minute = 0, scheduleList = timeSchedule) => {
+    const current = hour + minute / 60;
     const list = scheduleList && scheduleList.length > 0 ? scheduleList : defaultTimeSchedule;
     for (const slot of list) {
       if (slot.startHour < slot.endHour) {
-        if (hour >= slot.startHour && hour < slot.endHour) return slot;
+        if (current >= slot.startHour && current < slot.endHour) return slot;
       } else {
         // Over midnight slot (e.g. 22 to 6)
-        if (hour >= slot.startHour || hour < slot.endHour) return slot;
+        if (current >= slot.startHour || current < slot.endHour) return slot;
       }
     }
     return list[0] || defaultTimeSchedule[0];
   };
 
-  const getActiveSlot = () => getActiveSlotForHour(new Date().getHours(), timeSchedule);
+  const getActiveSlot = () => {
+    const now = new Date();
+    return getActiveSlotForHour(now.getHours(), now.getMinutes(), timeSchedule);
+  };
 
   const [currentSlot, setCurrentSlot] = useState(getActiveSlot);
   const [config, setConfigState] = useState(() => {
