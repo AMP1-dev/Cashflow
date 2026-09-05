@@ -37,6 +37,11 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
   const [mostrarPlanoContas, setMostrarPlanoContas] = useState(false);
   const [grupoPlanoAberto, setGrupoPlanoAberto] = useState('custos_diretos');
 
+  const [seRepete, setSeRepete] = useState(false);
+  const [qtdRepeticoes, setQtdRepeticoes] = useState(2);
+  const [modalAlertaAberto, setModalAlertaAberto] = useState(false);
+  const [alertaJaExibidoNoDia, setAlertaJaExibidoNoDia] = useState(false);
+
   const realMesAtual = new Date().getMonth();
   const realAnoAtual = new Date().getFullYear();
   const ehMesDiferente = mes !== realMesAtual || anoAtual !== realAnoAtual;
@@ -127,6 +132,8 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
       tipo, descricao: descricao.trim(), valor: valorNum, mes, dia,
       mesCompetencia: personalizarCompetencia ? mesCompetencia : mes,
       anoCompetencia: anoAtual,
+      personalizarCompetencia,
+      repeticoes: seRepete ? Math.max(1, parseInt(qtdRepeticoes) || 1) : 1,
       categoria: tipo === 'despesa' ? categoria : null,
       subcategoria: tipo === 'despesa' ? subcategoria : null,
       formaRecebimento: tipo === 'receita' ? (formaRecebimento === 'avista' ? 'À vista/PIX' : 'À prazo') : null,
@@ -257,13 +264,69 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
         </div>
         <div style={{ flex: 1 }}>
           <FieldLabel>Dia do lançamento</FieldLabel>
-          <select value={dia} onChange={e => setDia(parseInt(e.target.value))} style={inputStyle}>
+          <select 
+            value={dia} 
+            onChange={e => {
+              const novoDia = parseInt(e.target.value);
+              setDia(novoDia);
+              
+              // Se for despesa e houver valor lançado, verifica concentração após a escolha do dia
+              if (tipo === 'despesa' && valorNum > 0) {
+                const despesasMes = (historicoCompleto || []).filter(l => l.tipo === 'despesa' && l.mes === mes);
+                const mediaDiaria = despesasMes.length > 0 ? (despesasMes.reduce((s, l) => s + l.valor, 0) / (totalDiasMes || 30)) : 0;
+                const despesasJanela = despesasMes.filter(l => l.dia === novoDia || l.dia === novoDia - 1 || l.dia === novoDia + 1)
+                  .filter(l => !editando || l.id !== lancamentoEditando?.id)
+                  .reduce((s, l) => s + l.valor, 0);
+                const totalPeriodo = despesasJanela + valorNum;
+                if (totalPeriodo >= 400 && (mediaDiaria === 0 || totalPeriodo >= mediaDiaria * 1.8)) {
+                  setModalAlertaAberto(true);
+                }
+              }
+            }} 
+            style={inputStyle}
+          >
             {Array.from({ length: daysInMonth(mes, anoAtual) }, (_, i) => i + 1).map(d => (
               <option key={d} value={d}>Dia {d}</option>
             ))}
           </select>
         </div>
       </div>
+
+      {/* Recorrência / Repetição de Lançamentos Futuros */}
+      {!editando && (
+        <div style={{ marginTop: 10, padding: '10px 12px', background: '#fff', borderRadius: 10, border: '1px solid #E5E0D5' }}>
+          <div 
+            onClick={() => setSeRepete(!seRepete)}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', userSelect: 'none' }}
+          >
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: '#1C2421' }}>
+              Este lançamento se repete nos próximos meses?
+            </span>
+            <input 
+              type="checkbox" 
+              checked={seRepete} 
+              onChange={e => setSeRepete(e.target.checked)} 
+              style={{ accentColor: '#1F5C52', width: 17, height: 17, cursor: 'pointer' }}
+            />
+          </div>
+
+          {seRepete && (
+            <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #F0EDE3', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, color: '#5C5A4F' }}>Repetir por:</span>
+              <select
+                value={qtdRepeticoes}
+                onChange={e => setQtdRepeticoes(parseInt(e.target.value))}
+                style={{ ...inputStyle, width: 'auto', flex: 1, padding: '6px 10px', fontSize: 13, background: '#FAF8F3' }}
+              >
+                <option value={2}>2 meses (mês atual + 1 futuro)</option>
+                <option value={3}>3 meses (trimestral)</option>
+                <option value={6}>6 meses (semestral)</option>
+                <option value={12}>12 meses (recorrente anual)</option>
+              </select>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Alternar Mês de Competência Contábil (DRE) */}
       <div style={{ marginTop: 6, marginBottom: 10 }}>
@@ -539,12 +602,32 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
         </>
       )}
 
-      {/* Alerta Preventivo de Concentração de Despesas (Item 2) */}
-      {alertaConcentracao && (
-        <div style={{ marginTop: 16, padding: '10px 12px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-          <AlertTriangle size={18} style={{ color: '#E8A33D', flexShrink: 0, marginTop: 2 }} />
-          <div style={{ fontSize: 11.5, color: '#8A5D00', lineHeight: 1.4 }}>
-            <strong>Alerta de Concentração:</strong> Os <strong>{alertaConcentracao.diasStr}</strong> já acumulam <strong>{formatBRL(alertaConcentracao.total)}</strong> em saídas previstas. Avalie negociar este vencimento para aliviar a pressão no caixa desse período.
+      {/* Modal / Alerta de Concentração (Exibido após escolha do dia) */}
+      {modalAlertaAberto && alertaConcentracao && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 43, 39, 0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '20px 22px', maxWidth: 380, width: '100%', boxShadow: '0 12px 36px rgba(0,0,0,0.24)', border: '1px solid #E8A33D' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+              <div style={{ background: '#FFF8E7', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E8A33D', flexShrink: 0 }}>
+                <AlertTriangle size={22} />
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#1C2421', fontFamily: 'Georgia, serif' }}>
+                Alerta de Concentração
+              </div>
+            </div>
+
+            <div style={{ fontSize: 13, color: '#5C5A4F', lineHeight: 1.5, marginBottom: 18 }}>
+              Os <strong>{alertaConcentracao.diasStr}</strong> já acumulam <strong>{formatBRL(alertaConcentracao.total)}</strong> em saídas previstas. Avalie negociar este vencimento para aliviar a pressão no caixa desse período.
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => setModalAlertaAberto(false)}
+                style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: 'none', background: '#0F2B27', color: '#FAF8F3', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+              >
+                Entendido, manter data
+              </button>
+            </div>
           </div>
         </div>
       )}

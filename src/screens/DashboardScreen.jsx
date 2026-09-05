@@ -1,4 +1,4 @@
-import { ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronDown, X, Presentation, FileText, Target, CheckCircle2, AlertTriangle, TrendingUp, ShieldCheck, HelpCircle } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronDown, X, Presentation, FileText, Target, CheckCircle2, AlertTriangle, TrendingUp, ShieldCheck, HelpCircle, UploadCloud } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { EmptyState } from '../components/UIComponents';
@@ -6,7 +6,7 @@ import { RelatorioBancosModal } from '../components/RelatorioBancosModal';
 import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 'dono', onNovo, onEditar, onIrGestaoAVista }) {
+export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 'dono', onNovo, onEditar, onIrGestaoAVista, onAbrirImportacao }) {
   const ehDono = papel !== 'funcionario';
   const [pctCmv, setPctCmv] = useState(0);
   const [peExpandido, setPeExpandido] = useState(false);
@@ -150,82 +150,7 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 
         </div>
       </div>
 
-      {/* ── BOTÕES DE AÇÃO COM MÁXIMA ÊNFASE VISUAL (PROTAGONISTAS DO DASHBOARD) ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-        {/* Botão + Receita com Alta Visibilidade */}
-        <button 
-          onClick={() => onNovo('receita')} 
-          style={{ 
-            padding: '14px 14px', 
-            borderRadius: 14, 
-            border: 'none',
-            background: 'linear-gradient(135deg, #134E43 0%, #1F5C52 100%)', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'space-between',
-            cursor: 'pointer', 
-            textAlign: 'left', 
-            boxShadow: '0 4px 14px rgba(19, 78, 67, 0.25)',
-            minHeight: 82,
-            transition: 'transform 0.15s ease, box-shadow 0.15s ease'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
-              <ArrowUpCircle size={20} />
-            </div>
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
-              + ENTRADA
-            </span>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
-              Lançar Receita
-            </div>
-            <div style={{ fontSize: 11, color: '#CFEEE2', marginTop: 1, fontWeight: 500 }}>
-              Venda / Entrada
-            </div>
-          </div>
-        </button>
-
-        {/* Botão - Despesa com Alta Visibilidade */}
-        <button 
-          onClick={() => onNovo('despesa')} 
-          style={{ 
-            padding: '14px 14px', 
-            borderRadius: 14, 
-            border: 'none',
-            background: 'linear-gradient(135deg, #9C3814 0%, #B05A2E 100%)', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'space-between',
-            cursor: 'pointer', 
-            textAlign: 'left', 
-            boxShadow: '0 4px 14px rgba(176, 90, 46, 0.25)',
-            minHeight: 82,
-            transition: 'transform 0.15s ease, box-shadow 0.15s ease'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
-              <ArrowDownCircle size={20} />
-            </div>
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#4A1D0B', background: '#FDD1B8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
-              - SAÍDA
-            </span>
-          </div>
-          <div style={{ marginTop: 8 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
-              Lançar Despesa
-            </div>
-            <div style={{ fontSize: 11, color: '#FDE8DC', marginTop: 1, fontWeight: 500 }}>
-              Conta / Pagamento
-            </div>
-          </div>
-        </button>
-      </div>
-
-      {/* ── CARD DO PONTO DE EQUILÍBRIO: COMPACTO & INTELIGENTE (ACCORDION - APENAS DONO) ── */}
+      {/* ── CARD DO PONTO DE EQUILÍBRIO: ABAIXO DO CARD PRINCIPAL (APENAS DONO) ── */}
       {ehDono && (
         <div style={{ 
           background: '#fff', 
@@ -373,7 +298,82 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 
       </div>
       )}
 
-      {/* ── LANÇAMENTOS RECENTES & RELATÓRIO ── */}
+      {/* ── BOTÕES DE AÇÃO COM MÁXIMA ÊNFASE VISUAL (PROTAGONISTAS DO DASHBOARD) ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+        {/* Botão + Receita com Alta Visibilidade */}
+        <button 
+          onClick={() => onNovo('receita')} 
+          style={{ 
+            padding: '14px 14px', 
+            borderRadius: 14, 
+            border: 'none',
+            background: 'linear-gradient(135deg, #134E43 0%, #1F5C52 100%)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between', 
+            cursor: 'pointer', 
+            textAlign: 'left', 
+            boxShadow: '0 4px 14px rgba(19, 78, 67, 0.25)', 
+            minHeight: 82, 
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+              <ArrowUpCircle size={20} />
+            </div>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+              + ENTRADA
+            </span>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
+              Lançar Receita
+            </div>
+            <div style={{ fontSize: 11, color: '#CFEEE2', marginTop: 1, fontWeight: 500 }}>
+              Venda / Entrada
+            </div>
+          </div>
+        </button>
+
+        {/* Botão - Despesa com Alta Visibilidade */}
+        <button 
+          onClick={() => onNovo('despesa')} 
+          style={{ 
+            padding: '14px 14px', 
+            borderRadius: 14, 
+            border: 'none',
+            background: 'linear-gradient(135deg, #9C3814 0%, #B05A2E 100%)', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between', 
+            cursor: 'pointer', 
+            textAlign: 'left', 
+            boxShadow: '0 4px 14px rgba(176, 90, 46, 0.25)', 
+            minHeight: 82, 
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+              <ArrowDownCircle size={20} />
+            </div>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#4A1D0B', background: '#FDD1B8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+              - SAÍDA
+            </span>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
+              Lançar Despesa
+            </div>
+            <div style={{ fontSize: 11, color: '#FDE8DC', marginTop: 1, fontWeight: 500 }}>
+              Conta / Pagamento
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* ── BARRA DE FERRAMENTAS ACIMA DOS LANÇAMENTOS RECENTES: IMPORTAR EXTRATO & RELATÓRIOS ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, marginTop: 4 }}>
         <button
           onClick={() => setRecentesAbertos(a => !a)}
@@ -391,12 +391,23 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 
           )}
         </button>
         
-        <button 
-          onClick={() => setShowRelatorioModal(true)}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', background: '#fff', border: '1px solid #D1CFC7', borderRadius: 8, fontSize: 11.5, fontWeight: 600, color: '#1C2421', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
-        >
-          <FileText size={13} /> Relatório Bancos
-        </button>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {onAbrirImportacao && (
+            <button 
+              onClick={onAbrirImportacao}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: '#D9EBE6', border: '1px solid #1F5C52', borderRadius: 8, fontSize: 11.5, fontWeight: 600, color: '#1F5C52', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+            >
+              <UploadCloud size={13} /> Importar Extrato
+            </button>
+          )}
+
+          <button 
+            onClick={() => setShowRelatorioModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: '#fff', border: '1px solid #D1CFC7', borderRadius: 8, fontSize: 11.5, fontWeight: 600, color: '#1C2421', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+          >
+            <FileText size={13} /> Bancos
+          </button>
+        </div>
       </div>
 
       {recentes.length === 0 ? (

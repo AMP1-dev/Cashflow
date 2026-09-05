@@ -176,38 +176,51 @@ export default function CashFlowApp() {
   }, [lancamentosGeral]);
 
   async function addLancamento(novo) {
-    const mesAlvo = novo.mes !== undefined ? novo.mes : mesAtual;
-    const dataStr = formatDataISO(anoAtual, mesAlvo, novo.dia);
-    const dataCompStr = novo.dataCompetencia || (novo.mesCompetencia !== undefined 
-      ? formatDataISO(novo.anoCompetencia || anoAtual, novo.mesCompetencia, 1) 
-      : dataStr);
+    const repeticoes = Math.max(1, parseInt(novo.repeticoes) || 1);
+    const payloads = [];
 
-    const payload = {
-      empresa_id: empresaAtualObj.id,
-      tipo: novo.tipo,
-      descricao: novo.descricao,
-      valor: novo.valor,
-      data_lancamento: dataStr,
-      data_competencia: dataCompStr,
-      categoria: novo.categoria || null,
-      subcategoria: novo.subcategoria || null,
-      forma_recebimento: novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-      qtd_vendas: novo.qtdVendas || null,
-      banco: novo.banco || null,
-      meio_pagamento: novo.meio_pagamento || null,
-    };
+    for (let i = 0; i < repeticoes; i++) {
+      const mesBase = novo.mes !== undefined ? novo.mes : mesAtual;
+      const dataObj = new Date(anoAtual, mesBase + i, 1);
+      const anoItem = dataObj.getFullYear();
+      const mesItem = dataObj.getMonth();
+      const maxDiasMes = daysInMonth(mesItem, anoItem);
+      const diaItem = Math.min(novo.dia, maxDiasMes);
 
-    let { data, error } = await supabase.from('lancamentos').insert(payload).select().single();
+      const dataStr = formatDataISO(anoItem, mesItem, diaItem);
+      const dataCompStr = novo.personalizarCompetencia && novo.mesCompetencia !== undefined
+        ? formatDataISO(anoItem, (novo.mesCompetencia + i) % 12, 1)
+        : dataStr;
 
-    // Se a coluna data_competencia ainda não existir no schema local do PostgreSQL, tenta salvar sem ela
+      payloads.push({
+        empresa_id: empresaAtualObj.id,
+        tipo: novo.tipo,
+        descricao: repeticoes > 1 ? `${novo.descricao} (${i + 1}/${repeticoes})` : novo.descricao,
+        valor: novo.valor,
+        data_lancamento: dataStr,
+        data_competencia: dataCompStr,
+        categoria: novo.categoria || null,
+        subcategoria: novo.subcategoria || null,
+        forma_recebimento: novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
+        qtd_vendas: novo.qtdVendas || null,
+        banco: novo.banco || null,
+        meio_pagamento: novo.meio_pagamento || null,
+      });
+    }
+
+    let { data, error } = await supabase.from('lancamentos').insert(payloads);
+
     if (error && error.message && error.message.includes('data_competencia')) {
-      delete payload.data_competencia;
-      const res = await supabase.from('lancamentos').insert(payload).select().single();
-      data = res.data;
+      const semComp = payloads.map(p => {
+        const copy = { ...p };
+        delete copy.data_competencia;
+        return copy;
+      });
+      const res = await supabase.from('lancamentos').insert(semComp);
       error = res.error;
     }
 
-    if (!error && data) {
+    if (!error) {
       carregarLancamentos(empresaAtualObj.id);
     } else {
       alert('Erro ao registrar lançamento: ' + (error?.message || 'Falha desconhecida.'));
@@ -493,6 +506,7 @@ export default function CashFlowApp() {
               onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }}
               onEditar={abrirEdicao}
               onIrGestaoAVista={() => setTela('gestaoavista')}
+              onAbrirImportacao={() => setShowImportarModal(true)}
             />
           )}
           {tela === 'fluxo' && (
