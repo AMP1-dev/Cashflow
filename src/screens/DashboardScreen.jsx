@@ -73,7 +73,8 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
     
     const atingiu = faturamento >= pontoEquilibrio && pontoEquilibrio > 0;
     const falta = Math.max(0, pontoEquilibrio - faturamento);
-    const progressoPct = pontoEquilibrio > 0 ? Math.min(100, Math.round((faturamento / pontoEquilibrio) * 100)) : (faturamento > 0 ? 100 : 0);
+    const pctAtingido = pontoEquilibrio > 0 ? Math.round((faturamento / pontoEquilibrio) * 100) : (faturamento > 0 ? 100 : 0);
+    const progressoPct = Math.min(100, pctAtingido);
     const margemSeguranca = faturamento - pontoEquilibrio;
 
     return {
@@ -89,6 +90,7 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
       resultadoDRE,
       atingiu,
       falta,
+      pctAtingido,
       progressoPct,
       margemSeguranca,
       temCustos: custosFixos > 0
@@ -260,7 +262,7 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
               {peCalculo.temCustos && (
                 <span style={{ fontSize: 11, color: '#7A7868', marginLeft: 6 }}>
                   {peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0
-                    ? `(${peCalculo.progressoPct}% alcançado)`
+                    ? `(${peCalculo.pctAtingido}% alcançado)`
                     : `(Custos Fixos: ${formatBRL(peCalculo.custosFixos)})`
                   }
                 </span>

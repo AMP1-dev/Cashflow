@@ -66,6 +66,7 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
     if (pctCmv > 0 && !temEstoque) {
       porCategoria.cmv = cmvEstimado;
     }
+    const totalDespesasCategoria = Object.values(porCategoria).reduce((s, v) => s + v, 0);
 
     // Qtd Vendas e Dias Negativos (para Indicadores)
     const qtdVendas = lancamentosMes.filter(l => l.tipo === 'receita').reduce((s, l) => s + (l.qtdVendas || 0), 0);
@@ -76,6 +77,7 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
     return {
       faturamento,
       totalDespesa,
+      totalDespesasCategoria,
       custosFixosTotais,
       despesasVariaveisTotais,
       pctMC,
@@ -385,11 +387,16 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
             </div>
 
             <div style={{ background: '#fff', borderRadius: 14, padding: '14px 16px', border: '1px solid #EFEBE0', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 1px 4px rgba(0,0,0,0.02)' }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#1C2421', marginBottom: 8 }}>Distribuição de Despesas</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#1C2421', marginBottom: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Distribuição de Despesas</span>
+                <span style={{ fontSize: 10, fontWeight: 500, color: '#7A7868' }}>
+                  {pctCmv > 0 && !temEstoque ? '(Base DRE)' : '(Base Lançamentos)'}
+                </span>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4.5 }}>
                 {Object.entries(CATEGORIAS).map(([key, cat]) => {
                   const valor = calcAtual.porCategoria[key] || 0;
-                  const pct = calcAtual.totalDespesa > 0 ? (valor / calcAtual.totalDespesa) * 100 : 0;
+                  const pct = calcAtual.totalDespesasCategoria > 0 ? (valor / calcAtual.totalDespesasCategoria) * 100 : 0;
                   return (
                     <div key={key}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, marginBottom: 2 }}>
@@ -612,11 +619,16 @@ export function GestaoAVistaScreen({ lancamentosAno, mesAtual, anoAtual, empresa
             </div>
 
             <div className="print-card" style={{ background: '#fff', borderRadius: 14, padding: '12px 16px', border: '1px solid #EFEBE0', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 120, boxSizing: 'border-box', flex: 1 }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1C2421', marginBottom: 5 }}>Distribuição de Despesas</div>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#1C2421', marginBottom: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>Distribuição de Despesas</span>
+                <span style={{ fontSize: 9.5, fontWeight: 500, color: '#7A7868' }}>
+                  {pctCmv > 0 && !temEstoque ? '(Base DRE)' : ''}
+                </span>
+              </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3.5 }}>
                 {Object.entries(CATEGORIAS).map(([key, cat]) => {
                   const valor = calcAtual.porCategoria[key] || 0;
-                  const pct = calcAtual.totalDespesa > 0 ? (valor / calcAtual.totalDespesa) * 100 : 0;
+                  const pct = calcAtual.totalDespesasCategoria > 0 ? (valor / calcAtual.totalDespesasCategoria) * 100 : 0;
                   return (
                     <div key={key}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9.5, marginBottom: 1 }}>
