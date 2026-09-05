@@ -37,16 +37,38 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
   // ── Cálculo Sincronizado do Ponto de Equilíbrio & DRE ─────────────────────
   const peCalculo = useMemo(() => {
     const faturamento = totalReceita;
-    const cmvCalculado = pctCmv > 0 ? (faturamento * (pctCmv / 100)) : porCategoria.cmv;
+
+    // Verificar se há apuração por estoque (Modo Estoque)
+    const lInicial = lancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal   = lancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'final');
+    const estoqueInicial = lInicial ? lInicial.valor : null;
+    const estoqueFinal   = lFinal   ? lFinal.valor   : null;
+    const temEstoque     = estoqueInicial !== null || estoqueFinal !== null;
+
+    let cmvCalculado;
+    let modoCmv;
+    if (temEstoque) {
+      cmvCalculado = (estoqueInicial || 0) + porCategoria.cmv - (estoqueFinal || 0);
+      modoCmv = 'estoque';
+    } else if (pctCmv > 0) {
+      cmvCalculado = faturamento * (pctCmv / 100);
+      modoCmv = 'estimado';
+    } else {
+      cmvCalculado = porCategoria.cmv;
+      modoCmv = 'compras';
+    }
+
     const despesasVariaveis = cmvCalculado + porCategoria.variavel;
     const custosFixos = porCategoria.fixa + porCategoria.financeira;
     const margemContribuicao = faturamento - despesasVariaveis;
     
+    // Percentual da Margem de Contribuição
     const pctMC = faturamento > 0 
       ? (margemContribuicao / faturamento) 
       : (pctCmv > 0 ? ((100 - pctCmv) / 100) : 0.35);
     
-    const pontoEquilibrio = (pctMC > 0 && custosFixos > 0) ? (custosFixos / pctMC) : 0;
+    const mcPositiva = pctMC > 0;
+    const pontoEquilibrio = (mcPositiva && custosFixos > 0) ? (custosFixos / pctMC) : 0;
     const resultadoDRE = margemContribuicao - custosFixos;
     
     const atingiu = faturamento >= pontoEquilibrio && pontoEquilibrio > 0;
@@ -57,9 +79,12 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
     return {
       custosFixos,
       cmvCalculado,
+      modoCmv,
+      temEstoque,
       despesasVariaveis,
       margemContribuicao,
       pctMC,
+      mcPositiva,
       pontoEquilibrio,
       resultadoDRE,
       atingiu,
@@ -68,7 +93,7 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
       margemSeguranca,
       temCustos: custosFixos > 0
     };
-  }, [totalReceita, porCategoria, pctCmv]);
+  }, [totalReceita, porCategoria, pctCmv, lancamentos]);
 
   const recentes = [...lancamentos].sort((a, b) => b.dia - a.dia);
   const [recentesAbertos, setRecentesAbertos] = useState(false);
@@ -197,16 +222,22 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
         </button>
       </div>
 
-      {/* ── CARD DO PONTO DE EQUILÍBRIO: COMPACTO & COLAPSÁVEL (ACCORDION) ── */}
+      {/* ── CARD DO PONTO DE EQUILÍBRIO: COMPACTO & INTELIGENTE (ACCORDION) ── */}
       <div style={{ 
         background: '#fff', 
-        border: `1px solid ${peCalculo.temCustos ? (peCalculo.atingiu ? '#CFEAD9' : '#FCA5A5') : '#E5E0D5'}`, 
+        border: `1px solid ${
+          !peCalculo.temCustos 
+            ? '#E5E0D5' 
+            : !peCalculo.mcPositiva 
+            ? '#FDE68A' 
+            : (peCalculo.atingiu ? '#CFEAD9' : '#FCA5A5')
+        }`, 
         borderRadius: 14, 
         marginBottom: 14, 
         overflow: 'hidden', 
         boxShadow: '0 2px 6px rgba(0,0,0,0.02)' 
       }}>
-        {/* Cabeçalho Clicável (1 Linha Limpa) */}
+        {/* Cabeçalho Clicável */}
         <div 
           onClick={() => setPeExpandido(e => !e)}
           style={{ 
@@ -215,39 +246,50 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            background: peCalculo.temCustos ? (peCalculo.atingiu ? '#F5FAF7' : '#FEF2F2') : '#FAF8F3' 
+            background: !peCalculo.temCustos 
+              ? '#FAF8F3' 
+              : !peCalculo.mcPositiva 
+              ? '#FFFDF5' 
+              : (peCalculo.atingiu ? '#F5FAF7' : '#FEF2F2') 
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Target size={16} color={peCalculo.temCustos ? (peCalculo.atingiu ? '#1F5C52' : '#DC2626') : '#7A7868'} />
+            <Target size={16} color={!peCalculo.temCustos ? '#7A7868' : !peCalculo.mcPositiva ? '#D97706' : (peCalculo.atingiu ? '#1F5C52' : '#DC2626')} />
             <div>
               <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1C2421' }}>Ponto de Equilíbrio</span>
-              {peCalculo.temCustos && peCalculo.pontoEquilibrio > 0 && (
-                <span style={{ fontSize: 11, color: '#7A7868', marginLeft: 6 }}>({peCalculo.progressoPct}% alcançado)</span>
+              {peCalculo.temCustos && (
+                <span style={{ fontSize: 11, color: '#7A7868', marginLeft: 6 }}>
+                  {peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0
+                    ? `(${peCalculo.progressoPct}% alcançado)`
+                    : `(Custos Fixos: ${formatBRL(peCalculo.custosFixos)})`
+                  }
+                </span>
               )}
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {peCalculo.temCustos && peCalculo.pontoEquilibrio > 0 ? (
-              peCalculo.atingiu ? (
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1F5C52', background: '#CFEAD9', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <CheckCircle2 size={12} /> Atingido!
-                </span>
-              ) : (
-                <span style={{ fontSize: 10.5, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FECACA', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <AlertTriangle size={12} /> Faltam {formatBRL(peCalculo.falta)}
-                </span>
-              )
-            ) : (
+            {!peCalculo.temCustos ? (
               <span style={{ fontSize: 11, color: '#9C9A8F' }}>Sem custos fixos</span>
+            ) : !peCalculo.mcPositiva ? (
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#92400E', background: '#FEF3C7', border: '1px solid #FDE68A', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <AlertTriangle size={12} /> Margem Negativa
+              </span>
+            ) : peCalculo.atingiu ? (
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1F5C52', background: '#CFEAD9', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <CheckCircle2 size={12} /> Atingido!
+              </span>
+            ) : (
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FECACA', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <AlertTriangle size={12} /> Faltam {formatBRL(peCalculo.falta)}
+              </span>
             )}
             <ChevronDown size={16} color="#7A7868" style={{ transform: peExpandido ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
           </div>
         </div>
 
-        {/* Micro Barra de Progresso quando fechado */}
-        {!peExpandido && peCalculo.temCustos && peCalculo.pontoEquilibrio > 0 && (
+        {/* Micro Barra de Progresso quando fechado (somente se margem for positiva) */}
+        {!peExpandido && peCalculo.temCustos && peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0 && (
           <div style={{ height: 3, background: '#F0EDE3' }}>
             <div style={{ height: '100%', width: `${peCalculo.progressoPct}%`, background: peCalculo.atingiu ? '#1F5C52' : '#DC2626' }} />
           </div>
@@ -256,7 +298,23 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
         {/* Conteúdo Detalhado ao Expandir */}
         {peExpandido && (
           <div style={{ padding: '14px 14px 16px', background: '#fff', borderTop: '1px solid #EFEBE0' }}>
-            {peCalculo.temCustos && peCalculo.pontoEquilibrio > 0 ? (
+            {!peCalculo.temCustos ? (
+              <div style={{ fontSize: 12, color: '#7A7868', padding: '6px 0 10px', lineHeight: 1.4 }}>
+                Cadastre suas despesas fixas (aluguel, salários, etc.) para o sistema calcular automaticamente a receita mínima necessária para cobrir a operação.
+              </div>
+            ) : !peCalculo.mcPositiva ? (
+              <div style={{ background: '#FFFDF5', border: '1px solid #FDE68A', borderRadius: 10, padding: '12px 14px', marginBottom: 12, fontSize: 12, color: '#78350F', lineHeight: 1.5 }}>
+                <div style={{ fontWeight: 700, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6, color: '#92400E' }}>
+                  <AlertTriangle size={15} /> Ponto de Equilíbrio Indisponível (Margem de Contribuição Negativa)
+                </div>
+                <div style={{ marginTop: 4 }}>
+                  Sua empresa possui <strong>{formatBRL(peCalculo.custosFixos)}</strong> em custos fixos cadastrados neste mês. Porém, as compras de mercadorias lançadas como CMV (<strong>{formatBRL(peCalculo.cmvCalculado)}</strong>) superam o faturamento de vendas (<strong>{formatBRL(totalReceita)}</strong>), gerando margem negativa de <strong>{formatBRL(peCalculo.margemContribuicao)}</strong>.
+                </div>
+                <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px dashed #FCD34D', fontSize: 11.5 }}>
+                  💡 <strong>Por que isso acontece?</strong> Se essa compra de mercadorias foi para estoque que ainda será vendido nos próximos meses, vá na aba <strong>DRE</strong> e use <strong>"Apurar por Estoque"</strong> ou <strong>"Configurar % CMV"</strong> (ex: 35%). Assim o sistema calcula o custo apenas do que foi vendido e apura sua meta real de vendas!
+                </div>
+              </div>
+            ) : (
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
                   <div>
@@ -291,10 +349,6 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
                   )}
                 </div>
               </>
-            ) : (
-              <div style={{ fontSize: 12, color: '#7A7868', padding: '6px 0 10px', lineHeight: 1.4 }}>
-                Cadastre suas despesas fixas (aluguel, salários, etc.) para o sistema calcular automaticamente a receita mínima necessária para não ter prejuízo.
-              </div>
             )}
 
             <button 
