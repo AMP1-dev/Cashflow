@@ -272,31 +272,8 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, onNovo, 
         )}
       </div>
 
-      {/* ── SEÇÃO DESPESAS POR CATEGORIA (GRID COMPACTO 2x2) ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: '#5C5A4F' }}>Despesas por categoria</span>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
-        {Object.entries(CATEGORIAS).map(([key, cat]) => {
-          const valor = porCategoria[key] || 0;
-          const pct = totalDespesa > 0 ? (valor / totalDespesa) * 100 : 0;
-          return (
-            <div key={key} style={{ background: '#fff', borderRadius: 10, padding: '8px 10px', border: '1px solid #EFEBE0', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                <span style={{ color: cat.color, fontWeight: 600, fontSize: 11 }}>{cat.short}</span>
-                <span style={{ fontSize: 9.5, color: '#747266', background: '#F5F2E8', padding: '1px 4px', borderRadius: 4, fontWeight: 600 }}>{pct.toFixed(0)}%</span>
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#1C2421', marginBottom: 4 }}>{formatBRL(valor)}</div>
-              <div style={{ height: 3, background: '#F0EDE3', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: cat.color, borderRadius: 2 }} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
       {/* ── LANÇAMENTOS RECENTES & RELATÓRIO ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: recentesAbertos ? 10 : 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: recentesAbertos ? 10 : 12 }}>
         <button
           onClick={() => setRecentesAbertos(a => !a)}
           disabled={recentes.length === 0}

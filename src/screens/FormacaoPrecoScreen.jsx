@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { TrendingUp, TrendingDown, AlertCircle, Calculator, Settings2, X, HelpCircle, HardDrive } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Calculator, Settings2, X, HelpCircle, HardDrive, RotateCcw } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { FieldLabel, inputStyle, EmptyState } from '../components/UIComponents';
 import { CalculadoraRH } from '../components/CalculadoraRH';
@@ -153,6 +153,26 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
     TODOS_CAMPOS_KEYS.forEach(k => { t[k] = paraTexto(sugestao[k]); });
     setTextos(t);
     setUsandoSugestao(true);
+  }
+
+  const dadosCustoFixoDetalhado = useMemo(() => {
+    const receitas = lancamentos.filter(l => l.tipo === 'receita');
+    const faturamento = receitas.reduce((s, l) => s + l.valor, 0);
+    const despesas = lancamentos.filter(l => l.tipo === 'despesa');
+    const norm = (s) => (s || '').toLowerCase();
+    const fixasTotal = despesas.filter(d => d.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
+    const retirada = despesas.filter(d => d.categoria === 'fixa' && (norm(d.descricao).includes('pró-labore') || norm(d.descricao).includes('pro-labore') || norm(d.descricao).includes('pró labore') || norm(d.subcategoria).includes('pró-labore'))).reduce((s, l) => s + l.valor, 0);
+    const custoFixoMonetario = Math.max(fixasTotal - retirada, 0);
+    return {
+      faturamento,
+      custoFixoMonetario,
+      pctSugerido: sugestao.custoFixo,
+    };
+  }, [lancamentos, sugestao]);
+
+  function restaurarCampoIndividual(key) {
+    const valorSugerido = paraTexto(sugestao[key] ?? 0);
+    setTextos(prev => ({ ...prev, [key]: valorSugerido }));
   }
 
   function aplicarMatrizTributaria(novaConfig) {
@@ -366,16 +386,20 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 }}>
         <span style={{ fontSize: 12.5, fontWeight: 600, color: '#5C5A4F' }}>Índices incidentes</span>
-        {!usandoSugestao && regimeTributario === 'simples' && (
-          <button onClick={restaurarSugestao} style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 11, cursor: 'pointer', textDecoration: 'underline' }}>
-            usar sugestão automática
-          </button>
-        )}
+        <button 
+          type="button"
+          onClick={restaurarSugestao} 
+          style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', color: '#1F5C52', fontSize: 11, fontWeight: 600, cursor: 'pointer', padding: '3px 9px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4, transition: 'all 0.15s ease' }}
+          title="Recalcular todos os campos a partir dos lançamentos reais deste mês"
+        >
+          <RotateCcw size={11} />
+          <span>Restaurar todos os automáticos</span>
+        </button>
       </div>
       <div style={{ fontSize: 10.5, color: '#9C9A8F', marginBottom: 10 }}>
-        {usandoSugestao && regimeTributario === 'simples' ? 'Calculado a partir dos seus lançamentos deste mês. Você pode editar qualquer campo.' : 'Valores editados manualmente e salvos para este mês.'}
+        Valores sugeridos automaticamente dos seus lançamentos do mês. Você pode editar qualquer campo e restaurar o automático a qualquer momento.
         {precoVendaNum === 0 && ' Informe o preço de venda abaixo para ver os valores em R$.'}
       </div>
 
@@ -387,27 +411,109 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
             <span style={{ minWidth: 38, textAlign: 'right' }}>100,0%</span>
           </div>
         </div>
-        {camposPercentual.map((campo) => (
-          <div key={campo.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 12px', borderTop: '1px solid #F0EDE3', background: campo.grupo === 'fixo' ? '#FBFAF6' : '#fff' }}>
-            <span style={{ fontSize: 12.5, color: '#1C2421' }}>{campo.label}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <span style={{ fontSize: 12, color: '#9C9A8F', minWidth: 64, textAlign: 'right' }}>
-                {precoVendaNum > 0 ? formatBRL(valorCampoEmReais(campo.key)) : '—'}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                <input
-                  value={textos[campo.key]}
-                  onChange={e => atualizarPct(campo.key, e.target.value.replace(/[^0-9,.-]/g, ''))}
-                  inputMode="decimal"
-                  placeholder="0"
-                  disabled={['pisCofins', 'csllIrpj'].includes(campo.key) && (regimeTributario === 'presumido' || regimeTributario === 'real')}
-                  style={{ width: 46, textAlign: 'right', padding: '5px 6px', borderRadius: 6, border: '1px solid #E5E0D5', fontSize: 12.5, background: ['pisCofins', 'csllIrpj'].includes(campo.key) && (regimeTributario === 'presumido' || regimeTributario === 'real') ? '#F0EDE3' : '#fff', color: '#1C2421' }}
-                />
-                <span style={{ fontSize: 11.5, color: '#9C9A8F' }}>%</span>
+        {camposPercentual.map((campo) => {
+          const valorSugeridoNum = sugestao[campo.key] ?? 0;
+          const valorSugeridoTexto = paraTexto(valorSugeridoNum);
+          const valorAtualTexto = textos[campo.key] || '0';
+          const valorAtualNum = parseFloat(valorAtualTexto.replace(',', '.')) || 0;
+          const temSugestaoCalculada = valorSugeridoNum > 0 || campo.key === 'custoFixo';
+          const isDiferenteDoAuto = Math.abs(valorAtualNum - valorSugeridoNum) > 0.05;
+
+          return (
+            <div 
+              key={campo.key} 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                padding: '9px 12px', 
+                borderTop: '1px solid #F0EDE3', 
+                background: campo.key === 'custoFixo' ? (isDiferenteDoAuto ? '#FFFDF5' : '#F7FAF8') : (campo.grupo === 'fixo' ? '#FBFAF6' : '#fff'),
+                gap: 4
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                {/* Lado Esquerdo: Rótulo do campo + Botão/Sinalizador para trazer do sistema */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', minWidth: 0 }}>
+                  <span style={{ fontSize: 12.5, color: '#1C2421', fontWeight: campo.key === 'custoFixo' ? 600 : 400 }}>
+                    {campo.label}
+                  </span>
+
+                  {temSugestaoCalculada && (
+                    <button
+                      type="button"
+                      onClick={() => restaurarCampoIndividual(campo.key)}
+                      title={isDiferenteDoAuto 
+                        ? `Valor atual (${valorAtualTexto}%) difere do calculado pelo sistema (${valorSugeridoTexto}%). Clique para trazer o valor original dos lançamentos.`
+                        : `Valor em dia com os lançamentos deste mês (${valorSugeridoTexto}%). Clique para recarregar.`
+                      }
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 3,
+                        padding: '2px 7px',
+                        borderRadius: 6,
+                        border: isDiferenteDoAuto ? '1px solid #1F5C52' : '1px solid #D1E5DE',
+                        background: isDiferenteDoAuto ? '#E6F4F1' : '#F0F8F5',
+                        color: isDiferenteDoAuto ? '#1F5C52' : '#2D7569',
+                        fontSize: 10.5,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      <RotateCcw size={10} style={{ transform: isDiferenteDoAuto ? 'rotate(-45deg)' : 'none' }} />
+                      <span>{isDiferenteDoAuto ? `Trazer do Sistema (${valorSugeridoTexto}%)` : `Auto: ${valorSugeridoTexto}%`}</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Lado Direito: Valor em R$ e Campo de Input */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, color: '#9C9A8F', minWidth: 64, textAlign: 'right' }}>
+                    {precoVendaNum > 0 ? formatBRL(valorCampoEmReais(campo.key)) : '—'}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                    <input
+                      value={textos[campo.key]}
+                      onChange={e => atualizarPct(campo.key, e.target.value.replace(/[^0-9,.-]/g, ''))}
+                      inputMode="decimal"
+                      placeholder="0"
+                      disabled={['pisCofins', 'csllIrpj'].includes(campo.key) && (regimeTributario === 'presumido' || regimeTributario === 'real')}
+                      style={{ 
+                        width: 48, 
+                        textAlign: 'right', 
+                        padding: '5px 6px', 
+                        borderRadius: 6, 
+                        border: campo.key === 'custoFixo' 
+                          ? (isDiferenteDoAuto ? '1.5px solid #E8A33D' : '1px solid #1F5C52') 
+                          : '1px solid #E5E0D5', 
+                        fontSize: 12.5, 
+                        fontWeight: campo.key === 'custoFixo' ? 600 : 400,
+                        background: ['pisCofins', 'csllIrpj'].includes(campo.key) && (regimeTributario === 'presumido' || regimeTributario === 'real') ? '#F0EDE3' : '#fff', 
+                        color: '#1C2421' 
+                      }}
+                    />
+                    <span style={{ fontSize: 11.5, color: '#9C9A8F' }}>%</span>
+                  </div>
+                </div>
               </div>
+
+              {/* Detalhamento de apoio para Custo Fixo */}
+              {campo.key === 'custoFixo' && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 10.5, color: '#6A7D76', paddingLeft: 2, marginTop: 1, flexWrap: 'wrap', gap: 4 }}>
+                  <span>
+                    Base dos lançamentos: <strong>{formatBRL(dadosCustoFixoDetalhado.custoFixoMonetario)}</strong> fixos sobre faturamento de <strong>{formatBRL(dadosCustoFixoDetalhado.faturamento)}</strong>.
+                  </span>
+                  {isDiferenteDoAuto && (
+                    <span style={{ color: '#B05A2E', fontWeight: 600 }}>
+                      ⚠️ Editado manualmente ({valorAtualTexto}%)
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', borderTop: '1px solid #E5E0D5', background: '#D9EBE6', fontSize: 12.5, fontWeight: 700, color: '#1F5C52' }}>
           <span>Preço Líquido</span>
           <div style={{ display: 'flex', gap: 14 }}>
