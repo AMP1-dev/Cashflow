@@ -4,26 +4,71 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
-  
-  html {
-    scroll-behavior: smooth;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color-scheme: dark;
-  }
+* {
+  box-sizing: border-box;
+}
 
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, select, button {
+  font-family: inherit;
+}
+
+.gestao-row {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.app-container {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+@media print {
   body {
-    background-color: #060A14;
-    color: #F1F5F9;
-    overflow-x: hidden;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #FAF8F3 !important;
   }
-
-  :focus-visible {
-    outline: 2px solid #F59E0B !important;
-    outline-offset: 2px !important;
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .app-container {
+    max-width: none !important;
+    margin: 0 !important;
+  }
+  .gestao-row {
+    flex-direction: row !important;
+  }
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+  #root {
+    padding: 0 !important;
+  }
+  * {
+    box-shadow: none !important;
+  }
+  #print-area {
+    zoom: 0.8;
+  }
+  #print-area > div {
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 }
 

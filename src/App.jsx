@@ -93,29 +93,51 @@ function MainPortal() {
   );
 }
 
+import CashFlowApp from './CashFlowApp';
+
 export default function App() {
-  const [isRadio, setIsRadio] = useState(() => {
-    if (typeof window === 'undefined') return true;
+  const [activeMode, setActiveMode] = useState(() => {
+    if (typeof window === 'undefined') return 'cashflow';
+    const hostname = window.location.hostname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
-    return params.get('app') !== 'portal';
+
+    if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
+      return 'radio';
+    }
+    if (params.get('app') === 'portal') {
+      return 'portal';
+    }
+    // Default for dre.amp.ia.br, amp-flow.vercel.app, and general usage:
+    return 'cashflow';
   });
 
   useEffect(() => {
     const checkRoute = () => {
+      const hostname = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
-      setIsRadio(params.get('app') !== 'portal');
+      if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
+        setActiveMode('radio');
+      } else if (params.get('app') === 'portal') {
+        setActiveMode('portal');
+      } else {
+        setActiveMode('cashflow');
+      }
     };
     window.addEventListener('popstate', checkRoute);
     return () => window.removeEventListener('popstate', checkRoute);
   }, []);
 
-  if (isRadio) {
+  if (activeMode === 'radio') {
     return <RadioApp />;
   }
 
-  return (
-    <AmpProvider>
-      <MainPortal />
-    </AmpProvider>
-  );
+  if (activeMode === 'portal') {
+    return (
+      <AmpProvider>
+        <MainPortal />
+      </AmpProvider>
+    );
+  }
+
+  return <CashFlowApp />;
 }
