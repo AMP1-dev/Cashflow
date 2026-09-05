@@ -95,17 +95,15 @@ function MainPortal() {
 
 export default function App() {
   const [isRadio, setIsRadio] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    const hostname = window.location.hostname.toLowerCase();
+    if (typeof window === 'undefined') return true;
     const params = new URLSearchParams(window.location.search);
-    return hostname.includes('amplificadora') || params.get('app') === 'radio';
+    return params.get('app') !== 'portal';
   });
 
   useEffect(() => {
     const checkRoute = () => {
-      const hostname = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
-      setIsRadio(hostname.includes('amplificadora') || params.get('app') === 'radio');
+      setIsRadio(params.get('app') !== 'portal');
     };
     window.addEventListener('popstate', checkRoute);
     return () => window.removeEventListener('popstate', checkRoute);
