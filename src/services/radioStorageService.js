@@ -1,15 +1,15 @@
 import { initialRadioConfig, initialChannels, initialShows, initialSchedule, initialArticles, initialSongLibrary, timeBasedSchedule, initialB2BClients } from '../data/radioData';
 
-const CONFIG_KEY = 'amp_radio_config_v5';
-const CHANNELS_KEY = 'amp_radio_channels_v5';
-const SHOWS_KEY = 'amp_radio_shows_v5';
-const SCHEDULE_KEY = 'amp_radio_schedule_v5';
-const ARTICLES_KEY = 'amp_radio_articles_v5';
-const REQUESTS_KEY = 'amp_radio_requests_v5';
-const AUTH_KEY = 'amp_radio_admin_auth_v5';
-const PASS_KEY = 'amp_radio_admin_pass_v5';
-const TIME_SCHEDULE_KEY = 'amp_radio_time_schedule_v5';
-const B2B_CLIENTS_KEY = 'amp_radio_b2b_clients_v5';
+const CONFIG_KEY = 'amp_radio_config_v6';
+const CHANNELS_KEY = 'amp_radio_channels_v6';
+const SHOWS_KEY = 'amp_radio_shows_v6';
+const SCHEDULE_KEY = 'amp_radio_schedule_v6';
+const ARTICLES_KEY = 'amp_radio_articles_v6';
+const REQUESTS_KEY = 'amp_radio_requests_v6';
+const AUTH_KEY = 'amp_radio_admin_auth_v6';
+const PASS_KEY = 'amp_radio_admin_pass_v6';
+const TIME_SCHEDULE_KEY = 'amp_radio_time_schedule_v6';
+const B2B_CLIENTS_KEY = 'amp_radio_b2b_clients_v6';
 
 export const radioStorage = {
   getConfig: () => {

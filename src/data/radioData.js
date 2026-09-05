@@ -264,48 +264,70 @@ export const initialChannels = [
 
 export const initialShows = [
   {
-    id: "show-1",
-    title: "Tomorrowland Belgium 2024 / 2025 • Mainstage 4K",
-    host: "Tomorrowland Official Stream",
-    date: "Transmissão 4K • Set Completo",
-    duration: "01:15:00",
-    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
-    desc: "Assista ao show cinematográfico do palco principal da Tomorrowland em ultra alta definição.",
-    audioPreviewUrl: "https://22733.live.streamtheworld.com/OWR_INTERNATIONAL.mp3",
-    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/Hhws7b94jE8?autoplay=1"
-  },
-  {
-    id: "show-2",
-    title: "Coldplay Live in São Paulo • Music of the Spheres",
-    host: "Estúdio Alpha Live",
-    date: "Concerto Especial HD",
-    duration: "02:05:00",
-    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
-    desc: "Os maiores sucessos da banda britânica com performances épicas de Viva La Vida, Fix You e Yellow.",
-    audioPreviewUrl: "https://s10.streamingcloud.online:13192/stream",
+    id: "show-queen",
+    title: "Queen • Bohemian Rhapsody (Remastered 4K)",
+    host: "Queen Official",
+    date: "Concerto Clássico • 4K",
+    duration: "00:06:00",
+    cover: "https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=600&q=80",
+    desc: "O lendário videoclipe e performance de Bohemian Rhapsody remasterizado em altíssima definição pelo canal oficial da banda.",
+    audioPreviewUrl: "https://antenaone.crossradio.com.br/stream/1",
     videoEmbedUrl: "https://www.youtube-nocookie.com/embed/fJ9rUzIMcZQ?autoplay=1"
   },
   {
-    id: "show-3",
-    title: "Phil Collins • Live at Montreux (Flashback Gold)",
-    host: "Clássicos Inesquecíveis",
-    date: "Show Histórico dos Anos 80 e 90",
-    duration: "01:45:00",
-    cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80",
-    desc: "Uma das apresentações mais aclamadas da carreira de Phil Collins com clássicos imortais.",
-    audioPreviewUrl: "https://s10.streamingcloud.online:13192/stream",
-    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/YkADj0TwpZ4?autoplay=1"
+    id: "show-tomorrowland",
+    title: "Tomorrowland Belgium • Official Festival Film",
+    host: "Tomorrowland Official Stream",
+    date: "Transmissão 4K • Festival Oficial",
+    duration: "00:32:00",
+    cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
+    desc: "O lendário aftermovie cinematográfico do maior festival de música eletrônica do mundo com mais de 180 milhões de visualizações.",
+    audioPreviewUrl: "https://22733.live.streamtheworld.com/OWR_INTERNATIONAL.mp3",
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/UWb5Qc-fBvk?autoplay=1"
   },
   {
-    id: "show-4",
-    title: "Sade • Bring Me Home Live 4K",
-    host: "Vozes de Veludo",
-    date: "Tour Mundial Especial",
-    duration: "01:30:00",
-    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
-    desc: "A elegância e a sofisticação da diva do smooth soul e pop internacional ao vivo.",
+    id: "show-coldplay",
+    title: "Coldplay • Viva La Vida (Official Video)",
+    host: "Estúdio Alpha Live",
+    date: "Transmissão HD Oficial",
+    duration: "00:04:02",
+    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    desc: "A canção mais aclamada da carreira do Coldplay, vencedora de múltiplos prêmios Grammy e hino de estádios pelo mundo.",
     audioPreviewUrl: "https://s10.streamingcloud.online:13192/stream",
-    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/S2qYJ-g3iHQ?autoplay=1"
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/dvgZkm1xWPE?autoplay=1"
+  },
+  {
+    id: "show-phil-collins",
+    title: "Phil Collins • In The Air Tonight (Official 4K)",
+    host: "Clássicos Inesquecíveis",
+    date: "Show Histórico dos Anos 80 e 90",
+    duration: "00:04:56",
+    cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80",
+    desc: "O clássico imortal de Phil Collins com um dos solos de bateria mais famosos da história da música internacional.",
+    audioPreviewUrl: "https://antenaone.crossradio.com.br/stream/1",
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/YkADj0TPrJA?autoplay=1"
+  },
+  {
+    id: "show-aha",
+    title: "a-ha • Take On Me (Official 4K Remaster)",
+    host: "Anos 80 de Ouro",
+    date: "Remaster 4K Oficial",
+    duration: "00:03:48",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
+    desc: "O videoclipe inovador em rotoscopia que definiu a geração anos 80 e atingiu mais de 1 bilhão de visualizações.",
+    audioPreviewUrl: "https://live.hunter.fm/80s_high",
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/djV11Xbc914?autoplay=1"
+  },
+  {
+    id: "show-tears-for-fears",
+    title: "Tears For Fears • Everybody Wants To Rule The World",
+    host: "Vozes de Ouro",
+    date: "Clássico dos Anos 80",
+    duration: "00:04:52",
+    cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=600&q=80",
+    desc: "A trilha sonora perfeita que sintetiza o synth-pop e o melhor da década de 80.",
+    audioPreviewUrl: "https://antenaone.crossradio.com.br/stream/1",
+    videoEmbedUrl: "https://www.youtube-nocookie.com/embed/aGCdLKXNF3w?autoplay=1"
   }
 ];
 
