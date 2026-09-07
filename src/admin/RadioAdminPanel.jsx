@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRadio } from '../context/RadioContext';
-import { Radio, Music, Calendar, Newspaper, MessageSquare, Settings, Database, ExternalLink, LogOut, Lock, Plus, Edit, Trash2, Check, X, Upload, Save, Disc, Flame, Clock, Sparkles, Volume2, Play, Building2, Store, ShoppingBag, Shirt, Tv, Copy, BarChart3, Activity, ShieldCheck, Car, Signal, Headphones, Globe2, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Radio, Music, Calendar, Newspaper, MessageSquare, Settings, Database, ExternalLink, LogOut, Lock, Plus, Edit, Trash2, Check, X, Upload, Save, Disc, Flame, Clock, Sparkles, Volume2, Play, Building2, Store, ShoppingBag, Shirt, Tv, Copy, BarChart3, Activity, ShieldCheck, Car, Signal, Headphones, Globe2, Wifi, WifiOff, RefreshCw, Share2 } from 'lucide-react';
 import { formatYouTubeEmbed } from '../data/radioData';
 
 export function RadioAdminPanel() {
@@ -794,6 +794,27 @@ export function RadioAdminPanel() {
                       >
                         <Play className="w-3.5 h-3.5 fill-white" />
                         <span>Testar Áudio</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const url = `https://amplificadora.com.br/?slot=${slot.id}&play=1`;
+                          if (navigator.share) {
+                            navigator.share({
+                              title: `${slot.title} • Rádio Amplificadora`,
+                              text: `Ouça ${slot.title} ao vivo na Rádio Amplificadora:`,
+                              url: url
+                            }).catch(() => {});
+                          } else if (navigator.clipboard) {
+                            navigator.clipboard.writeText(url);
+                            showToast(`Link copiado: ${slot.title} (com play direto)!`);
+                          }
+                        }}
+                        className="px-3.5 py-2.5 rounded-xl bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 border border-pink-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Copiar link direto para ouvir este bloco"
+                      >
+                        <Share2 className="w-3.5 h-3.5" />
+                        <span>Compartilhar</span>
                       </button>
 
                       <button

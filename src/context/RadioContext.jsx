@@ -246,6 +246,60 @@ export function RadioProvider({ children }) {
     return () => clearInterval(interval);
   }, [currentSlot.id, config.streamUrl, isPlaying, activeChannel, timeSchedule]);
 
+  // Deep Link Auto-Handler (e.g. ?slot=slot-6 or ?canal=ch-6 or ?grade=1)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const targetSlotId = params.get('slot');
+    const targetCanalId = params.get('canal');
+    const shouldPlay = params.get('play') === '1' || params.get('play') === 'true';
+
+    if (targetSlotId && timeSchedule.length > 0) {
+      const foundSlot = timeSchedule.find(s => s.id === targetSlotId);
+      if (foundSlot) {
+        setActiveChannel(null);
+        setCurrentSlot(foundSlot);
+        setConfigState(prev => ({
+          ...prev,
+          streamUrl: foundSlot.streamUrl,
+          streamBackupUrl: foundSlot.backupUrl,
+          badge: foundSlot.badge,
+          currentShow: {
+            ...prev.currentShow,
+            title: foundSlot.title,
+            currentTrack: foundSlot.currentTrack || foundSlot.title,
+            artist: foundSlot.artist,
+            genre: foundSlot.genre,
+            cover: foundSlot.cover
+          }
+        }));
+        showToast(`Sintonizado no Bloco: ${foundSlot.title}`);
+        if (shouldPlay) {
+          setTimeout(() => {
+            playStream(foundSlot.streamUrl);
+          }, 600);
+        }
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 250);
+      }
+    } else if (targetCanalId && channels.length > 0) {
+      const foundChannel = channels.find(c => c.id === targetCanalId);
+      if (foundChannel) {
+        setActiveChannel(foundChannel);
+        showToast(`Sintonizado em ${foundChannel.title}`);
+        if (shouldPlay) {
+          setTimeout(() => {
+            playStream(foundChannel.streamUrl);
+          }, 600);
+        }
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 250);
+      }
+    }
+  }, [timeSchedule, channels]);
+
   // Periodic AzuraCast Live Analytics & Icecast Telemetry Polling (every 15s)
   useEffect(() => {
     let isMounted = true;
@@ -637,6 +691,27 @@ export function RadioProvider({ children }) {
     playStream(targetUrl);
   };
 
+  const playSlot = (slot) => {
+    setActiveChannel(null); // Reset channel to play specific schedule slot
+    setCurrentSlot(slot);
+    setConfigState(prev => ({
+      ...prev,
+      streamUrl: slot.streamUrl,
+      streamBackupUrl: slot.backupUrl,
+      badge: slot.badge,
+      currentShow: {
+        ...prev.currentShow,
+        title: slot.title,
+        currentTrack: slot.currentTrack || slot.title,
+        artist: slot.artist,
+        genre: slot.genre,
+        cover: slot.cover
+      }
+    }));
+    showToast(`Sintonizado no Bloco: ${slot.title}`);
+    playStream(slot.streamUrl);
+  };
+
   const selectChannel = (channel) => {
     setActiveChannel(channel);
     showToast(`Sintonizado em ${channel.title}`);
@@ -901,6 +976,7 @@ export function RadioProvider({ children }) {
         selectChannel,
         selectMainStream,
         togglePlay,
+        playSlot,
         audioQuality,
         setAudioQuality,
         currentView,

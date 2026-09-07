@@ -3,12 +3,12 @@ import { initialRadioConfig, initialChannels, initialShows, initialSchedule, ini
 const CONFIG_KEY = 'amp_radio_config_v6';
 const CHANNELS_KEY = 'amp_radio_channels_v8';
 const SHOWS_KEY = 'amp_radio_shows_v6';
-const SCHEDULE_KEY = 'amp_radio_schedule_v6';
+const SCHEDULE_KEY = 'amp_radio_schedule_v8';
 const ARTICLES_KEY = 'amp_radio_articles_v6';
 const REQUESTS_KEY = 'amp_radio_requests_v6';
 const AUTH_KEY = 'amp_radio_admin_auth_v6';
 const PASS_KEY = 'amp_radio_admin_pass_v6';
-const TIME_SCHEDULE_KEY = 'amp_radio_time_schedule_v6';
+const TIME_SCHEDULE_KEY = 'amp_radio_time_schedule_v8';
 const B2B_CLIENTS_KEY = 'amp_radio_b2b_clients_v6';
 
 export const radioStorage = {

@@ -97,7 +97,7 @@ export const timeBasedSchedule = [
   {
     id: "slot-5",
     startHour: 22,
-    endHour: 6, // 22h às 06h
+    endHour: 24, // 22h às 00h
     title: "Tomorrowland One World Radio LIVE",
     slogan: "The Sound of Tomorrowland 24/7",
     streamUrl: "https://22733.live.streamtheworld.com/OWR_INTERNATIONAL.mp3",
@@ -105,8 +105,22 @@ export const timeBasedSchedule = [
     genre: "Tomorrowland • Melodic Techno • Future Rave • EDM",
     currentTrack: "Tomorrowland One World Radio Global Broadcast",
     artist: "Tomorrowland Mainstage • David Guetta • Armin van Buuren • Tiësto",
-    badge: "22:00 - 06:00 • TOMORROWLAND SESSIONS",
+    badge: "22:00 - 00:00 • TOMORROWLAND SESSIONS",
     cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1000&q=80"
+  },
+  {
+    id: "slot-6",
+    startHour: 0,
+    endHour: 6, // 00h às 06h
+    title: "amplificadora.club • Amnesia",
+    slogan: "The Sound of Underground & Club Culture",
+    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_AAC.aac",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_MP3.mp3",
+    genre: "Deep House • Tech House • Melodic Techno",
+    currentTrack: "The Boom Room (SLAM!) • Madrugada Underground",
+    artist: "The Boom Room Sets • Ibiza & Amsterdam Club Sounds",
+    badge: "00:00 - 06:00 • AMNESIA CLUB",
+    cover: "/amnesia-club.jpg"
   }
 ];
 
@@ -343,13 +357,14 @@ export const initialShows = [
 ];
 
 export const initialSchedule = [
-  { day: "Segunda a Domingo", time: "06:00 - 10:00", show: "Manhã Alpha (Pop & Clássicos)", host: "Transmissão HD", genre: "Pop & Adult Contemporary" },
-  { day: "Segunda a Domingo", time: "10:00 - 14:00", show: "Expediente Premium", host: "Seleção Diária", genre: "Hits Internacionais" },
-  { day: "Segunda a Domingo", time: "14:00 - 15:00", show: "Tarde Sofisticada • Pop & Soft Hits", host: "Equipe Musical", genre: "Pop Internacional & Soft Hits" },
-  { day: "Segunda a Domingo", time: "15:00 - 16:30", show: "Flashback Gold (Antena 1 & Alpha)", host: "Vozes Consagradas", genre: "Flashback 70s, 80s & 90s" },
-  { day: "Segunda a Domingo", time: "16:30 - 18:00", show: "Super Flashback Anos 80 & 90", host: "Especial Nostalgia", genre: "Hits Consagrados 80s e 90s" },
-  { day: "Segunda a Domingo", time: "18:00 - 22:00", show: "Sunset Drive & Acústicos", host: "Vozes de Ouro", genre: "Acoustic & Soft Rock" },
-  { day: "Segunda a Domingo", time: "22:00 - 06:00", show: "Tomorrowland One World Radio LIVE", host: "DJs Globais", genre: "Melodic Techno / Festival" },
+  { id: "sched-1", slotId: "slot-1", day: "Segunda a Domingo", time: "06:00 - 10:00", show: "Manhã Alpha (Pop & Clássicos)", host: "Transmissão HD", genre: "Pop & Adult Contemporary" },
+  { id: "sched-2", slotId: "slot-2", day: "Segunda a Domingo", time: "10:00 - 14:00", show: "Expediente Premium", host: "Seleção Diária", genre: "Hits Internacionais" },
+  { id: "sched-3", slotId: "slot-3", day: "Segunda a Domingo", time: "14:00 - 15:00", show: "Tarde Sofisticada • Pop & Soft Hits", host: "Equipe Musical", genre: "Pop Internacional & Soft Hits" },
+  { id: "sched-3a", slotId: "slot-3a", day: "Segunda a Domingo", time: "15:00 - 16:30", show: "Flashback Gold (Antena 1 & Alpha)", host: "Vozes Consagradas", genre: "Flashback 70s, 80s & 90s" },
+  { id: "sched-3b", slotId: "slot-3b", day: "Segunda a Domingo", time: "16:30 - 18:00", show: "Super Flashback Anos 80 & 90", host: "Especial Nostalgia", genre: "Hits Consagrados 80s e 90s" },
+  { id: "sched-4", slotId: "slot-4", day: "Segunda a Domingo", time: "18:00 - 22:00", show: "Sunset Drive & Acústicos", host: "Vozes de Ouro", genre: "Acoustic & Soft Rock" },
+  { id: "sched-5", slotId: "slot-5", day: "Segunda a Domingo", time: "22:00 - 00:00", show: "Tomorrowland One World Radio LIVE", host: "DJs Globais", genre: "Tomorrowland / EDM / Melodic Techno" },
+  { id: "sched-6", slotId: "slot-6", day: "Segunda a Domingo", time: "00:00 - 06:00", show: "amplificadora.club • Amnesia", host: "The Boom Room (SLAM!)", genre: "Deep House / Club Culture" },
 ];
 
 export const initialArticles = [
