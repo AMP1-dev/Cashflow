@@ -259,6 +259,17 @@ export const initialChannels = [
     streamUrl: "https://live.hunter.fm/80s_high",
     backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/JBFMAAC.aac",
     color: "from-amber-600 to-rose-950"
+  },
+  {
+    id: "ch-6",
+    title: "amplificadora.club • Amnesia",
+    desc: "The Sound of Underground & Club Culture. O melhor do Deep House, Tech House e Melodic Techno 24h com a curadoria The Boom Room (SLAM!).",
+    badge: "AMNESIA • CLUB SESSIONS",
+    genre: "Deep House • Tech House • Melodic Techno",
+    cover: "/amnesia-club.jpg",
+    streamUrl: "https://stream.radiocorp.nl/web12_aac",
+    backupUrl: "https://stream.radiocorp.nl/web12_mp3",
+    color: "from-pink-600 to-violet-950"
   }
 ];
 
