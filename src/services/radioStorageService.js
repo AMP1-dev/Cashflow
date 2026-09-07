@@ -1,7 +1,7 @@
 import { initialRadioConfig, initialChannels, initialShows, initialSchedule, initialArticles, initialSongLibrary, timeBasedSchedule, initialB2BClients } from '../data/radioData';
 
 const CONFIG_KEY = 'amp_radio_config_v6';
-const CHANNELS_KEY = 'amp_radio_channels_v7';
+const CHANNELS_KEY = 'amp_radio_channels_v8';
 const SHOWS_KEY = 'amp_radio_shows_v6';
 const SCHEDULE_KEY = 'amp_radio_schedule_v6';
 const ARTICLES_KEY = 'amp_radio_articles_v6';

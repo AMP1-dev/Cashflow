@@ -594,22 +594,47 @@ export function RadioProvider({ children }) {
 
     enableMobileAudioSession();
 
-    if (isPlaying && !customUrl) {
+    // 1. Se clicou no mesmo canal que já está tocando, pausa
+    if (isPlaying && channelObj !== undefined && activeChannel?.id === channelObj?.id && !customUrl) {
       audio.pause();
-      if (hlsRef.current) {
-        hlsRef.current.stopLoad();
-      }
+      if (hlsRef.current) hlsRef.current.stopLoad();
       setIsPlaying(false);
       setIsBuffering(false);
       if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
-    } else {
-      if (channelObj !== undefined) {
-        setActiveChannel(channelObj);
-      }
-      const activeSlot = getActiveSlot();
-      const targetUrl = customUrl || (activeChannel ? activeChannel.streamUrl : activeSlot.streamUrl);
-      playStream(targetUrl);
+      return;
     }
+
+    // 2. Se clicou no mesmo canal já ativo (passando a url dele) enquanto está tocando, pausa
+    if (isPlaying && channelObj !== undefined && activeChannel?.id === channelObj?.id) {
+      audio.pause();
+      if (hlsRef.current) hlsRef.current.stopLoad();
+      setIsPlaying(false);
+      setIsBuffering(false);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+      return;
+    }
+
+    // 3. Se clicou no botão geral de play/pause sem especificar canal nem URL
+    if (isPlaying && !customUrl && channelObj === null) {
+      audio.pause();
+      if (hlsRef.current) hlsRef.current.stopLoad();
+      setIsPlaying(false);
+      setIsBuffering(false);
+      if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+      return;
+    }
+
+    // 4. Inicia reprodução do canal selecionado ou do stream padrão
+    if (channelObj !== undefined) {
+      setActiveChannel(channelObj);
+      if (channelObj) {
+        showToast(`Sintonizando ${channelObj.title}...`);
+      }
+    }
+
+    const activeSlot = getActiveSlot();
+    const targetUrl = customUrl || (channelObj ? channelObj.streamUrl : (activeChannel ? activeChannel.streamUrl : activeSlot.streamUrl));
+    playStream(targetUrl);
   };
 
   const selectChannel = (channel) => {

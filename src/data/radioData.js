@@ -267,8 +267,8 @@ export const initialChannels = [
     badge: "AMNESIA • CLUB SESSIONS",
     genre: "Deep House • Tech House • Melodic Techno",
     cover: "/amnesia-club.jpg",
-    streamUrl: "https://stream.radiocorp.nl/web12_aac",
-    backupUrl: "https://stream.radiocorp.nl/web12_mp3",
+    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_AAC.aac",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_MP3.mp3",
     color: "from-pink-600 to-violet-950"
   }
 ];
