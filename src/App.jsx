@@ -127,6 +127,22 @@ export default function App() {
     return () => window.removeEventListener('popstate', checkRoute);
   }, []);
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const favEl = document.getElementById('dynamic-favicon') || document.querySelector("link[rel*='icon']");
+
+    if (activeMode === 'radio') {
+      document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
+      if (favEl) favEl.href = '/favicon-amplificadora.jpg';
+    } else if (activeMode === 'portal') {
+      document.title = 'AMP Institucional • Ecossistema Full-Stack';
+      if (favEl) favEl.href = '/amp-mesh-logo.png';
+    } else {
+      document.title = 'AMP Flow — Fluxo de caixa e DRE sem mistério';
+      if (favEl) favEl.href = '/vite.svg';
+    }
+  }, [activeMode]);
+
   if (activeMode === 'radio') {
     return <RadioApp />;
   }

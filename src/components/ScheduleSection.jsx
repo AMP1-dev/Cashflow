@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRadio } from '../context/RadioContext';
-import { Calendar, Clock, Radio, Play, Pause, Sparkles, Music, Share2, Check, RadioTower, Volume2 } from 'lucide-react';
+import { Calendar, Clock, Radio, Play, Pause, Sparkles, Music, Share2, Check, RadioTower, Volume2, Copy, MessageCircle } from 'lucide-react';
 
 export function ScheduleSection() {
   const { schedule, timeSchedule, currentSlot, isPlaying, playSlot, togglePlay, showToast } = useRadio();
@@ -36,30 +36,28 @@ export function ScheduleSection() {
   const handleShare = async (item, matchedSlot) => {
     const slotId = item.slotId || matchedSlot?.id || 'slot-1';
     const shareUrl = `https://amplificadora.com.br/?slot=${slotId}&play=1`;
-    const shareData = {
-      title: `${item.show} • Rádio Amplificadora`,
-      text: `Ouça ao vivo ${item.show} na Rádio Amplificadora:`,
-      url: shareUrl
-    };
+    const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    if (navigator.share) {
+    if (isMobile && navigator.share) {
       try {
-        await navigator.share(shareData);
+        await navigator.share({
+          title: `${item.show} • Rádio Amplificadora`,
+          text: `Ouça ao vivo ${item.show} na Rádio Amplificadora:`,
+          url: shareUrl
+        });
         showToast('Compartilhado com sucesso!');
         return;
-      } catch (err) {
-        // Fallback to clipboard if share dialog was cancelled or unsupported
-      }
+      } catch (err) {}
     }
 
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(shareUrl);
         setCopiedId(item.id || item.time);
-        showToast(`Link do bloco copiado! Pronto para ouvir no site.`);
-        setTimeout(() => setCopiedId(null), 3000);
+        showToast(`Link copiado: ${item.show} (pronto para colar e ouvir)!`);
+        setTimeout(() => setCopiedId(null), 3500);
       } catch {
-        showToast(`Link de reprodução: ${shareUrl}`);
+        showToast(`Link: ${shareUrl}`);
       }
     }
   };
@@ -179,7 +177,19 @@ export function ScheduleSection() {
 
                   {/* Actions: Sintonizar / Ouvir & Compartilhar */}
                   <div className="flex items-center gap-2 self-end sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/5 w-full sm:w-auto justify-end">
-                    {/* Share Button */}
+                    {/* WhatsApp Direct Share */}
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Ouça agora ${item.show} na Rádio Amplificadora: https://amplificadora.com.br/?slot=${item.slotId || matchedSlot?.id || 'slot-1'}&play=1`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 sm:px-2.5 sm:py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer"
+                      title="Enviar no WhatsApp"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline text-xs">WhatsApp</span>
+                    </a>
+
+                    {/* Copy Link / Share Button */}
                     <button
                       type="button"
                       onClick={() => handleShare(item, matchedSlot)}
@@ -188,10 +198,10 @@ export function ScheduleSection() {
                           ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                           : 'bg-white/5 hover:bg-white/15 text-slate-300 hover:text-white border-white/10'
                       }`}
-                      title="Compartilhar link com reprodução direta"
+                      title="Copiar link com reprodução direta"
                     >
-                      {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
-                      <span className="text-xs">{isCopied ? 'Copiado!' : 'Compartilhar'}</span>
+                      {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span className="text-xs">{isCopied ? 'Copiado!' : 'Copiar Link'}</span>
                     </button>
 
                     {/* Play / Listen Button */}

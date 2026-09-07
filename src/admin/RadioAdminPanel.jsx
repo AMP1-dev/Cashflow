@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRadio } from '../context/RadioContext';
-import { Radio, Music, Calendar, Newspaper, MessageSquare, Settings, Database, ExternalLink, LogOut, Lock, Plus, Edit, Trash2, Check, X, Upload, Save, Disc, Flame, Clock, Sparkles, Volume2, Play, Building2, Store, ShoppingBag, Shirt, Tv, Copy, BarChart3, Activity, ShieldCheck, Car, Signal, Headphones, Globe2, Wifi, WifiOff, RefreshCw, Share2 } from 'lucide-react';
+import { Radio, Music, Calendar, Newspaper, MessageSquare, Settings, Database, ExternalLink, LogOut, Lock, Plus, Edit, Trash2, Check, X, Upload, Save, Disc, Flame, Clock, Sparkles, Volume2, Play, Building2, Store, ShoppingBag, Shirt, Tv, Copy, BarChart3, Activity, ShieldCheck, Car, Signal, Headphones, Globe2, Wifi, WifiOff, RefreshCw, Share2, MessageCircle } from 'lucide-react';
 import { formatYouTubeEmbed } from '../data/radioData';
 
 export function RadioAdminPanel() {
@@ -796,25 +796,46 @@ export function RadioAdminPanel() {
                         <span>Testar Áudio</span>
                       </button>
 
+                      {/* Direct WhatsApp Share */}
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Ouça ${slot.title} ao vivo na Rádio Amplificadora: https://amplificadora.com.br/?slot=${slot.id}&play=1`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer flex items-center justify-center"
+                        title="Enviar link no WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </a>
+
+                      {/* Direct Copy Link (no OS pop-up failure) */}
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           const url = `https://amplificadora.com.br/?slot=${slot.id}&play=1`;
-                          if (navigator.share) {
-                            navigator.share({
-                              title: `${slot.title} • Rádio Amplificadora`,
-                              text: `Ouça ${slot.title} ao vivo na Rádio Amplificadora:`,
-                              url: url
-                            }).catch(() => {});
-                          } else if (navigator.clipboard) {
-                            navigator.clipboard.writeText(url);
-                            showToast(`Link copiado: ${slot.title} (com play direto)!`);
+                          const isMobile = typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+                          if (isMobile && navigator.share) {
+                            try {
+                              await navigator.share({
+                                title: `${slot.title} • Rádio Amplificadora`,
+                                text: `Ouça ${slot.title} ao vivo na Rádio Amplificadora:`,
+                                url: url
+                              });
+                              return;
+                            } catch (e) {}
+                          }
+                          if (navigator.clipboard) {
+                            try {
+                              await navigator.clipboard.writeText(url);
+                              showToast(`Link copiado com sucesso! (com play direto)`);
+                            } catch (e) {
+                              showToast(`Link: ${url}`);
+                            }
                           }
                         }}
                         className="px-3.5 py-2.5 rounded-xl bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 border border-pink-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
                         title="Copiar link direto para ouvir este bloco"
                       >
-                        <Share2 className="w-3.5 h-3.5" />
-                        <span>Compartilhar</span>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Link</span>
                       </button>
 
                       <button

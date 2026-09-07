@@ -3,8 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0F2B27" />
-    <title>AMP Flow — Fluxo de caixa e DRE sem mistério</title>
+    <meta id="meta-theme-color" name="theme-color" content="#0A0910" />
+    <link id="dynamic-favicon" rel="icon" type="image/jpeg" href="/favicon-amplificadora.jpg" />
+    <title>Rádio Amplificadora • Ampliando sua onda musical</title>
+    <script>
+      (function() {
+        try {
+          var host = (window.location.hostname || '').toLowerCase();
+          var params = new URLSearchParams(window.location.search || '');
+          var isRadio = host.includes('amplificadora') || params.get('app') === 'radio';
+          var favEl = document.getElementById('dynamic-favicon');
+          var themeEl = document.getElementById('meta-theme-color');
+
+          if (isRadio) {
+            document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
+            if (favEl) favEl.href = '/favicon-amplificadora.jpg';
+            if (themeEl) themeEl.content = '#0A0910';
+          } else {
+            document.title = 'AMP Flow — Fluxo de caixa e DRE sem mistério';
+            if (favEl) favEl.href = '/vite.svg';
+            if (themeEl) themeEl.content = '#0F2B27';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { RadioProvider, useRadio } from './context/RadioContext';
 import { RadioNavbar } from './components/RadioNavbar';
 import { HeroLiveStream } from './components/HeroLiveStream';
@@ -17,7 +17,25 @@ import { RadioAdminPanel } from './admin/RadioAdminPanel';
 import { Toast } from './components/Toast';
 
 function MainRadioApp() {
-  const { currentView, toast } = useRadio();
+  const { currentView, toast, isPlaying, currentSlot, activeChannel, config } = useRadio();
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    if (currentView === 'admin') {
+      document.title = 'Amplificadora Control Room • Gestão 24/7';
+    } else if (isPlaying) {
+      const track = activeChannel ? activeChannel.title : (currentSlot?.currentTrack || currentSlot?.title || config?.currentShow?.title || 'No Ar');
+      document.title = `▶ ${track} • Rádio Amplificadora`;
+    } else {
+      document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
+    }
+
+    const fav = document.getElementById('dynamic-favicon') || document.querySelector("link[rel*='icon']");
+    if (fav) {
+      fav.href = '/favicon-amplificadora.jpg';
+    }
+  }, [currentView, isPlaying, currentSlot, activeChannel, config]);
 
   if (currentView === 'admin') {
     return (
