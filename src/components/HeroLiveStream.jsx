@@ -66,12 +66,12 @@ export function HeroLiveStream() {
   const [tshirtIndex, setTshirtIndex] = useState(0);
   const [isSlidePaused, setIsSlidePaused] = useState(false);
 
-  // Dynamic cycling for t-shirts (cycles every 2.4s)
+  // Dynamic cycling for t-shirts when t-shirt slide is active
   useEffect(() => {
     if (tshirtGallery.length <= 1) return;
     const interval = setInterval(() => {
       setTshirtIndex((prev) => (prev + 1) % tshirtGallery.length);
-    }, 2400);
+    }, 2800);
     return () => clearInterval(interval);
   }, [tshirtGallery.length]);
 
@@ -122,18 +122,18 @@ export function HeroLiveStream() {
     }
   ];
 
-  // Main carousel timer: amplink slide stays for 18 seconds so all t-shirts cycle smoothly!
-  // Other slides stay for 10 seconds. Pauses when user hovers or interacts.
+  // Main showcase carousel timer:
+  // Slide 2 (t-shirts) stays for 12s so shirts cycle; other slides stay for 7s.
+  // Pauses automatically when user hovers (onMouseEnter).
   useEffect(() => {
     if (isSlidePaused) return;
-    const currentType = slides[currentSlide]?.type;
-    const duration = currentType === 'amplink' ? 18000 : 10000;
+    const duration = currentSlide === 2 ? 12000 : 7000;
 
     const timer = setTimeout(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
+      setCurrentSlide((prev) => (prev + 1) % 5);
     }, duration);
     return () => clearTimeout(timer);
-  }, [currentSlide, isSlidePaused, slides]);
+  }, [currentSlide, isSlidePaused]);
 
   const slide = slides[currentSlide];
 
