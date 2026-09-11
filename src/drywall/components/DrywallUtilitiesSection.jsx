@@ -9,9 +9,11 @@ import {
   ArrowRight,
   BookOpen
 } from 'lucide-react';
-import { DRYWALL_UTILITIES, DRYWALL_NEWS } from '../data/drywallData';
+import { useDrywall } from '../context/DrywallContext';
 
 export function DrywallUtilitiesSection() {
+  const { utilities, news } = useDrywall();
+
   return (
     <section id="utilidades" className="py-20 bg-slate-50 dark:bg-[#0E131F] transition-colors border-b border-slate-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -32,7 +34,7 @@ export function DrywallUtilitiesSection() {
 
         {/* 4 Practical Utility Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
-          {DRYWALL_UTILITIES.map((item) => (
+          {utilities.map((item) => (
             <div
               key={item.id}
               className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col justify-between"
@@ -107,7 +109,7 @@ export function DrywallUtilitiesSection() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {DRYWALL_NEWS.map((item) => (
+            {news.map((item) => (
               <a
                 key={item.id}
                 href={item.url}

@@ -16,11 +16,16 @@ import { SAMPLE_STORE_ITEMS, COMPANY_INFO } from '../data/drywallData';
 import { useDrywall } from '../context/DrywallContext';
 
 export function DrywallDiBrunelliStorePreview() {
-  const { showToast } = useDrywall();
-  const [orderItems, setOrderItems] = useState([
-    { item: SAMPLE_STORE_ITEMS[0], qty: 20 },
-    { item: SAMPLE_STORE_ITEMS[2], qty: 30 }
-  ]);
+  const { showToast, company, storeItems, addQuote } = useDrywall();
+  const [orderItems, setOrderItems] = useState(() => {
+    if (storeItems && storeItems.length >= 2) {
+      return [
+        { item: storeItems[0], qty: 20 },
+        { item: storeItems[2] || storeItems[1], qty: 30 }
+      ];
+    }
+    return [];
+  });
   const [demoSubmitted, setDemoSubmitted] = useState(false);
 
   const addItem = (product) => {
@@ -50,6 +55,18 @@ export function DrywallDiBrunelliStorePreview() {
   };
 
   const handleSimulateOrder = () => {
+    // Also log this simulated order to the CRM
+    addQuote({
+      name: 'Cliente Simulação Loja Virtual',
+      company: 'Di Brunelli Online Demo',
+      phone: company.phone,
+      city: 'Campinas / Interior SP',
+      segment: 'Loja Virtual Di Brunelli',
+      message: orderItems.map(i => `${i.qty}x ${i.item.name} (${i.item.refPrice})`).join('; '),
+      items: orderItems.map(i => ({ name: i.item.name, quantity: i.qty, unit: i.item.unit })),
+      notes: 'Pedido gerado através da simulação da futura loja virtual.'
+    });
+
     setDemoSubmitted(true);
     showToast('Simulação de pedido concluída com sucesso!');
   };
@@ -107,7 +124,7 @@ export function DrywallDiBrunelliStorePreview() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {SAMPLE_STORE_ITEMS.map((item) => (
+                {storeItems.map((item) => (
                   <div
                     key={item.id}
                     className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-800/40 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all flex flex-col justify-between space-y-3"

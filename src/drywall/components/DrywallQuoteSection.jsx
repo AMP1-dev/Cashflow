@@ -17,7 +17,7 @@ import { useDrywall } from '../context/DrywallContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabaseClient';
 
 export function DrywallQuoteSection() {
-  const { showToast } = useDrywall();
+  const { showToast, addQuote, company } = useDrywall();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -47,9 +47,15 @@ export function DrywallQuoteSection() {
     msg += `📱 *WhatsApp:* ${formData.phone}\n`;
     msg += `📍 *Cidade da Obra:* ${formData.city || 'Interior de SP'}\n`;
     if (formData.message) msg += `📦 *Materiais / Projeto:* ${formData.message}\n`;
-    msg += `\nSolicito preços e prazos de entrega de distribuidora.`;
+    const url = `https://wa.me/${company.whatsapp}?text=${encodeURIComponent(msg)}`;
 
-    const url = `https://wa.me/${COMPANY_INFO.whatsapp}?text=${encodeURIComponent(msg)}`;
+    // Save into Local CRM / Storage
+    addQuote({
+      name: formData.name,
+      phone: formData.phone,
+      city: formData.city,
+      message: formData.message
+    });
 
     if (isSupabaseConfigured()) {
       supabase
@@ -66,7 +72,7 @@ export function DrywallQuoteSection() {
     }
 
     setSubmitted(true);
-    showToast('Solicitação enviada com sucesso!');
+    showToast('Solicitação enviada com sucesso! Conectando com a distribuidora...');
 
     setTimeout(() => {
       window.open(url, '_blank');

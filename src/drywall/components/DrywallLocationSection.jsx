@@ -1,8 +1,10 @@
 import React from 'react';
 import { MapPin, Truck, Clock, ShieldCheck, CheckCircle2 } from 'lucide-react';
-import { CITIES_SERVED, COMPANY_INFO } from '../data/drywallData';
+import { useDrywall } from '../context/DrywallContext';
 
 export function DrywallLocationSection() {
+  const { regions, company } = useDrywall();
+
   return (
     <section id="regioes" className="py-20 bg-white dark:bg-[#0B0F19] transition-colors border-b border-slate-200 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,7 +25,7 @@ export function DrywallLocationSection() {
 
         {/* Clean Region Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {CITIES_SERVED.map((item, idx) => (
+          {regions.map((item, idx) => (
             <div
               key={idx}
               className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 space-y-3"
@@ -55,7 +57,7 @@ export function DrywallLocationSection() {
               </p>
             </div>
             <a
-              href={`https://wa.me/${COMPANY_INFO.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de consultar se vocês entregam na minha cidade no interior de SP.')}`}
+              href={`https://wa.me/${company.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de consultar se vocês entregam na minha cidade no interior de SP.')}`}
               target="_blank"
               rel="noreferrer"
               className="text-xs font-bold text-[#0052D9] dark:text-blue-400 hover:underline"

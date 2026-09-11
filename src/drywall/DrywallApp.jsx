@@ -8,11 +8,16 @@ import { DrywallLocationSection } from './components/DrywallLocationSection';
 import { DrywallDiBrunelliStorePreview } from './components/DrywallDiBrunelliStorePreview';
 import { DrywallQuoteSection } from './components/DrywallQuoteSection';
 import { DrywallFooter } from './components/DrywallFooter';
+import { DrywallAdminPanel } from './admin/DrywallAdminPanel';
 import { MessageSquare, Check } from 'lucide-react';
 
 function DrywallMainLayout() {
-  const { theme, toast, company } = useDrywall();
+  const { theme, toast, company, currentView } = useDrywall();
   const isDark = theme === 'dark';
+
+  if (currentView === 'admin') {
+    return <DrywallAdminPanel />;
+  }
 
   return (
     <div className={`min-h-screen font-sans antialiased transition-colors duration-200 ${

@@ -1,7 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://eornunjxcmtyrdrihiqk.supabase.co';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcm51bmp4Y210eXJkcmloaXFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njg5NDYsImV4cCI6MjA5NzQ0NDk0Nn0.fGBiJI_Mx0qFd0lLhvC_FKDkH4To56FMFTvkhwKviV0';
+// Projeto "Fixos" (Projetos Institucionais, Drywall, etc.)
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ogqahhmxsmjoyjdikafm.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncWFoaG14c21qb3lqZGlrYWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzUwMDIsImV4cCI6MjEwNDY1MTAwMn0.mzImAieq-IkJL5eVumhW5QxK5u70yN_cnW2H48B-0bs';
 
 export const isSupabaseConfigured = () => {
   return (

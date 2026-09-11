@@ -1,0 +1,21 @@
+# Configuração de bloco para o Caddy na VPS 185.245.182.23
+# Adicione este bloco ao seu Caddyfile (/etc/caddy/Caddyfile ou no docker-compose do Caddy)
+
+fmadv.net, www.fmadv.net {
+    root * /var/www/fmadv
+    file_server
+    try_files {path} /index.html
+    encode gzip zstd
+    
+    header {
+        # Security headers
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        Cache-Control "public, max-age=3600"
+    }
+
+    log {
+        output file /var/log/caddy/fmadv.log
+    }
+}

@@ -10,7 +10,7 @@ import { ESSENTIAL_PRODUCTS } from '../data/drywallData';
 import { useDrywall } from '../context/DrywallContext';
 
 export function DrywallProductsSection() {
-  const { company } = useDrywall();
+  const { company, products } = useDrywall();
 
   return (
     <section id="produtos" className="py-20 bg-white dark:bg-[#0B0F19] transition-colors">
@@ -30,9 +30,9 @@ export function DrywallProductsSection() {
           </p>
         </div>
 
-        {/* 6 Essential Product Cards */}
+        {/* Essential Product Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {ESSENTIAL_PRODUCTS.map((prod) => (
+          {products.map((prod) => (
             <div
               key={prod.id}
               className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between"

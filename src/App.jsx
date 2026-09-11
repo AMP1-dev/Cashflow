@@ -94,6 +94,7 @@ function MainPortal() {
 }
 
 import CashFlowApp from './CashFlowApp';
+import DrywallApp from './drywall/DrywallApp';
 
 export default function App() {
   const [activeMode, setActiveMode] = useState(() => {
@@ -101,6 +102,9 @@ export default function App() {
     const hostname = window.location.hostname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
 
+    if (hostname.includes('drywall') || hostname.includes('dibrunelli') || params.get('app') === 'drywall') {
+      return 'drywall';
+    }
     if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
       return 'radio';
     }
@@ -112,10 +116,18 @@ export default function App() {
   });
 
   useEffect(() => {
+    // Redirecionamento de conveniência se acessar pelo domínio da loja dibrunelli.com.br:
+    if (typeof window !== 'undefined' && window.location.hostname.includes('dibrunelli.com.br')) {
+      window.location.replace('https://drywalldistribuidora.com.br' + window.location.pathname + window.location.search);
+      return;
+    }
+
     const checkRoute = () => {
       const hostname = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
-      if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
+      if (hostname.includes('drywall') || hostname.includes('dibrunelli') || params.get('app') === 'drywall') {
+        setActiveMode('drywall');
+      } else if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
         setActiveMode('radio');
       } else if (params.get('app') === 'portal') {
         setActiveMode('portal');
@@ -131,7 +143,10 @@ export default function App() {
     if (typeof document === 'undefined') return;
     const favEl = document.getElementById('dynamic-favicon') || document.querySelector("link[rel*='icon']");
 
-    if (activeMode === 'radio') {
+    if (activeMode === 'drywall') {
+      document.title = 'Drywall Distribuidora • Di Brunelli | Interior de SP';
+      if (favEl) favEl.href = '/vite.svg';
+    } else if (activeMode === 'radio') {
       document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
       if (favEl) favEl.href = '/favicon-amplificadora.jpg';
     } else if (activeMode === 'portal') {
@@ -142,6 +157,10 @@ export default function App() {
       if (favEl) favEl.href = '/vite.svg';
     }
   }, [activeMode]);
+
+  if (activeMode === 'drywall') {
+    return <DrywallApp />;
+  }
 
   if (activeMode === 'radio') {
     return <RadioApp />;

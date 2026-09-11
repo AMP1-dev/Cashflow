@@ -7,12 +7,13 @@ import {
   Menu, 
   X, 
   Phone,
-  Sparkles
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 import { useDrywall } from '../context/DrywallContext';
 
 export function DrywallNavbar() {
-  const { theme, toggleTheme, company } = useDrywall();
+  const { theme, toggleTheme, company, setCurrentView } = useDrywall();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
@@ -56,7 +57,16 @@ export function DrywallNavbar() {
         </nav>
 
         {/* Right CTA & Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => setCurrentView('admin')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:text-[#0052D9] dark:text-slate-300 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 border border-slate-200/80 dark:border-slate-800 transition-all"
+            title="Acessar Painel Administrativo"
+          >
+            <ShieldCheck className="w-4 h-4 text-[#0052D9] dark:text-blue-400" />
+            <span className="hidden md:inline">Painel Admin</span>
+          </button>
+
           <button
             onClick={toggleTheme}
             className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -100,7 +110,17 @@ export function DrywallNavbar() {
               {link.name}
             </a>
           ))}
-          <div className="pt-2">
+          <div className="pt-2 space-y-2">
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setCurrentView('admin');
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase text-slate-800 dark:text-white bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700"
+            >
+              <ShieldCheck className="w-4 h-4 text-[#0052D9] dark:text-blue-400" />
+              <span>Painel Administrativo</span>
+            </button>
             <a
               href={`https://wa.me/${company.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de cotar drywall para o interior de SP.')}`}
               target="_blank"

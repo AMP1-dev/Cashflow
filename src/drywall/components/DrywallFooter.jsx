@@ -9,11 +9,14 @@ import {
   ShieldCheck, 
   Award, 
   Globe, 
-  ArrowUp
+  ArrowUp,
+  Lock
 } from 'lucide-react';
-import { COMPANY_INFO } from '../data/drywallData';
+import { useDrywall } from '../context/DrywallContext';
 
 export function DrywallFooter() {
+  const { company, setCurrentView } = useDrywall();
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -79,25 +82,25 @@ export function DrywallFooter() {
             <div className="space-y-2 text-xs text-slate-400">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Televendas: <strong>{COMPANY_INFO.phone}</strong></span>
+                <span>Televendas: <strong>{company.phone}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <MessageSquare className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>WhatsApp: <strong className="text-emerald-300">{COMPANY_INFO.whatsappDisplay}</strong></span>
+                <span>WhatsApp: <strong className="text-emerald-300">{company.whatsappDisplay || company.whatsapp}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Cotações: <strong>{COMPANY_INFO.cotacaoEmail}</strong></span>
+                <span>Cotações: <strong>{company.cotacaoEmail || company.email}</strong></span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span>{COMPANY_INFO.hours}</span>
+                <span>{company.hours}</span>
               </div>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-3">
               <a
-                href={`https://wa.me/${COMPANY_INFO.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de cotar materiais com a Drywall Distribuidora.')}`}
+                href={`https://wa.me/${company.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de cotar materiais com a Drywall Distribuidora.')}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-2 py-2 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider transition-colors"
@@ -105,6 +108,15 @@ export function DrywallFooter() {
                 <MessageSquare className="w-3.5 h-3.5" />
                 <span>Falar no WhatsApp</span>
               </a>
+
+              <button
+                onClick={() => setCurrentView('admin')}
+                className="inline-flex items-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700 transition-colors"
+                title="Área Administrativa Restrita"
+              >
+                <Lock className="w-3 h-3 text-blue-400" />
+                <span>Painel Admin</span>
+              </button>
             </div>
           </div>
 
@@ -114,9 +126,16 @@ export function DrywallFooter() {
       {/* Bottom Copyright */}
       <div className="border-t border-slate-800/80 bg-[#040E1B] py-5 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>&copy; {new Date().getFullYear()} <strong>Drywall Distribuidora</strong> &bull; Marca Registrada <strong>Di Brunelli</strong>. Todos os direitos reservados.</span>
+          <span>&copy; {new Date().getFullYear()} <strong>{company.name}</strong> &bull; Marca Registrada <strong>{company.brandTransition}</strong>. Todos os direitos reservados.</span>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] text-slate-400">dibrunelli.com.br</span>
+            <span className="text-[11px] text-slate-400">{company.domain}</span>
+            <button
+              onClick={() => setCurrentView('admin')}
+              className="text-[11px] text-slate-400 hover:text-blue-400 transition-colors inline-flex items-center gap-1"
+            >
+              <ShieldCheck className="w-3 h-3 text-blue-400" />
+              <span>Gestão Interna</span>
+            </button>
             <button
               onClick={scrollToTop}
               className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"

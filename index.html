@@ -11,11 +11,16 @@
         try {
           var host = (window.location.hostname || '').toLowerCase();
           var params = new URLSearchParams(window.location.search || '');
+          var isDrywall = host.includes('drywall') || host.includes('dibrunelli') || params.get('app') === 'drywall';
           var isRadio = host.includes('amplificadora') || params.get('app') === 'radio';
           var favEl = document.getElementById('dynamic-favicon');
           var themeEl = document.getElementById('meta-theme-color');
 
-          if (isRadio) {
+          if (isDrywall) {
+            document.title = 'Drywall Distribuidora • Di Brunelli | Interior de SP';
+            if (favEl) favEl.href = '/vite.svg';
+            if (themeEl) themeEl.content = '#0052D9';
+          } else if (isRadio) {
             document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
             if (favEl) favEl.href = '/favicon-amplificadora.jpg';
             if (themeEl) themeEl.content = '#0A0910';
