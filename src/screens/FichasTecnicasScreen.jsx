@@ -268,15 +268,19 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
         });
     }
 
-    function atualizarIngrediente(id, campo, valor) {
+    function atualizarIngrediente(id, campoOuObjeto, valor) {
         setIngredientes(prev => prev.map(i => {
             if (i.id !== id) return i;
             
-            if (campo === 'unidadeCompra' && (valor === 'h' || valor === 'min')) {
+            if (typeof campoOuObjeto === 'object' && campoOuObjeto !== null) {
+                return { ...i, ...campoOuObjeto };
+            }
+
+            if (campoOuObjeto === 'unidadeCompra' && (valor === 'h' || valor === 'min')) {
                 const preco = valor === 'h' ? rhCustos.custoHora : rhCustos.custoMinuto;
                 return { 
                     ...i, 
-                    [campo]: valor, 
+                    [campoOuObjeto]: valor, 
                     precoCompra: preco > 0 ? preco.toFixed(2).replace('.', ',') : '', 
                     qtdCompra: '1', 
                     unidadeUso: valor,
@@ -284,7 +288,7 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
                 };
             }
             
-            return { ...i, [campo]: valor };
+            return { ...i, [campoOuObjeto]: valor };
         }));
     }
 
@@ -568,8 +572,10 @@ function IngredienteRow({ ingrediente, expandido, onToggleExpandido, onChange, o
                                         key={idxSal}
                                         type="button"
                                         onClick={() => {
-                                            onChange('precoCompra', taxaStr);
-                                            onChange('nome', ingrediente.nome && ingrediente.nome !== 'Mão de obra' ? ingrediente.nome : `Mão de obra (Salário R$ ${itemSal.salario})`);
+                                            const novoNome = !ingrediente.nome || ingrediente.nome === 'Mão de obra' || ingrediente.nome.startsWith('Mão de obra (Salário')
+                                                ? `Mão de obra (Salário R$ ${itemSal.salario})`
+                                                : ingrediente.nome;
+                                            onChange({ precoCompra: taxaStr, nome: novoNome });
                                         }}
                                         style={{
                                             padding: '4px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600,

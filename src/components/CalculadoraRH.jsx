@@ -54,20 +54,22 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
     setDomingos(contaDom);
   }, [mesAtual, anoAtual]);
 
+  const salarioBrutoStr = (salariosLista[salarioAtivoIndex] !== undefined && salariosLista[salarioAtivoIndex] !== null)
+    ? salariosLista[salarioAtivoIndex]
+    : (salariosLista[0] || '1800');
+  const salarioBruto = parseFloat(salarioBrutoStr) || 0;
+
   // Salvar no localStorage sempre que mudar
   useEffect(() => {
     localStorage.setItem(`rh_calc_${empresaId}_salarios_lista`, JSON.stringify(salariosLista));
-    localStorage.setItem(`rh_calc_${empresaId}_salario`, salariosLista[0] || '1800');
+    localStorage.setItem(`rh_calc_${empresaId}_salario`, salarioBrutoStr || '1800');
     localStorage.setItem(`rh_calc_${empresaId}_regime`, regime);
     localStorage.setItem(`rh_calc_${empresaId}_feriados`, feriados);
     localStorage.setItem(`rh_calc_${empresaId}_horasDia`, horasDia);
     localStorage.setItem(`rh_calc_${empresaId}_pausas`, horasNaoTrabalhadas);
     localStorage.setItem(`rh_calc_${empresaId}_ociosidade`, horasOciosas);
     localStorage.setItem(`rh_calc_${empresaId}_escala`, escala);
-  }, [empresaId, salariosLista, regime, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala]);
-
-  const salarioBrutoStr = salariosLista[salarioAtivoIndex] || salariosLista[0] || '1800';
-  const salarioBruto = parseFloat(salarioBrutoStr) || 0;
+  }, [empresaId, salariosLista, salarioBrutoStr, regime, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala]);
   
   const calc = useMemo(() => {
     // ENCARGOS SOCIAIS baseados no Regime
@@ -132,11 +134,6 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
     // Cálculo do Prejuízo por Ociosidade (Horas Paradas)
     const prejuizoOciosidadeDia = Math.max(horasOciosas, 0) * custoHora;
     const prejuizoOciosidadeMes = prejuizoOciosidadeDia * diasUteis;
-
-    // Salvar tabela e custos globais
-    localStorage.setItem(`amp_rh_custos_${empresaId}`, JSON.stringify({
-      custoHora, custoMinuto, prejuizoOciosidadeMes, tabelaSalarios
-    }));
     
     return {
       baseCalculo, ferias112, ferias13, decimoTerceiro, totalBase,
@@ -145,7 +142,18 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
       diasUteis, custoDia, custoHora, custoMinuto, horasProdutivas,
       prejuizoOciosidadeDia, prejuizoOciosidadeMes, tabelaSalarios
     };
-  }, [salarioBruto, salariosLista, regime, diasNoMes, sabados, domingos, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala, empresaId]);
+  }, [salarioBruto, salariosLista, regime, diasNoMes, sabados, domingos, feriados, horasDia, horasNaoTrabalhadas, horasOciosas, escala]);
+
+  // Salvar tabela e custos globais atualizados
+  useEffect(() => {
+    if (!calc) return;
+    localStorage.setItem(`amp_rh_custos_${empresaId}`, JSON.stringify({
+      custoHora: calc.custoHora,
+      custoMinuto: calc.custoMinuto,
+      prejuizoOciosidadeMes: calc.prejuizoOciosidadeMes,
+      tabelaSalarios: calc.tabelaSalarios
+    }));
+  }, [calc, empresaId]);
 
   return (
     <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
@@ -198,8 +206,11 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
                 <button
                   type="button"
                   onClick={() => {
-                    setSalariosLista(prev => [...prev, '2000']);
-                    setSalarioAtivoIndex(salariosLista.length);
+                    setSalariosLista(prev => {
+                      const next = [...prev, ''];
+                      setSalarioAtivoIndex(next.length - 1);
+                      return next;
+                    });
                   }}
                   style={{ background: '#1F5C52', color: '#fff', border: 'none', borderRadius: 6, padding: '3px 8px', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                 >
@@ -224,20 +235,27 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
                         transition: 'all 0.2s'
                       }}
                     >
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 11, fontWeight: 700, color: ativo ? '#1F5C52' : '#9C9A8F' }}>Salário {idx + 1}:</span>
                           <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1C2421' }}>{formatBRL(parseFloat(s) || 0)}</span>
+                          {ativo && (
+                            <span style={{ fontSize: 9.5, background: '#1F5C52', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>
+                              Ativo no painel
+                            </span>
+                          )}
                         </div>
                         <div style={{ fontSize: 11, color: ativo ? '#1F5C52' : '#5C5A4F', marginTop: 2 }}>
                           Hora: <strong>{formatBRL(itemCalc.custoHora || 0)}</strong> · Minuto: <strong>{formatBRL(itemCalc.custoMinuto || 0)}</strong>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }} onClick={e => e.stopPropagation()}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <input
                           type="number"
                           value={s}
+                          onFocus={() => setSalarioAtivoIndex(idx)}
+                          onClick={() => setSalarioAtivoIndex(idx)}
                           onChange={e => {
                             const novoVal = e.target.value;
                             setSalariosLista(prev => {
@@ -245,17 +263,22 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
                               arr[idx] = novoVal;
                               return arr;
                             });
+                            setSalarioAtivoIndex(idx);
                           }}
                           placeholder="0"
-                          style={{ width: 85, textAlign: 'right', padding: '4px 6px', border: '1px solid #D1CFC7', borderRadius: 6, fontWeight: 600, fontSize: 12.5 }}
+                          style={{ width: 85, textAlign: 'right', padding: '4px 6px', border: `1px solid ${ativo ? '#1F5C52' : '#D1CFC7'}`, borderRadius: 6, fontWeight: 600, fontSize: 12.5, background: '#fff' }}
                         />
                         {salariosLista.length > 1 && (
                           <button
                             type="button"
-                            onClick={() => {
-                              setSalariosLista(prev => prev.filter((_, i) => i !== idx));
-                              if (salarioAtivoIndex >= salariosLista.length - 1) {
-                                setSalarioAtivoIndex(Math.max(0, salariosLista.length - 2));
+                            onClick={e => {
+                              e.stopPropagation();
+                              setSalariosLista(prev => {
+                                const next = prev.filter((_, i) => i !== idx);
+                                return next.length > 0 ? next : ['1800'];
+                              });
+                              if (salarioAtivoIndex >= idx) {
+                                setSalarioAtivoIndex(prev => Math.max(0, prev - 1));
                               }
                             }}
                             title="Remover este valor de salário"
