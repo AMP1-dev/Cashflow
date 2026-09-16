@@ -1,5 +1,5 @@
-import { AlertCircle, Check, ChevronLeft, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, Check, ChevronLeft, DollarSign, Percent, Plus, Scissors, Trash2, User, Building2, HelpCircle } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { CATEGORIAS, SUBCATEGORIAS_SUGERIDAS, WIZARD } from '../utils/constants';
 import { FieldLabel, inputStyle, ModalShell } from './UIComponents';
 
@@ -19,7 +19,22 @@ function uid() {
 
 const CATEGORIAS_OPCOES = Object.entries(CATEGORIAS).filter(([k]) => k !== 'cmv').map(([key, cat]) => ({ key, ...cat }));
 
-function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
+function FracionamentoWizard({ valorTotal, descricaoOriginal = '', subcategoriaOriginal = '', onCancelar, onConfirmar }) {
+  // Modo de fracionamento: 'simples' (divisão CMV vs Resto/Pessoal) ou 'avancado' (múltiplas fatias livres)
+  const [modoVisao, setModoVisao] = useState('simples');
+
+  // Modo de entrada no fracionamento simples: 'pct' (% percentual) ou 'valor' (R$)
+  const [modoEntrada, setModoEntrada] = useState('pct');
+  const [pctCmv, setPctCmv] = useState('70'); // padrão 70%
+  const [valorCmvInput, setValorCmvInput] = useState('');
+
+  // Destino do restante no modo simples: 'pessoal' (uso próprio/lazer) ou 'empresa' (outra despesa do negócio)
+  const [destinoRestante, setDestinoRestante] = useState('pessoal');
+  const [catRestante, setCatRestante] = useState('fixa');
+  const [subRestante, setSubRestante] = useState('');
+  const [descRestante, setDescRestante] = useState('');
+
+  // Estado para modo avançado (múltiplas partes livres)
   const [partes, setPartes] = useState([]);
   const [inputValor, setInputValor] = useState('');
   const [inputDescricao, setInputDescricao] = useState('');
@@ -27,9 +42,75 @@ function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
   const [inputSubcategoria, setInputSubcategoria] = useState('');
   const [mostrandoAlertaCmv, setMostrandoAlertaCmv] = useState(false);
 
+  // Cálculos dinâmicos para modo simples
+  const { valorCmvCalculado, valorRestanteCalculado, pctCmvNum, pctRestanteNum } = useMemo(() => {
+    let cmvV = 0;
+    let cmvP = 0;
+
+    if (modoEntrada === 'pct') {
+      const p = Math.max(0, Math.min(100, parseFloat((pctCmv || '0').replace(',', '.')) || 0));
+      cmvP = p;
+      cmvV = Math.round((valorTotal * (p / 100)) * 100) / 100;
+    } else {
+      const v = Math.max(0, Math.min(valorTotal, parseBRL(valorCmvInput)));
+      cmvV = v;
+      cmvP = valorTotal > 0 ? (v / valorTotal) * 100 : 0;
+    }
+
+    const restV = Math.max(0, Math.round((valorTotal - cmvV) * 100) / 100);
+    const restP = Math.max(0, 100 - cmvP);
+
+    return {
+      valorCmvCalculado: cmvV,
+      valorRestanteCalculado: restV,
+      pctCmvNum: cmvP,
+      pctRestanteNum: restP,
+    };
+  }, [valorTotal, modoEntrada, pctCmv, valorCmvInput]);
+
+  function handleMudarModoEntrada(novoModo) {
+    setModoEntrada(novoModo);
+    if (novoModo === 'valor') {
+      setValorCmvInput(valorCmvCalculado > 0 ? valorCmvCalculado.toFixed(2).replace('.', ',') : '');
+    } else {
+      setPctCmv(pctCmvNum > 0 ? (Math.round(pctCmvNum * 10) / 10).toString().replace('.', ',') : '50');
+    }
+  }
+
+  function handleConfirmarSimples() {
+    if (valorCmvCalculado <= 0) return;
+
+    const listaFinal = [];
+
+    // Parte 1: O que é CMV da empresa
+    listaFinal.push({
+      id: uid(),
+      valor: valorCmvCalculado,
+      descricao: descricaoOriginal ? `${descricaoOriginal} (CMV empresa)` : 'Insumos / Matéria-prima (CMV)',
+      categoria: 'cmv',
+      subcategoria: subcategoriaOriginal || 'Matéria-prima',
+    });
+
+    // Se a diferença for da empresa, inclui como lançamento da respectiva categoria
+    if (destinoRestante === 'empresa' && valorRestanteCalculado > 0.005) {
+      listaFinal.push({
+        id: uid(),
+        valor: valorRestanteCalculado,
+        descricao: descRestante.trim() || (descricaoOriginal ? `${descricaoOriginal} (Restante empresa)` : 'Despesa complementar da empresa'),
+        categoria: catRestante,
+        subcategoria: subRestante || null,
+      });
+    }
+
+    // Se destino for 'pessoal', NÃO adicionamos na listaFinal!
+    // Ficará apenas o CMV da empresa registrado no caixa e na DRE.
+    onConfirmar(listaFinal);
+  }
+
+  // Lógica do modo avançado
   const totalDistribuido = partes.reduce((s, p) => s + p.valor, 0);
-  const restante = valorTotal - totalDistribuido;
-  const pct = (totalDistribuido / valorTotal) * 100;
+  const restanteAvancado = valorTotal - totalDistribuido;
+  const pctAvancado = (totalDistribuido / valorTotal) * 100;
 
   function addParte() {
     const v = parseBRL(inputValor);
@@ -45,13 +126,11 @@ function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
     setPartes(prev => prev.filter(p => p.id !== id));
   }
 
-  const podeSalvar = partes.length > 0 && restante >= -0.005;
-
-  function handleConfirmar() {
-    if (!podeSalvar) return;
+  function handleConfirmarAvancado() {
+    if (partes.length === 0 || restanteAvancado < -0.005) return;
     
-    if (restante > 0.005) {
-      const partesFinais = [...partes, { id: uid(), valor: restante, descricao: 'Restante CMV', categoria: 'cmv', subcategoria: '' }];
+    if (restanteAvancado > 0.005) {
+      const partesFinais = [...partes, { id: uid(), valor: restanteAvancado, descricao: 'Restante CMV', categoria: 'cmv', subcategoria: '' }];
       onConfirmar(partesFinais);
     } else {
       const temCmv = partes.some(p => p.categoria === 'cmv');
@@ -94,155 +173,432 @@ function FracionamentoWizard({ valorTotal, onCancelar, onConfirmar }) {
   }
 
   return (
-    <ModalShell onClose={onCancelar} titulo="Fracionar lançamento">
-      {/* Barra de progresso de distribuição */}
-      <div style={{ background: '#F0EDE3', borderRadius: 10, padding: 12, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-          <span style={{ fontSize: 11.5, color: '#5C5A4F', fontWeight: 600 }}>Total do lançamento</span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: '#1C2421', fontFamily: 'Georgia, serif' }}>{formatBRL(valorTotal)}</span>
-        </div>
-        <div style={{ height: 6, background: '#E5E0D5', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
-          <div style={{ height: '100%', width: `${Math.min(pct, 100)}%`, background: pct > 100 ? '#B05A2E' : '#1F5C52', borderRadius: 3, transition: 'width 0.2s' }} />
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 11, color: '#9C9A8F' }}>Distribuído: {formatBRL(totalDistribuido)}</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: restante < -0.005 ? '#B05A2E' : restante < 0.005 ? '#1F5C52' : '#8A6D1A' }}>
-            {restante < -0.005 ? `Excedeu ${formatBRL(Math.abs(restante))}` : restante < 0.005 ? '✓ Fechado' : `Faltam ${formatBRL(restante)}`}
-          </span>
+    <ModalShell onClose={onCancelar} titulo="Fracionamento de CMV e Gastos Mistos">
+      {/* Cabeçalho de Total */}
+      <div style={{ background: '#F8F6F1', borderRadius: 12, padding: '12px 14px', marginBottom: 14, border: '1px solid #E5E0D5' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <span style={{ fontSize: 11, color: '#7A7868', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Valor total da nota / recibo</span>
+            {descricaoOriginal && <div style={{ fontSize: 12, color: '#5C5A4F', marginTop: 1, fontWeight: 500 }}>{descricaoOriginal}</div>}
+          </div>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1C2421', fontFamily: 'Georgia, serif' }}>{formatBRL(valorTotal)}</span>
         </div>
       </div>
 
-      {/* Partes já adicionadas */}
-      {partes.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
-          {partes.map(p => (
-            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #E5E0D5', borderRadius: 10, padding: '9px 12px' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: CATEGORIAS[p.categoria].color, background: CATEGORIAS[p.categoria].bg, padding: '2px 7px', borderRadius: 6 }}>
-                    {CATEGORIAS[p.categoria].short}
-                  </span>
-                  {p.descricao && <span style={{ fontSize: 12, color: '#5C5A4F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.descricao}</span>}
+      {/* Alternador de Modo: Simples (% e R$) vs Múltiplas Partes */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: '#5C5A4F' }}>
+          {modoVisao === 'simples' ? 'Quanto deste total é CMV da empresa?' : 'Modo avançado (múltiplas fatias)'}
+        </span>
+        <button
+          type="button"
+          onClick={() => setModoVisao(m => m === 'simples' ? 'avancado' : 'simples')}
+          style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 11.5, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+        >
+          {modoVisao === 'simples' ? 'Divisão livre (+ categorias)' : 'Voltar ao cálculo % / R$'}
+        </button>
+      </div>
+
+      {modoVisao === 'simples' ? (
+        <div>
+          {/* Seletor de Chave: Percentual (%) ou Valor (R$) */}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 12, background: '#EFECE6', padding: 4, borderRadius: 10 }}>
+            <button
+              type="button"
+              onClick={() => handleMudarModoEntrada('pct')}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: modoEntrada === 'pct' ? '#fff' : 'transparent',
+                color: modoEntrada === 'pct' ? '#B05A2E' : '#7A7868',
+                fontWeight: modoEntrada === 'pct' ? 700 : 500, fontSize: 12.5,
+                boxShadow: modoEntrada === 'pct' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <Percent size={14} /> Índice percentual (%)
+            </button>
+            <button
+              type="button"
+              onClick={() => handleMudarModoEntrada('valor')}
+              style={{
+                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '8px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: modoEntrada === 'valor' ? '#fff' : 'transparent',
+                color: modoEntrada === 'valor' ? '#B05A2E' : '#7A7868',
+                fontWeight: modoEntrada === 'valor' ? 700 : 500, fontSize: 12.5,
+                boxShadow: modoEntrada === 'valor' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              <DollarSign size={14} /> Valor exato (R$)
+            </button>
+          </div>
+
+          {/* Campo de Entrada de acordo com o modo */}
+          <div style={{ background: '#FFFDF9', border: '1px solid #E5E0D5', borderRadius: 12, padding: '12px 14px', marginBottom: 14 }}>
+            {modoEntrada === 'pct' ? (
+              <div>
+                <FieldLabel>Percentual destinado ao CMV (Produto/Negócio)</FieldLabel>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 4 }}>
+                  <div style={{ position: 'relative', width: 110 }}>
+                    <input
+                      value={pctCmv}
+                      onChange={e => {
+                        const val = e.target.value.replace(/[^0-9,.]/g, '');
+                        setPctCmv(val);
+                      }}
+                      placeholder="70"
+                      inputMode="decimal"
+                      style={{ ...inputStyle, paddingRight: 28, fontSize: 16, fontWeight: 700, color: '#B05A2E', textAlign: 'right' }}
+                    />
+                    <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontWeight: 600, color: '#B05A2E', fontSize: 14 }}>%</span>
+                  </div>
+
+                  {/* Atalhos rápidos de % */}
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', flex: 1 }}>
+                    {[30, 50, 70, 80].map(p => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPctCmv(p.toString())}
+                        style={{
+                          padding: '6px 10px', borderRadius: 7, border: '1px solid #E5E0D5',
+                          background: pctCmv === p.toString() ? '#F5E4D8' : '#fff',
+                          color: pctCmv === p.toString() ? '#B05A2E' : '#5C5A4F',
+                          fontSize: 12, fontWeight: pctCmv === p.toString() ? 700 : 500,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {p}%
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-              <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1C2421', flexShrink: 0 }}>{formatBRL(p.valor)}</span>
-              <button onClick={() => removerParte(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C9C5B6', padding: 2, flexShrink: 0 }}>
-                <Trash2 size={14} />
-              </button>
+            ) : (
+              <div>
+                <FieldLabel>Valor em R$ destinado ao CMV</FieldLabel>
+                <div style={{ position: 'relative', marginTop: 4 }}>
+                  <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontWeight: 600, color: '#B05A2E' }}>R$</span>
+                  <input
+                    value={valorCmvInput}
+                    onChange={e => setValorCmvInput(e.target.value)}
+                    placeholder={valorTotal > 0 ? (valorTotal * 0.7).toFixed(2).replace('.', ',') : '0,00'}
+                    inputMode="decimal"
+                    style={{ ...inputStyle, paddingLeft: 38, fontSize: 16, fontWeight: 700, color: '#B05A2E' }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Barra visual de Divisão CMV vs Diferença */}
+            <div style={{ marginTop: 14 }}>
+              <div style={{ height: 10, background: '#E5E0D5', borderRadius: 5, overflow: 'hidden', display: 'flex' }}>
+                <div style={{ width: `${Math.min(100, Math.max(0, pctCmvNum))}%`, background: '#B05A2E', transition: 'width 0.2s ease' }} />
+                <div style={{ width: `${Math.min(100, Math.max(0, pctRestanteNum))}%`, background: destinoRestante === 'pessoal' ? '#9C9A8F' : '#1F5C52', transition: 'width 0.2s ease' }} />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 12 }}>
+                <div>
+                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#B05A2E', marginRight: 5 }} />
+                  <strong>CMV: </strong>
+                  <span style={{ color: '#B05A2E', fontWeight: 700 }}>{formatBRL(valorCmvCalculado)}</span>
+                  <span style={{ color: '#7A7868', marginLeft: 4 }}>({(Math.round(pctCmvNum * 10) / 10).toString().replace('.', ',')}%)</span>
+                </div>
+                <div>
+                  <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: destinoRestante === 'pessoal' ? '#9C9A8F' : '#1F5C52', marginRight: 5 }} />
+                  <strong>Diferença: </strong>
+                  <span style={{ color: destinoRestante === 'pessoal' ? '#5C5A4F' : '#1F5C52', fontWeight: 700 }}>{formatBRL(valorRestanteCalculado)}</span>
+                  <span style={{ color: '#7A7868', marginLeft: 4 }}>({(Math.round(pctRestanteNum * 10) / 10).toString().replace('.', ',')}%)</span>
+                </div>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {/* Formulário de nova parte */}
-      {restante > 0.005 && (
-        <div style={{ background: '#F8F6F1', borderRadius: 12, padding: 12, marginBottom: 14 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 10 }}>
-            {partes.length === 0 ? 'Qual parte não é CMV?' : 'Adicionar mais uma parte'}
           </div>
 
-          <FieldLabel>Valor desta parte</FieldLabel>
-          <div style={{ position: 'relative' }}>
-            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9C9A8F' }}>R$</span>
-            <input
-              value={inputValor}
-              onChange={e => setInputValor(e.target.value)}
-              placeholder={restante > 0 ? (restante).toFixed(2).replace('.', ',') : '0,00'}
-              inputMode="decimal"
-              style={{ ...inputStyle, paddingLeft: 34 }}
-            />
-          </div>
-          {restante > 0.005 && (
-            <button onClick={() => setInputValor(restante.toFixed(2).replace('.', ','))} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#5C8A71', fontSize: 11, marginTop: -4, marginBottom: 6, padding: 0 }}>
-              Usar restante ({formatBRL(restante)})
-            </button>
+          {/* O que fazer com a Diferença? (Empresa vs Uso Pessoal) */}
+          {valorRestanteCalculado > 0.005 && (
+            <div style={{ background: '#F8F6F1', border: '1px solid #E5E0D5', borderRadius: 12, padding: '14px', marginBottom: 16 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#1C2421', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <HelpCircle size={15} color="#5C5A4F" />
+                Para onde vai a diferença de {formatBRL(valorRestanteCalculado)}?
+              </div>
+
+              {/* Botões de Escolha: Pessoal vs Empresa */}
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setDestinoRestante('pessoal')}
+                  style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 9, cursor: 'pointer', textAlign: 'left',
+                    border: `1.5px solid ${destinoRestante === 'pessoal' ? '#5C5A4F' : '#E5E0D5'}`,
+                    background: destinoRestante === 'pessoal' ? '#ECE9DF' : '#fff',
+                    color: '#1C2421',
+                    display: 'flex', alignItems: 'center', gap: 8
+                  }}
+                >
+                  <User size={18} color={destinoRestante === 'pessoal' ? '#1C2421' : '#9C9A8F'} />
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600 }}>Uso Pessoal (Particular)</div>
+                    <div style={{ fontSize: 10.5, color: '#7A7868' }}>Não pertence à empresa</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDestinoRestante('empresa')}
+                  style={{
+                    flex: 1, padding: '10px 12px', borderRadius: 9, cursor: 'pointer', textAlign: 'left',
+                    border: `1.5px solid ${destinoRestante === 'empresa' ? '#1F5C52' : '#E5E0D5'}`,
+                    background: destinoRestante === 'empresa' ? '#D9EBE6' : '#fff',
+                    color: '#1C2421',
+                    display: 'flex', alignItems: 'center', gap: 8
+                  }}
+                >
+                  <Building2 size={18} color={destinoRestante === 'empresa' ? '#1F5C52' : '#9C9A8F'} />
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600 }}>Outra Despesa da Empresa</div>
+                    <div style={{ fontSize: 10.5, color: '#7A7868' }}>Classificar no negócio</div>
+                  </div>
+                </button>
+              </div>
+
+              {/* Explicação e Alertas baseados na escolha */}
+              {destinoRestante === 'pessoal' ? (
+                <div style={{ marginTop: 12, padding: '10px 12px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', gap: 8 }}>
+                  <AlertCircle size={16} color="#B05A2E" style={{ flexShrink: 0, marginTop: 1 }} />
+                  <div style={{ fontSize: 11.5, color: '#8A6D1A', lineHeight: 1.45 }}>
+                    <strong>Aviso importante:</strong> Como a diferença de <strong>{formatBRL(valorRestanteCalculado)}</strong> é de uso pessoal (ex: parte da gasolina particular, supermercado de casa), <strong>ela NÃO será contabilizada em nenhuma categoria do negócio</strong>. Apenas os <strong>{formatBRL(valorCmvCalculado)}</strong> entrarão no seu Fluxo de Caixa e na DRE da empresa!
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginTop: 12 }}>
+                  <FieldLabel>Selecione a categoria da empresa para este restante ({formatBRL(valorRestanteCalculado)})</FieldLabel>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                    {CATEGORIAS_OPCOES.map(cat => (
+                      <button
+                        key={cat.key}
+                        type="button"
+                        onClick={() => { setCatRestante(cat.key); setSubRestante(''); }}
+                        style={{
+                          padding: '7px 11px', borderRadius: 8, fontSize: 12, cursor: 'pointer',
+                          border: `1px solid ${catRestante === cat.key ? cat.color : '#E5E0D5'}`,
+                          background: catRestante === cat.key ? cat.bg : '#fff',
+                          color: catRestante === cat.key ? cat.color : '#5C5A4F',
+                          fontWeight: catRestante === cat.key ? 700 : 400
+                        }}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {SUBCATEGORIAS_SUGERIDAS[catRestante] && (
+                    <div style={{ marginTop: 8 }}>
+                      <div style={{ fontSize: 11, color: '#7A7868', marginBottom: 4 }}>Subcategoria sugerida:</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {SUBCATEGORIAS_SUGERIDAS[catRestante].map(sub => (
+                          <button
+                            key={sub}
+                            type="button"
+                            onClick={() => setSubRestante(subRestante === sub ? '' : sub)}
+                            style={{
+                              padding: '3px 7px', borderRadius: 6, fontSize: 10.5, cursor: 'pointer',
+                              border: `1px solid ${subRestante === sub ? CATEGORIAS[catRestante].color : '#E5E0D5'}`,
+                              background: subRestante === sub ? CATEGORIAS[catRestante].bg : '#fff',
+                              color: subRestante === sub ? CATEGORIAS[catRestante].color : '#5C5A4F',
+                              fontWeight: subRestante === sub ? 600 : 400
+                            }}
+                          >
+                            {sub}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: 8 }}>
+                    <FieldLabel>Descrição complementar (opcional)</FieldLabel>
+                    <input
+                      value={descRestante}
+                      onChange={e => setDescRestante(e.target.value)}
+                      placeholder="Ex: Combustível uso entregas / Material de apoio"
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
-          <FieldLabel>Descrição (opcional)</FieldLabel>
-          <input
-            value={inputDescricao}
-            onChange={e => setInputDescricao(e.target.value)}
-            placeholder="Ex: Frascos para revenda no site"
-            style={inputStyle}
-          />
-
-          <FieldLabel>Para qual categoria vai?</FieldLabel>
-          <div style={{ display: 'flex', gap: 8, background: '#F0EDE3', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-            <AlertCircle size={14} color="#9C9A8F" style={{ flexShrink: 0, marginTop: 1 }} />
-            <div style={{ fontSize: 12, color: '#7A7868', lineHeight: 1.5 }}>
-              <strong>Despesa Variável</strong> = gasto que muda conforme sua venda (embalagem, frete, comissão, produto pronto pra revender).<br />
-              <strong>Despesa Fixa</strong> = gasto que não muda mesmo se vender mais ou menos (aluguel, mensalidade, salário fixo).<br />
-              <strong>Despesa Financeira</strong> = juros, tarifas bancárias, IOF, taxas de cartão.
+          {/* Ações Finais do Modo Simples */}
+          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+            <button
+              type="button"
+              onClick={onCancelar}
+              style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #E5E0D5', background: '#fff', color: '#5C5A4F', fontSize: 13, cursor: 'pointer' }}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmarSimples}
+              disabled={valorCmvCalculado <= 0}
+              style={{
+                flex: 2, padding: '12px', borderRadius: 10, border: 'none',
+                background: valorCmvCalculado > 0 ? '#0F2B27' : '#E5E0D5',
+                color: valorCmvCalculado > 0 ? '#FAF8F3' : '#9C9A8F',
+                fontSize: 13, fontWeight: 600, cursor: valorCmvCalculado > 0 ? 'pointer' : 'not-allowed'
+              }}
+            >
+              {destinoRestante === 'pessoal' || valorRestanteCalculado <= 0.005
+                ? `Lançar ${formatBRL(valorCmvCalculado)} no CMV`
+                : `Confirmar divisão (${formatBRL(valorCmvCalculado)} CMV + ${formatBRL(valorRestanteCalculado)} ${CATEGORIAS[catRestante]?.short || ''})`
+              }
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* MODO AVANÇADO: Múltiplas partes com botão adicionar */
+        <div>
+          <div style={{ background: '#F0EDE3', borderRadius: 10, padding: 12, marginBottom: 14 }}>
+            <div style={{ height: 6, background: '#E5E0D5', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
+              <div style={{ height: '100%', width: `${Math.min(pctAvancado, 100)}%`, background: pctAvancado > 100 ? '#B05A2E' : '#1F5C52', borderRadius: 3, transition: 'width 0.2s' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 11, color: '#9C9A8F' }}>Distribuído: {formatBRL(totalDistribuido)}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: restanteAvancado < -0.005 ? '#B05A2E' : restanteAvancado < 0.005 ? '#1F5C52' : '#8A6D1A' }}>
+                {restanteAvancado < -0.005 ? `Excedeu ${formatBRL(Math.abs(restanteAvancado))}` : restanteAvancado < 0.005 ? '✓ Fechado' : `Faltam ${formatBRL(restanteAvancado)}`}
+              </span>
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {CATEGORIAS_OPCOES.map(cat => (
+
+          {partes.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 14 }}>
+              {partes.map(p => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: '1px solid #E5E0D5', borderRadius: 10, padding: '9px 12px' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: CATEGORIAS[p.categoria].color, background: CATEGORIAS[p.categoria].bg, padding: '2px 7px', borderRadius: 6 }}>
+                        {CATEGORIAS[p.categoria].short}
+                      </span>
+                      {p.descricao && <span style={{ fontSize: 12, color: '#5C5A4F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.descricao}</span>}
+                    </div>
+                  </div>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: '#1C2421', flexShrink: 0 }}>{formatBRL(p.valor)}</span>
+                  <button onClick={() => removerParte(p.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#C9C5B6', padding: 2, flexShrink: 0 }}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {restanteAvancado > 0.005 && (
+            <div style={{ background: '#F8F6F1', borderRadius: 12, padding: 12, marginBottom: 14 }}>
+              <FieldLabel>Valor desta fatia</FieldLabel>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, color: '#9C9A8F' }}>R$</span>
+                <input
+                  value={inputValor}
+                  onChange={e => setInputValor(e.target.value)}
+                  placeholder={restanteAvancado > 0 ? (restanteAvancado).toFixed(2).replace('.', ',') : '0,00'}
+                  inputMode="decimal"
+                  style={{ ...inputStyle, paddingLeft: 34 }}
+                />
+              </div>
+
+              <FieldLabel>Descrição (opcional)</FieldLabel>
+              <input
+                value={inputDescricao}
+                onChange={e => setInputDescricao(e.target.value)}
+                placeholder="Ex: Embalagens ou material de escritório"
+                style={inputStyle}
+              />
+
+              <FieldLabel>Para qual categoria vai?</FieldLabel>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {CATEGORIAS_OPCOES.map(cat => (
+                  <button
+                    key={cat.key}
+                    type="button"
+                    onClick={() => setInputCategoria(cat.key === inputCategoria ? null : cat.key)}
+                    style={{
+                      textAlign: 'left', padding: '10px 12px', borderRadius: 9, cursor: 'pointer',
+                      border: `1px solid ${cat.key === inputCategoria ? cat.color : '#E5E0D5'}`,
+                      background: cat.key === inputCategoria ? cat.bg : '#fff',
+                      color: cat.key === inputCategoria ? cat.color : '#1C2421',
+                      fontSize: 13, fontWeight: cat.key === inputCategoria ? 600 : 400,
+                    }}
+                  >
+                    {cat.label}
+                  </button>
+                ))}
+              </div>
+
               <button
-                key={cat.key}
-                onClick={() => setInputCategoria(cat.key === inputCategoria ? null : cat.key)}
+                type="button"
+                onClick={addParte}
+                disabled={parseBRL(inputValor) <= 0 || !inputCategoria}
                 style={{
-                  textAlign: 'left', padding: '10px 12px', borderRadius: 9, cursor: 'pointer',
-                  border: `1px solid ${cat.key === inputCategoria ? cat.color : '#E5E0D5'}`,
-                  background: cat.key === inputCategoria ? cat.bg : '#fff',
-                  color: cat.key === inputCategoria ? cat.color : '#1C2421',
-                  fontSize: 13.5, fontWeight: cat.key === inputCategoria ? 600 : 400,
+                  width: '100%', marginTop: 12, padding: '11px', borderRadius: 9, border: 'none',
+                  background: parseBRL(inputValor) > 0 && inputCategoria ? '#1F5C52' : '#E5E0D5',
+                  color: parseBRL(inputValor) > 0 && inputCategoria ? '#fff' : '#9C9A8F',
+                  fontSize: 13, fontWeight: 600, cursor: parseBRL(inputValor) > 0 && inputCategoria ? 'pointer' : 'not-allowed',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
               >
-                {cat.label}
+                <Plus size={14} /> Adicionar parte
               </button>
-            ))}
-          </div>
+            </div>
+          )}
 
-          <button
-            onClick={addParte}
-            disabled={parseBRL(inputValor) <= 0 || !inputCategoria}
-            style={{
-              width: '100%', marginTop: 12, padding: '11px', borderRadius: 9, border: 'none',
-              background: parseBRL(inputValor) > 0 && inputCategoria ? '#1F5C52' : '#E5E0D5',
-              color: parseBRL(inputValor) > 0 && inputCategoria ? '#fff' : '#9C9A8F',
-              fontSize: 13.5, fontWeight: 600, cursor: parseBRL(inputValor) > 0 && inputCategoria ? 'pointer' : 'not-allowed',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            }}
-          >
-            <Plus size={14} /> Adicionar parte
-          </button>
+          <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <button type="button" onClick={onCancelar} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #E5E0D5', background: '#fff', color: '#5C5A4F', fontSize: 13.5, cursor: 'pointer' }}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmarAvancado}
+              disabled={partes.length === 0 || restanteAvancado < -0.005}
+              style={{
+                flex: 2, padding: '12px', borderRadius: 10, border: 'none',
+                background: partes.length > 0 && restanteAvancado >= -0.005 ? '#0F2B27' : '#E5E0D5',
+                color: partes.length > 0 && restanteAvancado >= -0.005 ? '#FAF8F3' : '#9C9A8F',
+                fontSize: 12.5, fontWeight: 600, cursor: partes.length > 0 && restanteAvancado >= -0.005 ? 'pointer' : 'not-allowed',
+              }}
+            >
+              {restanteAvancado > 0.005 ? `Confirmar e lançar ${formatBRL(restanteAvancado)} no CMV` : 'Confirmar fracionamento'}
+            </button>
+          </div>
         </div>
       )}
-
-      {/* Ações finais */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-        <button onClick={onCancelar} style={{ flex: 1, padding: '12px', borderRadius: 10, border: '1px solid #E5E0D5', background: '#fff', color: '#5C5A4F', fontSize: 13.5, cursor: 'pointer' }}>
-          Cancelar
-        </button>
-        <button
-          onClick={handleConfirmar}
-          disabled={!podeSalvar}
-          style={{
-            flex: 2, padding: '12px', borderRadius: 10, border: 'none',
-            background: podeSalvar ? '#0F2B27' : '#E5E0D5',
-            color: podeSalvar ? '#FAF8F3' : '#9C9A8F',
-            fontSize: 12.5, fontWeight: 600, cursor: podeSalvar ? 'pointer' : 'not-allowed',
-          }}
-        >
-          {restante > 0.005 ? `Confirmar e lançar ${formatBRL(restante)} no CMV` : 'Confirmar fracionamento'}
-        </button>
-      </div>
     </ModalShell>
   );
 }
 
 // ---------- Wizard principal de classificação ----------
 
-export function ClassificacaoWizard({ descricao, valorTotal, sugestoesExtras, onCancel, onConcluir, onConcluirFracionado }) {
-  const [nodeId, setNodeId] = useState('start');
+export function ClassificacaoWizard({
+  descricao,
+  valorTotal,
+  sugestoesExtras,
+  initialNodeId = 'start',
+  initialFaseCmv = 'subcategoria',
+  subcategoriaInicial = null,
+  onCancel,
+  onConcluir,
+  onConcluirFracionado
+}) {
+  const [nodeId, setNodeId] = useState(initialNodeId);
   const [trilha, setTrilha] = useState([]);
-  const [subEscolhida, setSubEscolhida] = useState(null);
+  const [subEscolhida, setSubEscolhida] = useState(subcategoriaInicial);
   const [novaSubInput, setNovaSubInput] = useState('');
   const [mostrandoInputNova, setMostrandoInputNova] = useState(false);
   // fases para CMV: 'subcategoria' | 'perguntaFracao' | 'fracionamento'
-  const [faseCmv, setFaseCmv] = useState('subcategoria');
+  const [faseCmv, setFaseCmv] = useState(initialFaseCmv);
 
-  const node = WIZARD[nodeId];
+  const node = WIZARD[nodeId] || WIZARD.start;
 
   // Chegou numa categoria final
   if (node.categoria) {
@@ -303,7 +659,9 @@ export function ClassificacaoWizard({ descricao, valorTotal, sugestoesExtras, on
       return (
         <FracionamentoWizard
           valorTotal={valorTotal || 0}
-          onCancelar={() => setFaseCmv('perguntaFracao')}
+          descricaoOriginal={descricao}
+          subcategoriaOriginal={subEscolhida}
+          onCancelar={() => setFaseCmv(initialFaseCmv === 'fracionamento' ? 'subcategoria' : 'perguntaFracao')}
           onConfirmar={(partes) => onConcluirFracionado && onConcluirFracionado(partes)}
         />
       );

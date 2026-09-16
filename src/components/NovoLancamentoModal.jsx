@@ -1,4 +1,4 @@
-import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BANCOS, CATEGORIAS, MESES, SUBCATEGORIAS_SUGERIDAS, PLANO_DE_CONTAS_SUGERIDO } from '../utils/constants';
 import { construirSugestoesDescricao, daysInMonth, formatBRL } from '../utils/formatters';
@@ -26,6 +26,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
   );
   const [qtdVendas, setQtdVendas] = useState(editando && lancamentoEditando.qtdVendas ? String(lancamentoEditando.qtdVendas) : '');
   const [showWizard, setShowWizard] = useState(false);
+  const [wizardConfig, setWizardConfig] = useState({ nodeId: 'start', faseCmv: 'subcategoria' });
   const [categoria, setCategoria] = useState(editando ? lancamentoEditando.categoria : null);
   const [subcategoria, setSubcategoria] = useState(editando ? (lancamentoEditando.subcategoria || '') : '');
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
@@ -155,6 +156,9 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
         descricao={descricao}
         valorTotal={valorNum}
         sugestoesExtras={(historicoCompleto || []).filter(l => l.tipo === 'despesa' && l.subcategoria).map(l => l.subcategoria)}
+        initialNodeId={wizardConfig.nodeId || 'start'}
+        initialFaseCmv={wizardConfig.faseCmv || 'subcategoria'}
+        subcategoriaInicial={subcategoria || null}
         onCancel={() => setShowWizard(false)}
         onConcluir={(cat, sub) => { setCategoria(cat); setSubcategoria(sub || ''); setShowWizard(false); }}
         onConcluirFracionado={(partes) => {
@@ -383,7 +387,11 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
           {categoria ? (
             <>
               <button
-                onClick={() => setShowWizard(true)}
+                type="button"
+                onClick={() => {
+                  setWizardConfig({ nodeId: 'start', faseCmv: 'subcategoria' });
+                  setShowWizard(true);
+                }}
                 style={{ width: '100%', textAlign: 'left', padding: '10px 12px', borderRadius: 9, border: `1px solid ${CATEGORIAS[categoria].color}`, background: CATEGORIAS[categoria].bg, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <div>
@@ -438,17 +446,33 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
                 </div>
               )}
 
-              {/* Nota Informativa sobre Mão de Obra Extra (Item 1) */}
-              {subcategoria && (subcategoria.toLowerCase().includes('mão de obra') || subcategoria.toLowerCase().includes('diária') || subcategoria.toLowerCase().includes('diaria') || subcategoria.toLowerCase().includes('freelancer')) && (
-                <div style={{ marginTop: 8, padding: '7px 9px', borderRadius: 8, background: '#EAF4F1', border: '1px solid #1F5C52', fontSize: 11, color: '#1F5C52', lineHeight: 1.3 }}>
-                  💡 <strong>Nota:</strong> Lançamento de diária/freelancer extra de produção. Contabilizado como <strong>despesa variável</strong>, sem distorcer o CMV de alimentos/insumos da DRE.
-                </div>
+              {/* Botão de Atalho para Fracionar CMV (% ou R$ / separar uso pessoal) */}
+              {categoria === 'cmv' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWizardConfig({ nodeId: 'cmv', faseCmv: 'fracionamento' });
+                    setShowWizard(true);
+                  }}
+                  style={{
+                    marginTop: 8, width: '100%', padding: '9px 12px', borderRadius: 8,
+                    border: '1px dashed #B05A2E', background: '#FDF7F4', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                    color: '#B05A2E', fontSize: 12, fontWeight: 600,
+                  }}
+                >
+                  <Scissors size={14} />
+                  Fracionar CMV (% ou R$ — separar uso pessoal ou despesas mistas)
+                </button>
               )}
             </>
           ) : (
             <button
               type="button"
-              onClick={() => setShowWizard(true)}
+              onClick={() => {
+                setWizardConfig({ nodeId: 'start', faseCmv: 'subcategoria' });
+                setShowWizard(true);
+              }}
               style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: '1px dashed #C9A063', background: '#FBF3E5', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, color: '#8A6D1A', fontSize: 12.5, fontWeight: 600 }}
             >
               <HelpCircle size={15} />
