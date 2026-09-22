@@ -70,7 +70,7 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
   );
 }
 
-export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSenha }) {
+export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSenha, onVoltarEmpresa }) {
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [selecionado, setSelecionado] = useState(null);
@@ -112,9 +112,31 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
           <div style={{ fontSize: 11, color: '#9298A3' }}>Painel administrativo</div>
           <div style={{ fontFamily: 'Georgia, serif', fontSize: 17 }}>Assinantes — AMP Flow</div>
         </div>
-        <button onClick={onSair} aria-label="Sair" style={{ background: 'none', border: 'none', color: '#9298A3', cursor: 'pointer', padding: 8 }}>
-          <LogOut size={18} />
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {onVoltarEmpresa && (
+            <button
+              onClick={onVoltarEmpresa}
+              style={{
+                background: 'rgba(232, 163, 61, 0.15)',
+                border: '1px solid rgba(232, 163, 61, 0.4)',
+                borderRadius: 8,
+                color: '#E8A33D',
+                padding: '6px 12px',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5
+              }}
+            >
+              <span>🏢 Minha Empresa</span>
+            </button>
+          )}
+          <button onClick={onSair} aria-label="Sair" style={{ background: 'none', border: 'none', color: '#9298A3', cursor: 'pointer', padding: 8 }}>
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
 
       <div style={{ padding: 20, maxWidth: 720, margin: '0 auto' }}>

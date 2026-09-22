@@ -83,22 +83,15 @@ export default function CashFlowApp() {
     ]);
 
     const profile = reqProfile.data;
-
-    if (profile?.eh_admin) {
-      setSessao({ tipo: 'admin' });
-      carregarPainelAdmin();
-      return;
-    }
-
     const vinculadas = reqVinculadas.data;
 
     if (vinculadas && vinculadas.length > 0) {
       const vinculo = vinculadas[0];
       const empresa = vinculo.empresas;
       const papel = vinculo.papel || 'dono';
-      setSessao({ tipo: 'cliente', empresaId: empresa.id, papel });
+      setSessao({ tipo: 'cliente', empresaId: empresa.id, papel, ehAdmin: !!profile?.eh_admin });
       // Injetamos o nome do profile e papel na empresa pra TopBar e BottomNav usarem
-      setEmpresaAtualObj({ ...empresa, nome: profile?.nome, papel });
+      setEmpresaAtualObj({ ...empresa, nome: profile?.nome, papel, ehAdmin: !!profile?.eh_admin });
 
       if (!localStorage.getItem('avisoRegimeCaixaVisto')) {
         setShowAvisoModal(true);
@@ -108,6 +101,10 @@ export default function CashFlowApp() {
         isNovoCadastroRef.current = false;
         setTela('diagnostico');
       }
+    } else if (profile?.eh_admin) {
+      setSessao({ tipo: 'admin' });
+      carregarPainelAdmin();
+      return;
     } else {
       // Usuário autenticado que ainda não tem empresa vinculada:
       try {
@@ -592,7 +589,15 @@ export default function CashFlowApp() {
   }
 
   if (sessao.tipo === 'admin') {
-    return <AdminPanel assinantes={assinantesAdmin} onAtualizarDados={atualizarDadosAssinante} onSair={sair} onRecuperarSenha={redefinirSenha} />;
+    return (
+      <AdminPanel 
+        assinantes={assinantesAdmin} 
+        onAtualizarDados={atualizarDadosAssinante} 
+        onSair={sair} 
+        onRecuperarSenha={redefinirSenha}
+        onVoltarEmpresa={empresaAtualObj ? () => setSessao({ tipo: 'cliente', empresaId: empresaAtualObj.id, papel: empresaAtualObj.papel || 'dono', ehAdmin: true }) : null}
+      />
+    );
   }
 
   if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
@@ -610,6 +615,7 @@ export default function CashFlowApp() {
         setMesAtual={setMesAtual}
         onAbrirEquipe={() => setShowEquipeModal(true)}
         onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
+        onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
         ehDono={ehDono}
       />
 
