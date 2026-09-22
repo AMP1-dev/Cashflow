@@ -14,13 +14,13 @@ export const timeBasedSchedule = [
     id: "slot-1",
     startHour: 6,
     endHour: 10,
-    title: "Manhã Premium • Pop & Soft Hits",
-    slogan: "Ampliando sua onda musical",
-    streamUrl: "https://s10.streamingcloud.online:13192/stream",
-    backupUrl: "https://stream.zeno.fm/f3wvbbqmdg8uv",
-    genre: "Pop Internacional & Soft Hits",
-    currentTrack: "Grandes Clássicos & Pop Internacional",
-    artist: "Phil Collins, Sade, Coldplay, Elton John",
+    title: "Manhã Alpha • Soft Pop & Clássicos",
+    slogan: "A música nos acompanha",
+    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFM.mp3",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFMAAC.aac",
+    genre: "Adult Contemporary & Soft Pop",
+    currentTrack: "Grandes Clássicos & Sucessos Consagrados",
+    artist: "Phil Collins, Sade, George Michael, Elton John, Adele",
     badge: "06:00 - 10:00 • MANHÃ ALPHA",
     cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80"
   },
@@ -28,33 +28,19 @@ export const timeBasedSchedule = [
     id: "slot-2",
     startHour: 10,
     endHour: 14,
-    title: "Conexão Trabalho & Sucessos Pop",
-    slogan: "A música nos acompanha",
-    streamUrl: "https://s10.streamingcloud.online:13192/stream",
-    backupUrl: "https://stream.zeno.fm/f3wvbbqmdg8uv",
-    genre: "Adult Contemporary • Pop Comercial",
-    currentTrack: "Música com Estilo para o seu Expediente",
-    artist: "Adele, Fleetwood Mac, George Michael, Michael Jackson",
-    badge: "10:00 - 14:00 • EXPEDIENTE PREMIUM",
+    title: "Antena 1 Hits • O Melhor da Música Internacional",
+    slogan: "A rádio dos melhores ouvintes",
+    streamUrl: "https://antenaone.crossradio.com.br/stream/1",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFM.mp3",
+    genre: "Pop Internacional & Clássicos",
+    currentTrack: "Grandes Sucessos Mundiais com Som Cristalino",
+    artist: "Coldplay, Adele, Ed Sheeran, Bruno Mars, Dua Lipa",
+    badge: "10:00 - 14:00 • ANTENA 1 HITS",
     cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80"
   },
   {
-    id: "slot-3",
-    startHour: 14,
-    endHour: 15,
-    title: "Tarde Sofisticada • Pop & Soft Hits",
-    slogan: "Ampliando sua onda musical",
-    streamUrl: "https://s10.streamingcloud.online:13192/stream",
-    backupUrl: "https://stream.zeno.fm/f3wvbbqmdg8uv",
-    genre: "Pop Internacional & Soft Hits",
-    currentTrack: "Grandes Clássicos & Pop Contemporâneo",
-    artist: "Sade, Phil Collins, George Michael, Coldplay",
-    badge: "14:00 - 15:00 • TARDE SOFISTICADA",
-    cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
     id: "slot-3a",
-    startHour: 15,
+    startHour: 14,
     endHour: 16.5,
     title: "Flashback Gold • Os Clássicos Consagrados",
     slogan: "A música nos acompanha",
@@ -63,7 +49,7 @@ export const timeBasedSchedule = [
     genre: "Flashback 70s, 80s & 90s Inesquecíveis",
     currentTrack: "As Músicas Mais Amadas da Antena 1 & Alpha FM",
     artist: "Tears for Fears, A-ha, George Michael, Phil Collins, Elton John, Sade",
-    badge: "15:00 - 16:30 • FLASHBACK GOLD",
+    badge: "14:00 - 16:30 • FLASHBACK GOLD",
     cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1000&q=80"
   },
   {
@@ -81,18 +67,32 @@ export const timeBasedSchedule = [
     cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80"
   },
   {
-    id: "slot-4",
+    id: "slot-4a",
     startHour: 18,
-    endHour: 22,
-    title: "Sunset Drive & Love Songs",
+    endHour: 20,
+    title: "Sunset Drive & Love Songs • Som Cristalino HD",
     slogan: "A música nos acompanha",
-    streamUrl: "https://s10.streamingcloud.online:13192/stream",
-    backupUrl: "https://ice1.somafm.com/groovesalad-128-mp3",
-    genre: "Acoustic, Soft Rock & Pop",
-    currentTrack: "Trilha Sonora Perfeita para a sua Noite",
-    artist: "Ed Sheeran, Norah Jones, Eric Clapton, Bryan Adams",
-    badge: "18:00 - 22:00 • SUNSET DRIVE",
+    streamUrl: "https://antenaone.crossradio.com.br/stream/1",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFM.mp3",
+    genre: "Acoustic, Soft Rock & Pop Internacional",
+    currentTrack: "Trilha Sonora Perfeita para o seu Fim de Tarde",
+    artist: "Ed Sheeran, Norah Jones, Eric Clapton, Bryan Adams, Sade",
+    badge: "18:00 - 20:00 • SUNSET DRIVE",
     cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=1000&q=80"
+  },
+  {
+    id: "slot-4b",
+    startHour: 20,
+    endHour: 22,
+    title: "Super Flashback Anos 70 • A Década de Ouro",
+    slogan: "Ampliando sua onda musical",
+    streamUrl: "http://strm112.1.fm/70s_mobile_mp3",
+    backupUrl: "https://antenaone.crossradio.com.br/stream/1",
+    genre: "Classic 70s Pop, Rock, Disco & Soul",
+    currentTrack: "Os Maiores Clássicos dos Anos 70 em Alta Definição",
+    artist: "Bee Gees, ABBA, Elton John, Earth Wind & Fire, Queen, Stevie Wonder, Fleetwood Mac",
+    badge: "20:00 - 22:00 • SUPER ANOS 70",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1000&q=80"
   },
   {
     id: "slot-5",
@@ -101,9 +101,9 @@ export const timeBasedSchedule = [
     title: "Tomorrowland One World Radio LIVE",
     slogan: "The Sound of Tomorrowland 24/7",
     streamUrl: "https://22733.live.streamtheworld.com/OWR_INTERNATIONAL.mp3",
-    backupUrl: "https://s10.streamingcloud.online:13192/stream",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_AAC.aac",
     genre: "Tomorrowland • Melodic Techno • Future Rave • EDM",
-    currentTrack: "Tomorrowland One World Radio Global Broadcast",
+    currentTrack: "Tomorrowland One World Radio Global Broadcast (192 kbps HD)",
     artist: "Tomorrowland Mainstage • David Guetta • Armin van Buuren • Tiësto",
     badge: "22:00 - 00:00 • TOMORROWLAND SESSIONS",
     cover: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1000&q=80"
@@ -224,13 +224,91 @@ export const initialRadioConfig = {
 export const initialChannels = [
   {
     id: "ch-1",
-    title: "Amplificadora Hits & Pop (Alpha / Melody)",
+    title: "Amplificadora Hits & Pop",
     desc: "A melhor seleção de Pop Internacional, Anos 80, 90 e Adult Contemporary.",
     badge: "ALPHA & MELODY STYLE",
     genre: "Pop Internacional & Soft Hits",
     cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
     streamUrl: "https://s10.streamingcloud.online:13192/stream",
+    backupUrl: "https://stream.zeno.fm/f3wvbbqmdg8uv",
     color: "from-pink-600 to-purple-900"
+  },
+  {
+    id: "ch-alpha",
+    title: "Alpha FM 101.7 SP",
+    desc: "Sempre com você: o som clássico e sofisticado que conquistou São Paulo e o Brasil.",
+    badge: "ALPHA FM • SÃO PAULO",
+    genre: "Adult Contemporary • Soft Pop",
+    cover: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFM.mp3",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFMAAC.aac",
+    color: "from-blue-700 to-indigo-950"
+  },
+  {
+    id: "ch-antena1",
+    title: "Antena 1 SP",
+    desc: "O melhor da música internacional com qualidade e elegância ininterruptas.",
+    badge: "ANTENA 1 • HITS MUNDIAIS",
+    genre: "Pop Internacional Contemporâneo",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://antenaone.crossradio.com.br/stream/1",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFM.mp3",
+    color: "from-sky-600 to-slate-900"
+  },
+  {
+    id: "ch-mpb",
+    title: "O Canal MPB • Hunter.FM",
+    desc: "A fina flor da Música Popular Brasileira: Caetano, Gil, Djavan, Marisa Monte e Chico Buarque.",
+    badge: "MPB • CLÁSSICOS & BOSSA",
+    genre: "Música Popular Brasileira & Bossa Nova",
+    cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://live.hunter.fm/mpb_high",
+    backupUrl: "https://live.hunter.fm/mpb_low",
+    color: "from-emerald-600 to-teal-950"
+  },
+  {
+    id: "ch-70s",
+    title: "Super Flashback Anos 70 • Década de Ouro",
+    desc: "Bee Gees, ABBA, Elton John, Earth Wind & Fire, Queen, Stevie Wonder e Fleetwood Mac em 256 kbps.",
+    badge: "ANOS 70 CLÁSSICOS & DISCO",
+    genre: "70s Pop, Rock, Disco & Soul",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "http://strm112.1.fm/70s_mobile_mp3",
+    backupUrl: "https://antenaone.crossradio.com.br/stream/1",
+    color: "from-amber-600 to-yellow-950"
+  },
+  {
+    id: "ch-pop",
+    title: "O Canal Pop • Hunter.FM",
+    desc: "Só os hits do pop internacional e aqueles throwbacks que você ama cantar!",
+    badge: "CANAL POP • HUNTER FM",
+    genre: "Pop Global & Billboard Hits",
+    cover: "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://live.hunter.fm/pop_high",
+    backupUrl: "https://live.hunter.fm/pop_normal",
+    color: "from-fuchsia-600 to-purple-950"
+  },
+  {
+    id: "ch-5",
+    title: "Super 80s & Nostalgia • Hunter FM",
+    desc: "Puro anos 80: Michael Jackson, Madonna, Cyndi Lauper, Queen, Bon Jovi e Air Supply.",
+    badge: "ANOS 80 PURA NOSTALGIA",
+    genre: "80s Pop, Rock & Ballads",
+    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://live.hunter.fm/80s_high",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/JBFMAAC.aac",
+    color: "from-amber-600 to-rose-950"
+  },
+  {
+    id: "ch-slam10s",
+    title: "SLAM! '10s (2010 - 2019)",
+    desc: "A década de ouro do Dance Pop e EDM: Avicii, Calvin Harris, David Guetta e Swedish House Mafia.",
+    badge: "SLAM! • DECADE 10's",
+    genre: "Dance Pop • EDM • Club Hits 2010s",
+    cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://stream.slam.nl/web14_mp3",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB14_AAC.aac",
+    color: "from-violet-600 to-indigo-950"
   },
   {
     id: "ch-2",
@@ -243,6 +321,17 @@ export const initialChannels = [
     color: "from-purple-600 to-indigo-950"
   },
   {
+    id: "ch-6",
+    title: "amplificadora.club • Amnesia",
+    desc: "The Sound of Underground & Club Culture. O melhor do Deep House, Tech House e Melodic Techno 24h (SLAM!).",
+    badge: "AMNESIA • CLUB SESSIONS",
+    genre: "Deep House • Tech House • Melodic Techno",
+    cover: "/amnesia-club.jpg",
+    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_AAC.aac",
+    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_MP3.mp3",
+    color: "from-pink-600 to-violet-950"
+  },
+  {
     id: "ch-3",
     title: "Acoustic, Jazz & Love Songs",
     desc: "Versões acústicas refinadas, Bossa Nova, Jazz e canções inesquecíveis.",
@@ -251,39 +340,6 @@ export const initialChannels = [
     cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
     streamUrl: "https://ice1.somafm.com/groovesalad-128-mp3",
     color: "from-rose-500 to-amber-900"
-  },
-  {
-    id: "ch-4",
-    title: "Flashback Gold • Antena 1 & Alpha FM",
-    desc: "Os maiores clássicos mundiais dos anos 70, 80, 90 e 2000 consagrados no Brasil.",
-    badge: "FLASHBACK DE OURO",
-    genre: "Flashback 70s, 80s, 90s & 2000s",
-    cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
-    streamUrl: "https://antenaone.crossradio.com.br/stream/1",
-    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIO_ALPHAFMAAC.aac",
-    color: "from-blue-600 to-slate-900"
-  },
-  {
-    id: "ch-5",
-    title: "Super 80s & Nostalgia • Hunter FM",
-    desc: "Puro anos 80: Michael Jackson, Madonna, Cyndi Lauper, Queen, Bon Jovi e Air Supply sem intervalos.",
-    badge: "ANOS 80 PURA NOSTALGIA",
-    genre: "80s Pop, Rock & Ballads",
-    cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
-    streamUrl: "https://live.hunter.fm/80s_high",
-    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/JBFMAAC.aac",
-    color: "from-amber-600 to-rose-950"
-  },
-  {
-    id: "ch-6",
-    title: "amplificadora.club • Amnesia",
-    desc: "The Sound of Underground & Club Culture. O melhor do Deep House, Tech House e Melodic Techno 24h com a curadoria The Boom Room (SLAM!).",
-    badge: "AMNESIA • CLUB SESSIONS",
-    genre: "Deep House • Tech House • Melodic Techno",
-    cover: "/amnesia-club.jpg",
-    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_AAC.aac",
-    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_MP3.mp3",
-    color: "from-pink-600 to-violet-950"
   }
 ];
 
@@ -357,14 +413,14 @@ export const initialShows = [
 ];
 
 export const initialSchedule = [
-  { id: "sched-1", slotId: "slot-1", day: "Segunda a Domingo", time: "06:00 - 10:00", show: "Manhã Alpha (Pop & Clássicos)", host: "Transmissão HD", genre: "Pop & Adult Contemporary" },
-  { id: "sched-2", slotId: "slot-2", day: "Segunda a Domingo", time: "10:00 - 14:00", show: "Expediente Premium", host: "Seleção Diária", genre: "Hits Internacionais" },
-  { id: "sched-3", slotId: "slot-3", day: "Segunda a Domingo", time: "14:00 - 15:00", show: "Tarde Sofisticada • Pop & Soft Hits", host: "Equipe Musical", genre: "Pop Internacional & Soft Hits" },
-  { id: "sched-3a", slotId: "slot-3a", day: "Segunda a Domingo", time: "15:00 - 16:30", show: "Flashback Gold (Antena 1 & Alpha)", host: "Vozes Consagradas", genre: "Flashback 70s, 80s & 90s" },
-  { id: "sched-3b", slotId: "slot-3b", day: "Segunda a Domingo", time: "16:30 - 18:00", show: "Super Flashback Anos 80 & 90", host: "Especial Nostalgia", genre: "Hits Consagrados 80s e 90s" },
-  { id: "sched-4", slotId: "slot-4", day: "Segunda a Domingo", time: "18:00 - 22:00", show: "Sunset Drive & Acústicos", host: "Vozes de Ouro", genre: "Acoustic & Soft Rock" },
-  { id: "sched-5", slotId: "slot-5", day: "Segunda a Domingo", time: "22:00 - 00:00", show: "Tomorrowland One World Radio LIVE", host: "DJs Globais", genre: "Tomorrowland / EDM / Melodic Techno" },
-  { id: "sched-6", slotId: "slot-6", day: "Segunda a Domingo", time: "00:00 - 06:00", show: "amplificadora.club • Amnesia", host: "The Boom Room (SLAM!)", genre: "Deep House / Club Culture" },
+  { id: "sched-1", slotId: "slot-1", day: "Segunda a Domingo", time: "06:00 - 10:00", show: "Manhã Alpha • Soft Pop & Clássicos", host: "Alpha FM 101.7", genre: "Adult Contemporary & Soft Pop" },
+  { id: "sched-2", slotId: "slot-2", day: "Segunda a Domingo", time: "10:00 - 14:00", show: "Antena 1 Hits • O Melhor da Música Internacional", host: "Antena 1 SP", genre: "Pop Internacional & Clássicos" },
+  { id: "sched-3a", slotId: "slot-3a", day: "Segunda a Domingo", time: "14:00 - 16:30", show: "Flashback Gold (Antena 1 & Alpha)", host: "Vozes Consagradas", genre: "Flashback 70s, 80s & 90s" },
+  { id: "sched-3b", slotId: "slot-3b", day: "Segunda a Domingo", time: "16:30 - 18:00", show: "Super Flashback Anos 80 & 90", host: "Hunter.FM 80s", genre: "Hits Consagrados 80s e 90s" },
+  { id: "sched-4a", slotId: "slot-4a", day: "Segunda a Domingo", time: "18:00 - 20:00", show: "Sunset Drive & Love Songs", host: "Vozes de Ouro", genre: "Acoustic, Soft Rock & Pop Internacional" },
+  { id: "sched-4b", slotId: "slot-4b", day: "Segunda a Domingo", time: "20:00 - 22:00", show: "Super Flashback Anos 70 • A Década de Ouro", host: "1.FM 70s Master HD", genre: "Classic 70s Pop, Rock, Disco & Soul" },
+  { id: "sched-5", slotId: "slot-5", day: "Segunda a Domingo", time: "22:00 - 00:00", show: "Tomorrowland One World Radio LIVE", host: "Tomorrowland Oficial", genre: "Tomorrowland / EDM / Melodic Techno" },
+  { id: "sched-6", slotId: "slot-6", day: "Segunda a Domingo", time: "00:00 - 06:00", show: "amplificadora.club • Amnesia", host: "The Boom Room (SLAM!)", genre: "Deep House / Melodic Techno / Underground" },
 ];
 
 export const initialArticles = [
@@ -418,21 +474,43 @@ export const initialSongLibrary = [
 
 export const initialB2BClients = [
   {
-    id: "b2b-1",
-    name: "Bistrô & Café Vintage",
-    slug: "bistro-vintage",
-    segment: "Restaurante & Cafeteria",
+    id: "b2b-caribu",
+    name: "Caribu Burgers & Bistrô",
+    slug: "caribu-burgers-bistro",
+    segment: "Hamburgueria Gourmet & Bistrô",
     location: "São Paulo, SP",
-    streamUrl: "https://ice1.somafm.com/groovesalad-128-mp3",
-    genre: "Jazz, Bossa & Acoustic Lounge",
-    slogan: "Sabor, sofisticação e música boa",
-    logo: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=400&q=80",
-    spotsCount: 4,
-    plan: "Plano Pro (2 Ambientes + Locução IA)",
-    status: "Ativo"
+    streamUrl: "https://radio.amplificadora.com.br/listen/caribu_burgers__bistr%C3%B4/radio.mp3",
+    genre: "Vintage Chic • Jazz, Bossa & Acoustic Lounge",
+    slogan: "Cortes nobres, pães artesanais e trilha sonora perfeita",
+    logo: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=600&q=80",
+    spotsCount: 3,
+    plan: "Plano Pro Indoor (Locução IA + Smart Crossfade)",
+    status: "Ativo",
+    spotsList: [
+      { title: "Caribu - Blend Artesanal (Emma • Sax Lounge)", url: "https://amplificadora.com.br/spots/caribu1_emma_lounge.mp3" },
+      { title: "Caribu - Blend Artesanal (Vivienne • Sax Lounge)", url: "https://amplificadora.com.br/spots/caribu1_vivienne_lounge.mp3" },
+      { title: "Caribu - Experiência Gourmet (Vivienne • Acústico Chic)", url: "https://amplificadora.com.br/spots/caribu2_vivienne_chic.mp3" }
+    ]
   },
   {
-    id: "b2b-2",
+    id: "b2b-donazeca",
+    name: "Dona Zeca Vintage Café",
+    slug: "dona-zeca-cafe",
+    segment: "Doceria & Cafeteria Gourmet",
+    location: "São Paulo, SP",
+    streamUrl: "https://radio.amplificadora.com.br/spots/donazeca_vivienne_cafe.mp3",
+    genre: "Café Bossa & Piano Jazz Lounge",
+    slogan: "Café especial passado na hora e doces com sabor de infância",
+    logo: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=600&q=80",
+    spotsCount: 1,
+    plan: "Plano Essencial Indoor (Spots IA)",
+    status: "Ativo",
+    spotsList: [
+      { title: "Dona Zeca - Doceria & Café Especial (Vivienne • Piano Jazz)", url: "https://amplificadora.com.br/spots/donazeca_vivienne_cafe.mp3" }
+    ]
+  },
+  {
+    id: "b2b-pulse",
     name: "Pulse Fitness Club",
     slug: "pulse-fitness",
     segment: "Academia & CrossFit",
@@ -443,20 +521,6 @@ export const initialB2BClients = [
     logo: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=400&q=80",
     spotsCount: 6,
     plan: "Plano Multi-Unidades",
-    status: "Ativo"
-  },
-  {
-    id: "b2b-3",
-    name: "Ateliê & Moda Urbana",
-    slug: "atelie-moda",
-    segment: "Varejo & Boutique",
-    location: "Curitiba, PR",
-    streamUrl: "https://s10.streamingcloud.online:13192/stream",
-    genre: "Pop Sofisticado & Hits Globais",
-    slogan: "Moda, elegância e ritmo envolvente",
-    logo: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=80",
-    spotsCount: 3,
-    plan: "Plano Essencial Indoor",
     status: "Ativo"
   }
 ];

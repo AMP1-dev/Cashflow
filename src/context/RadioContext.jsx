@@ -622,22 +622,34 @@ export function RadioProvider({ children }) {
       }
     } else {
       // Direct MP3/Icecast Stream
-      // Append cache-buster on retry so browser doesn't hang on dropped socket
-      const cleanUrl = url.split('?')[0];
-      const targetSrc = isAutoRetry ? `${cleanUrl}?_t=${Date.now()}` : url;
-      audio.src = targetSrc;
-      audio.preload = 'auto';
+      audio.src = url;
+      audio.load();
 
-      audio.play().then(() => {
-        setIsPlaying(true);
-        setIsBuffering(false);
-        setIsReconnecting(false);
-        reconnectAttemptsRef.current = 0;
-        if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-      }).catch((e) => {
-        console.log('Direct audio play error:', e);
-        if (isPlaying) attemptSilentReconnect();
-      });
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          setIsPlaying(true);
+          setIsBuffering(false);
+          setIsReconnecting(false);
+          reconnectAttemptsRef.current = 0;
+          if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        }).catch((e) => {
+          console.warn('Direct audio play error:', e);
+          const fallback = currentSlot?.backupUrl || config.streamBackupUrl;
+          if (fallback && url !== fallback) {
+            console.log('Flipping to fallback stream:', fallback);
+            audio.src = fallback;
+            audio.load();
+            audio.play().then(() => {
+              setIsPlaying(true);
+              setIsBuffering(false);
+              setIsReconnecting(false);
+            }).catch(err => console.error('Fallback error:', err));
+          } else {
+            attemptSilentReconnect();
+          }
+        });
+      }
     }
   };
 

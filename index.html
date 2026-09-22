@@ -3,20 +3,28 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
-    <meta id="meta-theme-color" name="theme-color" content="#0A0910" />
-    <link id="dynamic-favicon" rel="icon" type="image/jpeg" href="/favicon-amplificadora.jpg" />
-    <title>Rádio Amplificadora • Ampliando sua onda musical</title>
+    <meta id="meta-theme-color" name="theme-color" content="#0B0B0E" />
+    <link id="dynamic-favicon" rel="icon" type="image/png" href="/logo-ecp.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+    <title>Esporte Clube Palmeirense • Desde 1908</title>
     <script>
       (function() {
         try {
           var host = (window.location.hostname || '').toLowerCase();
           var params = new URLSearchParams(window.location.search || '');
+          var isPalmeirense = host.includes('palmeirense') || params.get('app') === 'palmeirense' || params.get('app') === 'ecp';
           var isDrywall = host.includes('drywall') || host.includes('dibrunelli') || params.get('app') === 'drywall';
           var isRadio = host.includes('amplificadora') || params.get('app') === 'radio';
           var favEl = document.getElementById('dynamic-favicon');
           var themeEl = document.getElementById('meta-theme-color');
 
-          if (isDrywall) {
+          if (isPalmeirense) {
+            document.title = 'Esporte Clube Palmeirense • Desde 1908 | Sta. C. das Palmeiras';
+            if (favEl) favEl.href = '/logo-ecp.png';
+            if (themeEl) themeEl.content = '#0B0B0E';
+          } else if (isDrywall) {
             document.title = 'Drywall Distribuidora • Di Brunelli | Interior de SP';
             if (favEl) favEl.href = '/vite.svg';
             if (themeEl) themeEl.content = '#0052D9';

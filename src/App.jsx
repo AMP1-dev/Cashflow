@@ -95,6 +95,7 @@ function MainPortal() {
 
 import CashFlowApp from './CashFlowApp';
 import DrywallApp from './drywall/DrywallApp';
+import PalmeirenseApp from './palmeirense/PalmeirenseApp';
 
 export default function App() {
   const [activeMode, setActiveMode] = useState(() => {
@@ -102,6 +103,9 @@ export default function App() {
     const hostname = window.location.hostname.toLowerCase();
     const params = new URLSearchParams(window.location.search);
 
+    if (hostname.includes('palmeirense') || params.get('app') === 'palmeirense' || params.get('app') === 'ecp') {
+      return 'palmeirense';
+    }
     if (hostname.includes('drywall') || hostname.includes('dibrunelli') || params.get('app') === 'drywall') {
       return 'drywall';
     }
@@ -125,7 +129,9 @@ export default function App() {
     const checkRoute = () => {
       const hostname = window.location.hostname.toLowerCase();
       const params = new URLSearchParams(window.location.search);
-      if (hostname.includes('drywall') || hostname.includes('dibrunelli') || params.get('app') === 'drywall') {
+      if (hostname.includes('palmeirense') || params.get('app') === 'palmeirense' || params.get('app') === 'ecp') {
+        setActiveMode('palmeirense');
+      } else if (hostname.includes('drywall') || hostname.includes('dibrunelli') || params.get('app') === 'drywall') {
         setActiveMode('drywall');
       } else if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
         setActiveMode('radio');
@@ -143,7 +149,9 @@ export default function App() {
     if (typeof document === 'undefined') return;
     const favEl = document.getElementById('dynamic-favicon') || document.querySelector("link[rel*='icon']");
 
-    if (activeMode === 'drywall') {
+    if (activeMode === 'palmeirense') {
+      document.title = 'Esporte Clube Palmeirense • Desde 1908 | Santa Cruz das Palmeiras';
+    } else if (activeMode === 'drywall') {
       document.title = 'Drywall Distribuidora • Di Brunelli | Interior de SP';
       if (favEl) favEl.href = '/vite.svg';
     } else if (activeMode === 'radio') {
@@ -157,6 +165,10 @@ export default function App() {
       if (favEl) favEl.href = '/vite.svg';
     }
   }, [activeMode]);
+
+  if (activeMode === 'palmeirense') {
+    return <PalmeirenseApp />;
+  }
 
   if (activeMode === 'drywall') {
     return <DrywallApp />;

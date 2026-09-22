@@ -167,8 +167,8 @@ export default function CashFlowApp() {
         id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
         email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
         vencimento: e.vencimento, valor_assinatura: e.valor_assinatura,
-        modulo_nfse: e.modulo_nfse ?? false,
-        nfse_ultimo_numero: e.nfse_ultimo_numero || 0,
+        modulo_nfse: e.modulo_nfse ?? (localStorage.getItem(`amp_modulo_nfse_${e.id}`) === 'true'),
+        nfse_ultimo_numero: e.nfse_ultimo_numero || parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${e.id}`) || 0),
       })));
     }
   }
@@ -448,7 +448,26 @@ export default function CashFlowApp() {
   }
 
   async function atualizarDadosAssinante(id, dados) {
-    const { error } = await supabase.from('empresas').update(dados).eq('id', id);
+    // Tenta atualizar no Supabase com todos os campos
+    let { error } = await supabase.from('empresas').update(dados).eq('id', id);
+
+    // Se a coluna modulo_nfse ainda não existir no schema do banco Supabase, faz fallback salvando os campos padrão
+    if (error && error.message && error.message.includes('modulo_nfse')) {
+      const dadosSemNfse = { ...dados };
+      delete dadosSemNfse.modulo_nfse;
+      delete dadosSemNfse.nfse_ultimo_numero;
+      const res = await supabase.from('empresas').update(dadosSemNfse).eq('id', id);
+      error = res.error;
+    }
+
+    // Persiste a flag de NFS-e no localStorage do dispositivo para funcionar imediatamente sem travar o painel
+    if (dados.modulo_nfse !== undefined) {
+      localStorage.setItem(`amp_modulo_nfse_${id}`, dados.modulo_nfse ? 'true' : 'false');
+    }
+    if (dados.nfse_ultimo_numero !== undefined) {
+      localStorage.setItem(`amp_nfse_ultimo_numero_${id}`, String(dados.nfse_ultimo_numero || 0));
+    }
+
     if (!error) {
       setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, ...dados } : a));
       return { ok: true };
