@@ -10,14 +10,21 @@ export const STATUS_ASSINATURA = {
 export const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
 export const CATEGORIAS = {
-  cmv: { label: 'Custo da Mercadoria (CMV)', short: 'CMV', color: '#B05A2E', bg: '#F5E4D8' },
+  cmv: { label: 'Custos Diretos (CMV / CSP)', short: 'CMV / CSP', color: '#B05A2E', bg: '#F5E4D8' },
   variavel: { label: 'Despesa Variável', short: 'Variável', color: '#8A6D1A', bg: '#F3EAC9' },
   fixa: { label: 'Despesa Fixa', short: 'Fixa', color: '#1F5C52', bg: '#D9EBE6' },
   financeira: { label: 'Despesa Financeira', short: 'Financeira', color: '#7A2E3D', bg: '#F2DDE1' },
 };
 
 export const SUBCATEGORIAS_SUGERIDAS = {
-  cmv: ['Mercadoria para revenda', 'Matéria-prima', 'Embalagens do produto', 'Frete de compra de mercadoria'],
+  cmv: [
+    'Mercadoria para revenda', 
+    'Matéria-prima', 
+    'Peças e materiais aplicados em serviços', 
+    'Subcontratação de serviços / Diaristas de obra', 
+    'Embalagens do produto', 
+    'Frete de compra de mercadoria'
+  ],
   variavel: ['Impostos sobre venda', 'Comissão sobre vendas', 'Taxa de cartão', 'Frete de entrega ao cliente', 'Mão de Obra Extra / Diárias de Pico'],
   fixa: ['Aluguel', 'Salários', 'Pró-labore', 'Água', 'Energia elétrica', 'Telefone e internet', 'Contador', 'Combustível (uso geral)', 'Manutenção de veículo', 'Material de escritório'],
   financeira: ['Juros bancários', 'Tarifa bancária', 'Amortização de empréstimo'],
@@ -26,18 +33,19 @@ export const SUBCATEGORIAS_SUGERIDAS = {
 export const PLANO_DE_CONTAS_SUGERIDO = [
   {
     id: 'custos_diretos',
-    grupo: '📦 Custos Diretos (CMV / Insumos)',
+    grupo: '📦 Custos Diretos (CMV / CSP)',
     categoria: 'cmv',
-    tipoLabel: 'Custo Direto (CMV)',
+    tipoLabel: 'Custo Direto (CMV / CSP)',
     badgeColor: '#B05A2E',
     badgeBg: '#F5E4D8',
-    descricao: 'Gastos essenciais de produtos comprados para revender ou produzir',
+    descricao: 'Gastos essenciais de mercadorias para revender, insumos de produção ou peças/terceiros aplicados no serviço',
     itens: [
       { nome: 'Mercadoria para revenda', sub: 'Mercadoria para revenda' },
       { nome: 'Matéria-prima / Ingredientes', sub: 'Matéria-prima' },
+      { nome: 'Peças e materiais aplicados no serviço', sub: 'Peças e materiais aplicados em serviços' },
+      { nome: 'Subcontratação técnica / Diárias diretas', sub: 'Subcontratação de serviços / Diaristas de obra' },
       { nome: 'Embalagens do produto', sub: 'Embalagens do produto' },
       { nome: 'Frete de compra de mercadoria', sub: 'Frete de compra de mercadoria' },
-      { nome: 'Terceirização direta de produção', sub: 'Matéria-prima' },
     ]
   },
   {
@@ -136,10 +144,10 @@ export const WIZARD = {
     ],
   },
   pergunta_cmv: {
-    pergunta: 'Essa despesa é algo que você só paga porque vendeu (ou vai vender) um produto específico? Ex: a mercadoria que você compra para revender, ou a matéria-prima de um produto.',
-    ajuda: 'O teste do CMV: se você não vendesse nada, esse gasto não existiria. Ex: o pão que a padaria compra para fazer o sanduíche é CMV. O aluguel da padaria não é — ele existe mesmo num mês sem vendas.',
+    pergunta: 'Essa despesa é algo que você só paga para entregar um produto ou executar um serviço específico? Ex: mercadoria para revenda, matéria-prima, peças trocadas no cliente ou freelancer/diarista subcontratado.',
+    ajuda: 'O teste do CMV / CSP (Custo do Serviço): se você não vendesse nada ou não fizesse aquele serviço, esse gasto não existiria. Ex: o pão da padaria é CMV; as peças que um encanador/técnico instala no cliente ou o freelancer contratado para um projeto são CSP. O aluguel não é — ele existe mesmo sem faturamento.',
     opcoes: [
-      { texto: 'Sim, é o custo direto do que eu vendo', proximo: 'fim_cmv' },
+      { texto: 'Sim, é o custo direto do meu produto ou serviço', proximo: 'fim_cmv' },
       { texto: 'Não, é diferente disso', proximo: 'pergunta_variavel' },
     ],
   },

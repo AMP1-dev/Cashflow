@@ -158,7 +158,14 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
                   style={{ width: '100%', textAlign: 'left', background: '#fff', borderRadius: 12, border: '1px solid #E1E3E6', padding: '12px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                 >
                   <div>
-                    <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.fantasia || a.empresa}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontSize: 13.5, fontWeight: 600 }}>{a.fantasia || a.empresa}</span>
+                      {a.modulo_nfse && (
+                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                          🧾 NFS-e ATIVA
+                        </span>
+                      )}
+                    </div>
                     <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
                     {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
                   </div>
@@ -221,6 +228,8 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [status, setStatus] = useState(assinante.status);
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
+  const [moduloNfse, setModuloNfse] = useState(assinante.modulo_nfse ?? false);
+  const [ultimoNumeroNfse, setUltimoNumeroNfse] = useState(assinante.nfse_ultimo_numero || '');
   const [salvando, setSalvando] = useState(false);
   const [enviandoLink, setEnviandoLink] = useState(false);
   const [msgLink, setMsgLink] = useState('');
@@ -228,10 +237,15 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
 
   async function handleSalvar() {
     setSalvando(true);
+    // Também salva no localStorage como fallback para testes imediatos
+    localStorage.setItem(`amp_modulo_nfse_${assinante.id}`, moduloNfse ? 'true' : 'false');
+
     const resultado = await onAtualizarDados(assinante.id, {
       status,
       vencimento: vencimento || null,
-      valor_assinatura: valor ? parseFloat(valor) : null
+      valor_assinatura: valor ? parseFloat(valor) : null,
+      modulo_nfse: moduloNfse,
+      nfse_ultimo_numero: ultimoNumeroNfse ? parseInt(ultimoNumeroNfse) : 0,
     });
     setSalvando(false);
     if (!resultado.ok) alert('Erro ao salvar: ' + resultado.erro);
@@ -291,7 +305,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
         <div style={{ flex: 1 }}>
           <FieldLabel>Vencimento do plano</FieldLabel>
           <input
@@ -312,6 +326,42 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
             style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #E1E3E6', fontSize: 14, boxSizing: 'border-box' }}
           />
         </div>
+      </div>
+
+      {/* ── CHAVE DE ATIVAÇÃO DO MÓDULO NFS-E & RECORRÊNCIA (ADD-ON COBRADO) ── */}
+      <div style={{ background: '#FAF8F3', border: '1.5px solid #1F5C52', borderRadius: 12, padding: '14px', marginBottom: 20 }}>
+        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>
+              🧾 Módulo NFS-e & Emissão Recorrente
+            </div>
+            <div style={{ fontSize: 11, color: '#5C5A4F', marginTop: 2 }}>
+              Habilita a aba de emissão fiscal, leitura de A1 e contratos no app do cliente
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={moduloNfse}
+            onChange={e => setModuloNfse(e.target.checked)}
+            style={{ accentColor: '#1F5C52', width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </label>
+
+        {moduloNfse && (
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #D1CFC7' }}>
+            <FieldLabel>Último número de NFS-e emitida (Sequencial)</FieldLabel>
+            <input
+              type="number"
+              value={ultimoNumeroNfse}
+              onChange={e => setUltimoNumeroNfse(e.target.value)}
+              placeholder="Ex: 45 (a próxima nota emitida será a 46)"
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E1E3E6', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+            <div style={{ fontSize: 10.5, color: '#7A7868', marginTop: 3 }}>
+              Se o cliente já emitiu notas no portal da prefeitura, informe aqui para continuar a sequência exata.
+            </div>
+          </div>
+        )}
       </div>
 
       <button

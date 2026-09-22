@@ -8,6 +8,7 @@ import { NovoLancamentoModal } from './components/NovoLancamentoModal';
 import { AvisoRegimeCaixaModal } from './components/AvisoRegimeCaixaModal';
 import { ImportarExtratoModal } from './components/ImportarExtratoModal';
 import { GestaoEquipeModal } from './components/GestaoEquipeModal';
+import { EmitirNfseModal } from './components/EmitirNfseModal';
 import { ErrorBoundary } from './components/UIComponents';
 
 import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
@@ -20,6 +21,7 @@ import { FichasTecnicasScreen } from './screens/FichasTecnicasScreen';
 import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
+import { NfseScreen } from './screens/NfseScreen';
 
 export default function CashFlowApp() {
   const [sessao, setSessao] = useState(null);
@@ -40,6 +42,8 @@ export default function CashFlowApp() {
   const [showAvisoModal, setShowAvisoModal] = useState(false);
   const [showImportarModal, setShowImportarModal] = useState(false);
   const [showEquipeModal, setShowEquipeModal] = useState(false);
+  const [showNfseModalAvulso, setShowNfseModalAvulso] = useState(false);
+  const [dadosIniciaisNfseAvulso, setDadosIniciaisNfseAvulso] = useState(null);
 
   // Admin state
   const [assinantesAdmin, setAssinantesAdmin] = useState([]);
@@ -162,7 +166,9 @@ export default function CashFlowApp() {
       setAssinantesAdmin(data.map(e => ({
         id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
         email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
-        vencimento: e.vencimento, valor_assinatura: e.valor_assinatura
+        vencimento: e.vencimento, valor_assinatura: e.valor_assinatura,
+        modulo_nfse: e.modulo_nfse ?? false,
+        nfse_ultimo_numero: e.nfse_ultimo_numero || 0,
       })));
     }
   }
@@ -481,6 +487,7 @@ export default function CashFlowApp() {
   if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
 
   const ehDono = empresaAtualObj?.papel !== 'funcionario';
+  const moduloNfseAtivo = !!(empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
 
   return (
     <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
@@ -491,6 +498,7 @@ export default function CashFlowApp() {
         mesAtual={mesAtual}
         setMesAtual={setMesAtual}
         onAbrirEquipe={() => setShowEquipeModal(true)}
+        onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
         ehDono={ehDono}
       />
 
@@ -507,6 +515,7 @@ export default function CashFlowApp() {
               onEditar={abrirEdicao}
               onIrGestaoAVista={() => setTela('gestaoavista')}
               onAbrirImportacao={() => setShowImportarModal(true)}
+              onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
             />
           )}
           {tela === 'fluxo' && (
@@ -517,6 +526,14 @@ export default function CashFlowApp() {
               onRemove={removeLancamento}
               onEditar={abrirEdicao}
               onAbrirImportacao={() => setShowImportarModal(true)}
+            />
+          )}
+          {tela === 'nfse' && ehDono && moduloNfseAtivo && (
+            <NfseScreen
+              empresa={empresaAtualObj}
+              mesAtual={mesAtual}
+              anoAtual={anoAtual}
+              onAdicionarReceitaAoCaixa={(rec) => addLancamento(rec)}
             />
           )}
           {tela === 'dre' && ehDono && (
@@ -564,7 +581,13 @@ export default function CashFlowApp() {
         </ErrorBoundary>
       </div>
 
-      <BottomNav tela={tela} setTela={setTela} onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} papel={empresaAtualObj.papel || 'dono'} />
+      <BottomNav 
+        tela={tela} 
+        setTela={setTela} 
+        onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} 
+        papel={empresaAtualObj.papel || 'dono'} 
+        moduloNfseAtivo={moduloNfseAtivo}
+      />
 
       {showLancamentoModal && (
         <NovoLancamentoModal
@@ -578,6 +601,37 @@ export default function CashFlowApp() {
           onSave={(l) => { addLancamento(l); fecharModal(); }}
           onUpdate={(dados) => { updateLancamento(lancamentoEditando.id, dados); fecharModal(); }}
           onDelete={() => { removeLancamento(lancamentoEditando.id); fecharModal(); }}
+          onAbrirEmissaoNfse={moduloNfseAtivo ? (dados) => {
+            setDadosIniciaisNfseAvulso(dados);
+            setShowLancamentoModal(false);
+            setShowNfseModalAvulso(true);
+          } : null}
+        />
+      )}
+
+      {showNfseModalAvulso && (
+        <EmitirNfseModal
+          empresa={empresaAtualObj}
+          mesAtual={mesAtual}
+          anoAtual={anoAtual}
+          dadosIniciais={dadosIniciaisNfseAvulso}
+          onClose={() => {
+            setShowNfseModalAvulso(false);
+            setDadosIniciaisNfseAvulso(null);
+          }}
+          onSucesso={(nota, dadosLancamento) => {
+            setShowNfseModalAvulso(false);
+            setDadosIniciaisNfseAvulso(null);
+            addLancamento({
+              tipo: 'receita',
+              descricao: `NFS-e Nº ${nota.numero} - ${dadosLancamento.tomador} (${dadosLancamento.descricao})`,
+              valor: dadosLancamento.valor,
+              mes: dadosLancamento.mes,
+              dia: dadosLancamento.dia,
+              formaRecebimento: 'À vista/PIX',
+            });
+            setTela('nfse');
+          }}
         />
       )}
 

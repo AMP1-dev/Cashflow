@@ -1,11 +1,11 @@
-import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { BANCOS, CATEGORIAS, MESES, SUBCATEGORIAS_SUGERIDAS, PLANO_DE_CONTAS_SUGERIDO } from '../utils/constants';
 import { construirSugestoesDescricao, daysInMonth, formatBRL } from '../utils/formatters';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
 import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
 
-export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Date().getMonth(), anoAtual = new Date().getFullYear(), lancamentoEditando, historicoCompleto, onClose, onSave, onUpdate, onDelete }) {
+export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Date().getMonth(), anoAtual = new Date().getFullYear(), lancamentoEditando, historicoCompleto, onClose, onSave, onUpdate, onDelete, onAbrirEmissaoNfse }) {
   const editando = !!lancamentoEditando;
   const [tipo, setTipo] = useState(editando ? lancamentoEditando.tipo : tipoInicial);
   const [descricao, setDescricao] = useState(editando ? lancamentoEditando.descricao : '');
@@ -378,6 +378,41 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
             inputMode="numeric"
             style={inputStyle}
           />
+
+          {/* Botão de Atalho Inteligente para Gerar NFS-e */}
+          {onAbrirEmissaoNfse && valorNum > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                onClick={() => {
+                  onAbrirEmissaoNfse({
+                    descricao,
+                    valor: valorNum,
+                    mesCompetencia: personalizarCompetencia ? mesCompetencia : mes,
+                  });
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  borderRadius: 9,
+                  border: '1.5px dashed #1F5C52',
+                  background: '#EAF4F1',
+                  color: '#0F2B27',
+                  fontSize: 12.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 7,
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                }}
+              >
+                <FileText size={15} color="#1F5C52" />
+                <span>🧾 Gerar Nota Fiscal de Serviços (NFS-e) deste valor</span>
+              </button>
+            </div>
+          )}
         </>
       )}
 

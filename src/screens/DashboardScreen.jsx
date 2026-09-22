@@ -6,7 +6,7 @@ import { RelatorioBancosModal } from '../components/RelatorioBancosModal';
 import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 'dono', onNovo, onEditar, onIrGestaoAVista, onAbrirImportacao }) {
+export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 'dono', onNovo, onEditar, onIrGestaoAVista, onAbrirImportacao, onAbrirNfse }) {
   const ehDono = papel !== 'funcionario';
   const [pctCmv, setPctCmv] = useState(0);
   const [peExpandido, setPeExpandido] = useState(false);
@@ -392,12 +392,21 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 
         </button>
         
         <div style={{ display: 'flex', gap: 6 }}>
+          {ehDono && onAbrirNfse && (
+            <button 
+              onClick={onAbrirNfse}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: '#EAF4F1', border: '1px solid #1F5C52', borderRadius: 8, fontSize: 11.5, fontWeight: 700, color: '#1F5C52', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+            >
+              <FileText size={13} /> NFS-e
+            </button>
+          )}
+
           {onAbrirImportacao && (
             <button 
               onClick={onAbrirImportacao}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: '#D9EBE6', border: '1px solid #1F5C52', borderRadius: 8, fontSize: 11.5, fontWeight: 600, color: '#1F5C52', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
             >
-              <UploadCloud size={13} /> Importar Extrato
+              <UploadCloud size={13} /> Importar
             </button>
           )}
 
