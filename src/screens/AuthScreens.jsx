@@ -83,6 +83,7 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
   function cpfValido(v) { return somenteDigitos(v).length === 11; }
 
   async function handleCriar() {
+    setErro('');
     if (!empresa.trim()) { setErro('Informe o nome da empresa.'); return; }
     if (!cpfValido(cpf)) { setErro('Informe um CPF válido (11 dígitos).'); return; }
     if (!email || !email.includes('@')) { setErro('Informe um e-mail válido, ele será seu login.'); return; }
@@ -92,10 +93,21 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
     setLoading(true);
     const resultado = await onCriar({ empresa: empresa.trim(), cpf, fantasia: fantasia.trim(), nome: nome.trim(), email: email.trim(), telefone: telefone.trim(), senha });
     if (!resultado.ok) {
-      setErro(resultado.erro);
+      let msg = typeof resultado.erro === 'string' ? resultado.erro : (resultado.erro?.message || '');
+      if (!msg || msg === '{}' || msg.includes('AuthRetryableFetchError')) {
+        msg = 'Este CPF ou e-mail já possui cadastro no sistema. Tente fazer login ou recuperar o acesso.';
+      }
+      setErro(msg);
       setLoading(false);
     }
   }
+
+  const erroEhContaExistente = erro && (
+    erro.toLowerCase().includes('já possui cadastro') ||
+    erro.toLowerCase().includes('already registered') ||
+    erro.toLowerCase().includes('já está em uso') ||
+    erro.toLowerCase().includes('cpf')
+  );
 
   return (
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -111,10 +123,10 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
 
         <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
           <AuthLabel>CPF do responsável *</AuthLabel>
-          <AuthInput value={cpf} onChange={(v) => setCpf(formatarCpfInput(v))} placeholder="000.000.000-00" inputMode="numeric" />
+          <AuthInput value={cpf} onChange={(v) => { setCpf(formatarCpfInput(v)); setErro(''); }} placeholder="000.000.000-00" inputMode="numeric" />
 
           <AuthLabel>Nome da empresa *</AuthLabel>
-          <AuthInput value={empresa} onChange={setEmpresa} placeholder="Razão social ou nome do negócio" />
+          <AuthInput value={empresa} onChange={(v) => { setEmpresa(v); setErro(''); }} placeholder="Razão social ou nome do negócio" />
 
           <AuthLabel>Nome fantasia</AuthLabel>
           <AuthInput value={fantasia} onChange={setFantasia} placeholder="Como o negócio é conhecido" />
@@ -123,18 +135,51 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
           <AuthInput value={nome} onChange={setNome} placeholder="Nome do responsável" />
 
           <AuthLabel>E-mail de acesso *</AuthLabel>
-          <AuthInput value={email} onChange={setEmail} placeholder="seuemail@empresa.com.br" inputMode="email" type="email" autoCapitalize="none" />
+          <AuthInput value={email} onChange={(v) => { setEmail(v); setErro(''); }} placeholder="seuemail@empresa.com.br" inputMode="email" type="email" autoCapitalize="none" />
 
           <AuthLabel>Telefone</AuthLabel>
           <AuthInput value={telefone} onChange={setTelefone} placeholder="(00) 00000-0000" inputMode="tel" />
 
           <AuthLabel>Crie uma senha *</AuthLabel>
-          <AuthInput value={senha} onChange={setSenha} placeholder="Mínimo 6 caracteres" type="password" />
+          <AuthInput value={senha} onChange={(v) => { setSenha(v); setErro(''); }} placeholder="Mínimo 6 caracteres" type="password" />
 
           <AuthLabel>Confirme a senha *</AuthLabel>
-          <AuthInput value={confirmarSenha} onChange={setConfirmarSenha} placeholder="Repita a senha" type="password" last />
+          <AuthInput value={confirmarSenha} onChange={(v) => { setConfirmarSenha(v); setErro(''); }} placeholder="Repita a senha" type="password" last />
 
-          {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
+          {erro && (
+            <div style={{ 
+              fontSize: 12.5, 
+              color: '#FCA5A5', 
+              background: '#381E1E', 
+              border: '1px solid #7F1D1D', 
+              borderRadius: 8, 
+              padding: '10px 12px', 
+              lineHeight: 1.45, 
+              marginBottom: 14 
+            }}>
+              {erro}
+              {erroEhContaExistente && (
+                <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={onVoltarLogin}
+                    style={{
+                      background: '#16352F',
+                      border: '1px solid #234A42',
+                      color: '#FAF8F3',
+                      fontSize: 11.5,
+                      fontWeight: 600,
+                      padding: '5px 10px',
+                      borderRadius: 6,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Fazer login
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <button onClick={handleCriar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Criando conta e estrutura...' : 'Criar assinatura'}

@@ -108,6 +108,36 @@ export default function CashFlowApp() {
         isNovoCadastroRef.current = false;
         setTela('diagnostico');
       }
+    } else {
+      // Usuário autenticado que ainda não tem empresa vinculada:
+      try {
+        const novaEmpresaId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : 'emp_' + Date.now();
+        
+        const nomeBase = profile?.nome ? `${profile.nome} - Negócios` : 'Minha Empresa';
+        const { data: novaEmpresa, error: errEmp } = await supabase.from('empresas').insert({
+          id: novaEmpresaId,
+          razao_social: nomeBase,
+          nome_fantasia: nomeBase,
+          cpf_titular: profile?.cpf || '',
+          status: 'teste'
+        }).select().single();
+
+        if (!errEmp && novaEmpresa) {
+          await supabase.from('empresa_usuarios').insert({
+            empresa_id: novaEmpresaId,
+            usuario_id: userId,
+            papel: 'dono'
+          });
+
+          setSessao({ tipo: 'cliente', empresaId: novaEmpresa.id, papel: 'dono' });
+          setEmpresaAtualObj({ ...novaEmpresa, nome: profile?.nome, papel: 'dono' });
+          setTela('diagnostico');
+        }
+      } catch (e) {
+        console.error('Erro ao auto-criar empresa inicial:', e);
+      }
     }
   }
 
@@ -355,10 +385,13 @@ export default function CashFlowApp() {
   }
 
   async function fazerLogin(email, senha) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email, password: senha });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: senha });
     if (error) {
       if (error.message.includes('Invalid login')) return { ok: false, erro: 'E-mail ou senha incorretos.' };
       return { ok: false, erro: error.message };
+    }
+    if (data?.user) {
+      await carregarDadosIniciais(data.user.id);
     }
     return { ok: true };
   }
@@ -369,67 +402,126 @@ export default function CashFlowApp() {
       carregarPainelAdmin();
       return { ok: true };
     }
-    return { ok: false, erro: 'Usu├írio ou senha incorretos.' };
+    return { ok: false, erro: 'Usuário ou senha incorretos.' };
   }
 
   async function criarAssinatura(dados) {
-    const cpfLimpo = somenteDigitos(dados.cpf);
+    try {
+      const cpfLimpo = somenteDigitos(dados.cpf);
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: dados.email,
-      password: dados.senha,
-      options: {
-        data: { nome: dados.nome || '', cpf: cpfLimpo, telefone: dados.telefone || '' }
+      // 1. Tentar cadastro inicial no Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: dados.email.trim(),
+        password: dados.senha,
+        options: {
+          data: { nome: dados.nome?.trim() || '', cpf: cpfLimpo, telefone: dados.telefone?.trim() || '' }
+        }
+      });
+
+      let userId = authData?.user?.id;
+      let session = authData?.session;
+
+      // 2. Se deu erro ou a sessão não foi aberta diretamente (ex: conta ou CPF já cadastrados)
+      if (authError || !session) {
+        // Tentar autenticar com a senha informada caso o usuário já tenha criado a conta
+        const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+          email: dados.email.trim(),
+          password: dados.senha
+        });
+
+        if (!loginError && loginData?.user) {
+          userId = loginData.user.id;
+          session = loginData.session;
+        } else {
+          // Tratar erro em português legível sem exibir "{}"
+          const errRaw = (authError?.message || '') + ' ' + (authError?.description || '');
+          const errDetail = JSON.stringify(authError || loginError || {});
+
+          if (
+            errRaw.includes('profiles_cpf_uidx') ||
+            errDetail.includes('profiles_cpf_uidx') ||
+            errDetail.includes(cpfLimpo) ||
+            errRaw.toLowerCase().includes('already registered') ||
+            errDetail.toLowerCase().includes('already registered')
+          ) {
+            return {
+              ok: false,
+              erro: 'Este CPF ou e-mail já possui cadastro no sistema. Se você já criou sua conta anteriormente, faça login com sua senha ou clique em "Esqueci minha senha" na tela inicial.'
+            };
+          }
+
+          if (authError?.message && authError.message !== '{}' && !authError.message.includes('AuthRetryableFetchError')) {
+            return { ok: false, erro: authError.message };
+          }
+
+          return {
+            ok: false,
+            erro: 'Este CPF ou e-mail já está em uso com outra senha. Retorne à tela de login para acessar sua conta ou redefinir a senha.'
+          };
+        }
       }
-    });
 
-    if (authError) return { ok: false, erro: authError.message };
+      if (!userId) {
+        return { ok: false, erro: 'Não foi possível validar o acesso. Tente novamente.' };
+      }
 
-    // Se a conta j├í existir ou por algum motivo a sess├úo vier vazia:
-    if (!authData.session) {
-      return { ok: false, erro: 'Conta criada, mas n├úo foi poss├¡vel fazer login autom├ítico. Tente usar um e-mail diferente (este pode j├í estar em uso).' };
+      // 3. Verificar se o usuário já tem uma empresa criada
+      const { data: empresasCadastradas } = await supabase
+        .from('empresa_usuarios')
+        .select('empresa_id, empresas (*)')
+        .eq('usuario_id', userId);
+
+      if (empresasCadastradas && empresasCadastradas.length > 0) {
+        await carregarDadosIniciais(userId);
+        return { ok: true };
+      }
+
+      // 4. Se não tem empresa criada ainda, criar a empresa agora
+      const novaEmpresaId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : 'emp_' + Date.now();
+
+      const { error: empError } = await supabase.from('empresas').insert({
+        id: novaEmpresaId,
+        razao_social: dados.empresa.trim(),
+        nome_fantasia: (dados.fantasia || dados.empresa).trim(),
+        cpf_titular: cpfLimpo,
+        email_contato: dados.email.trim() || '',
+        telefone_contato: dados.telefone?.trim() || '',
+        status: 'teste'
+      });
+
+      if (empError) {
+        return { ok: false, erro: 'Erro ao cadastrar empresa: ' + (empError.message || JSON.stringify(empError)) };
+      }
+
+      const { error: vincError } = await supabase.from('empresa_usuarios').insert({
+        empresa_id: novaEmpresaId,
+        usuario_id: userId,
+        papel: 'dono'
+      });
+
+      if (vincError) {
+        return { ok: false, erro: 'Erro ao vincular empresa: ' + (vincError.message || JSON.stringify(vincError)) };
+      }
+
+      isNovoCadastroRef.current = true;
+      await carregarDadosIniciais(userId);
+      return { ok: true };
+    } catch (err) {
+      console.error('Exceção em criarAssinatura:', err);
+      return { ok: false, erro: err?.message || 'Erro inesperado ao criar assinatura.' };
     }
-
-    const novaEmpresaId = crypto.randomUUID();
-
-    const { error: empError } = await supabase.from('empresas').insert({
-      id: novaEmpresaId,
-      razao_social: dados.empresa,
-      nome_fantasia: dados.fantasia || dados.empresa,
-      cpf_titular: cpfLimpo,
-      email_contato: dados.email || '',
-      telefone_contato: dados.telefone || '',
-      status: 'teste'
-    });
-
-    if (empError) return { ok: false, erro: 'Erro banco de dados (Empresa): ' + empError.message };
-
-    const { error: vincError } = await supabase.from('empresa_usuarios').insert({
-      empresa_id: novaEmpresaId,
-      usuario_id: authData.user.id,
-      papel: 'dono'
-    });
-
-    if (vincError) return { ok: false, erro: 'Erro ao vincular: ' + vincError.message };
-
-    isNovoCadastroRef.current = true;
-    
-    // For├ºar o recarregamento da sess├úo agora que a empresa j├í existe no banco.
-    // Isso evita o bug de a tela ficar travada esperando o evento do Auth.
-    await carregarDadosIniciais(authData.user.id);
-    
-    return { ok: true };
   }
 
   async function redefinirSenha(email) {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: window.location.origin,
     });
     if (error) {
-      alert('Erro ao enviar recupera├º├úo: ' + error.message);
-    } else {
-      alert('Um e-mail de recupera├º├úo foi enviado para ' + email);
+      return { ok: false, erro: error.message };
     }
+    return { ok: true };
   }
 
   async function salvarNovaSenha(novaSenha) {
