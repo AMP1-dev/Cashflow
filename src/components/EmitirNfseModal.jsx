@@ -282,7 +282,7 @@ export function EmitirNfseModal({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 10 }}>
             <div>
-              <FieldLabel>E-mail (para envio da nota)</FieldLabel>
+              <FieldLabel>E-mail</FieldLabel>
               <input
                 value={emailTomador}
                 onChange={e => setEmailTomador(e.target.value)}
@@ -310,7 +310,7 @@ export function EmitirNfseModal({
 
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 10 }}>
             <div>
-              <FieldLabel>Valor Total do Serviço (Bruto)</FieldLabel>
+              <FieldLabel>Valor Total</FieldLabel>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 14, fontWeight: 700, color: '#1F5C52' }}>R$</span>
                 <input

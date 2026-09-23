@@ -53,11 +53,10 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
   );
 }
 
-export function BottomNav({ tela, setTela, onAdd, papel = 'dono', moduloNfseAtivo = false }) {
+export function BottomNav({ tela, setTela, onAdd, papel = 'dono' }) {
   const todosItems = [
     { id: 'dashboard',   label: 'Resumo',    icon: LayoutDashboard, apenasDono: false },
     { id: 'fluxo',       label: 'Fluxo',     icon: ListChecks, apenasDono: false },
-    ...(moduloNfseAtivo ? [{ id: 'nfse', label: 'NFS-e', icon: FileText, apenasDono: true }] : []),
     { id: 'dre',         label: 'DRE',       icon: FileBarChart, apenasDono: true },
     { id: 'anual',       label: 'Anual',     icon: TrendingUp, apenasDono: true },
     { id: 'preco',       label: 'Preço',     icon: Tag, apenasDono: true },

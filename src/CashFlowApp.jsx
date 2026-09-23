@@ -689,6 +689,7 @@ export default function CashFlowApp() {
               mesAtual={mesAtual}
               anoAtual={anoAtual}
               onAdicionarReceitaAoCaixa={(rec) => addLancamento(rec)}
+              onVoltar={() => setTela('dashboard')}
             />
           )}
           {tela === 'dre' && ehDono && (
@@ -741,7 +742,6 @@ export default function CashFlowApp() {
         setTela={setTela} 
         onAdd={() => { setLancamentoEditando(null); setShowLancamentoModal(true); }} 
         papel={empresaAtualObj.papel || 'dono'} 
-        moduloNfseAtivo={moduloNfseAtivo}
       />
 
       {showLancamentoModal && (

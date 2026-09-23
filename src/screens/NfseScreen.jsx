@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, Plus, RefreshCw, CheckCircle, ShieldCheck, Download, 
-  ExternalLink, Trash2, Calendar, Search, ArrowRight, Printer, AlertCircle 
+  ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, AlertCircle 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { formatarCpfCnpj, nfseService, resolverDescricaoRecorrente } from '../utils/nfseService';
@@ -13,7 +13,8 @@ export function NfseScreen({
   empresa, 
   mesAtual, 
   anoAtual, 
-  onAdicionarReceitaAoCaixa 
+  onAdicionarReceitaAoCaixa,
+  onVoltar
 }) {
   const [abaAtiva, setAbaAtiva] = useState('emitidas'); // 'emitidas' | 'recorrentes' | 'lote'
   const [notas, setNotas] = useState([]);
@@ -104,6 +105,26 @@ export function NfseScreen({
   return (
     <div style={{ padding: '16px 16px 30px', maxWidth: 640, margin: '0 auto' }}>
       
+      {onVoltar && (
+        <button
+          onClick={onVoltar}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            background: 'none',
+            border: 'none',
+            color: '#1F5C52',
+            fontSize: 12.5,
+            fontWeight: 700,
+            cursor: 'pointer',
+            padding: '2px 0 12px 0'
+          }}
+        >
+          <ArrowLeft size={16} /> Voltar ao Início
+        </button>
+      )}
+
       {/* ── CARD PRINCIPAL: TOTAL DE NOTAS DO MÊS ── */}
       <div style={{
         background: 'linear-gradient(135deg, #0F2B27 0%, #173E38 100%)',

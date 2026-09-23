@@ -255,7 +255,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
 
       <div style={{ display: 'flex', gap: 10 }}>
         <div style={{ flex: 1 }}>
-          <FieldLabel>Mês do lançamento (Pagamento/Caixa)</FieldLabel>
+          <FieldLabel>Mês de Lançamento</FieldLabel>
           <select value={mes} onChange={e => {
             const novoMes = parseInt(e.target.value);
             setMes(novoMes);
