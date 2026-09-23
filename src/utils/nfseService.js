@@ -200,11 +200,31 @@ export const nfseService = {
 
     // Gerador de protocolo e numeração sequencial respeitando o histórico contábil
     const notasExistentes = this.getNotasEmitidas(empresaId);
-    const baseInicial = parseInt(dadosEmissor?.ultimoNumero || dadosEmissor?.nfse_ultimo_numero || 0);
-    const sequencialAtual = baseInicial > 0 
-      ? baseInicial + notasExistentes.length + 1 
-      : (notasExistentes.length > 0 ? (parseInt(notasExistentes[0].numero) || 0) + 1 : 1);
+    const baseInicial = parseInt(
+      dadosEmissor?.ultimoNumero ?? 
+      dadosEmissor?.nfse_ultimo_numero ?? 
+      localStorage.getItem(`amp_nfse_ultimo_numero_${empresaId}`) ?? 
+      75
+    );
+
+    let maiorNumeroExistente = isNaN(baseInicial) ? 0 : baseInicial;
+    notasExistentes.forEach(n => {
+      const num = parseInt(n.numero);
+      if (!isNaN(num) && num >= maiorNumeroExistente) {
+        maiorNumeroExistente = num;
+      }
+    });
+
+    const sequencialAtual = (dadosEmissor?.numeroPersonalizado && parseInt(dadosEmissor.numeroPersonalizado) > 0)
+      ? parseInt(dadosEmissor.numeroPersonalizado)
+      : (maiorNumeroExistente > 0 ? maiorNumeroExistente + 1 : 1);
+
     const numeroNfse = `${sequencialAtual}`;
+
+    // Atualiza o último número no localStorage para manter a continuidade
+    try {
+      localStorage.setItem(`amp_nfse_ultimo_numero_${empresaId}`, numeroNfse);
+    } catch (e) {}
     const codigoVerificacao = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     const dataHoraEmissao = new Date().toISOString();
 

@@ -71,84 +71,87 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
         {/* Barra superior de Ações */}
         <div style={{
           background: '#0F2B27',
-          padding: '12px 18px',
+          padding: '10px 14px',
           color: '#fff',
           display: 'flex',
           justifyContent: 'space-between',
-          alignItems: 'center'
+          alignItems: 'center',
+          gap: 6
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText size={18} color="#9FE0C8" />
-            <span style={{ fontSize: 13.5, fontWeight: 700, letterSpacing: -0.2 }}>
-              DANFSE • Documento Auxiliar da NFS-e
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <FileText size={16} color="#9FE0C8" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: -0.2, whiteSpace: 'nowrap' }}>
+              DANFSE
             </span>
             <span style={{
-              fontSize: 10,
-              padding: '2px 6px',
+              fontSize: 9.5,
+              padding: '2px 5px',
               borderRadius: 4,
               background: ambiente === 'producao' ? '#1F5C52' : '#8A6D1A',
               color: '#fff',
-              fontWeight: 700
+              fontWeight: 700,
+              whiteSpace: 'nowrap'
             }}>
               {ambiente === 'producao' ? 'PRODUÇÃO' : 'HOMOLOGAÇÃO'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
             <button
               onClick={handleWhatsApp}
               title="Compartilhar no WhatsApp do Cliente"
               style={{
                 background: '#25D366',
                 border: 'none',
-                borderRadius: 8,
-                padding: '6px 11px',
+                borderRadius: 6,
+                padding: '5px 8px',
                 color: '#fff',
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5
+                gap: 4
               }}
             >
               <MessageCircle size={13} /> WhatsApp
-            </button>
-            <button
-              onClick={handleImprimir}
-              style={{
-                background: 'rgba(255,255,255,0.15)',
-                border: 'none',
-                borderRadius: 8,
-                padding: '6px 10px',
-                color: '#FAF8F3',
-                fontSize: 11.5,
-                fontWeight: 600,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5
-              }}
-            >
-              <Printer size={13} /> Imprimir
             </button>
             <button
               onClick={handleDownloadXml}
               style={{
                 background: 'rgba(255,255,255,0.15)',
                 border: 'none',
-                borderRadius: 8,
-                padding: '6px 10px',
+                borderRadius: 6,
+                padding: '5px 8px',
                 color: '#9FE0C8',
-                fontSize: 11.5,
+                fontSize: 11,
                 fontWeight: 600,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5
+                gap: 4
               }}
             >
               <Download size={13} /> XML
+            </button>
+            <button
+              onClick={handleImprimir}
+              title="Imprimir DANFSE"
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                borderRadius: 6,
+                padding: '5px 8px',
+                color: '#FAF8F3',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4
+              }}
+            >
+              <Printer size={13} />
             </button>
             <button
               onClick={onClose}
@@ -157,12 +160,12 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
                 border: 'none',
                 color: '#9FBDB5',
                 cursor: 'pointer',
-                padding: 4,
+                padding: '3px 4px',
                 display: 'flex',
                 alignItems: 'center'
               }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>

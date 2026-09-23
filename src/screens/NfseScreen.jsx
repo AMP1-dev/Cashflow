@@ -280,33 +280,34 @@ export function NfseScreen({
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F2B27', fontFamily: 'Georgia, serif' }}>
                       {formatBRL(n.servico.valorTotal)}
                     </div>
-                    <div style={{ fontSize: 10.5, color: '#1F5C52', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 2 }}>
-                      <CheckCircle size={11} /> Autorizada
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                      <span style={{ fontSize: 10.5, color: '#1F5C52', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <CheckCircle size={11} /> Autorizada
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const link = gerarLinkWhatsAppNfse(n, empresa);
+                          if (link) window.open(link, '_blank');
+                        }}
+                        title="Enviar no WhatsApp do Cliente"
+                        style={{
+                          background: '#25D366',
+                          border: 'none',
+                          color: '#fff',
+                          borderRadius: 4,
+                          padding: '2px 7px',
+                          fontSize: 10,
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <MessageCircle size={10} /> WhatsApp
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const link = gerarLinkWhatsAppNfse(n, empresa);
-                        if (link) window.open(link, '_blank');
-                      }}
-                      title="Enviar no WhatsApp do Cliente"
-                      style={{
-                        background: '#EAF8EE',
-                        border: '1px solid #A3E4B5',
-                        color: '#15803D',
-                        borderRadius: 6,
-                        padding: '3px 8px',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        cursor: 'pointer',
-                        marginTop: 4
-                      }}
-                    >
-                      <MessageCircle size={12} /> WhatsApp
-                    </button>
                   </div>
                 </div>
               ))}

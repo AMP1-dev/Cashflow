@@ -121,11 +121,12 @@ export function EmitirNfseModal({
       const notaEmitida = await nfseService.emitirNfse({
         empresaId: empresa.id,
         dadosEmissor: {
-          cnpj: empresa.cpf_titular || empresa.cnpj || '00000000000000',
-          razaoSocial: empresa.razao_social || empresa.fantasia || 'Empresa Prestadora',
+          cnpj: empresa.cnpj || empresa.cpf_titular || '00000000000000',
+          razaoSocial: empresa.razao_social || empresa.nome_fantasia || empresa.fantasia || 'Empresa Prestadora',
           regime: 'simples',
-          municipio: 'São Paulo',
-          uf: 'SP',
+          municipio: empresa.municipio || 'Santa Cruz das Palmeiras',
+          uf: empresa.uf || 'SP',
+          ultimoNumero: maiorNumeroExistente,
         },
         dadosTomador: {
           cpfCnpj: somenteDigitos(cpfCnpj),
@@ -184,6 +185,22 @@ export function EmitirNfseModal({
   const aliqNum = parseFloat((aliquotaIss || '0').replace(',', '.')) || 0;
   const issPrevisto = Math.round((vNum * (aliqNum / 100)) * 100) / 100;
 
+  // Numeração sequencial contábil contínua
+  const baseConfigurada = parseInt(
+    empresa?.nfse_ultimo_numero ?? 
+    localStorage.getItem(`amp_nfse_ultimo_numero_${empresa?.id}`) ?? 
+    75
+  );
+  const notasExistentes = empresa?.id ? nfseService.getNotasEmitidas(empresa.id) : [];
+  let maiorNumeroExistente = isNaN(baseConfigurada) ? 0 : baseConfigurada;
+  notasExistentes.forEach(n => {
+    const num = parseInt(n.numero);
+    if (!isNaN(num) && num >= maiorNumeroExistente) {
+      maiorNumeroExistente = num;
+    }
+  });
+  const proximoNumeroSugerido = maiorNumeroExistente + 1;
+
   return (
     <ModalShell onClose={onClose} titulo="Emitir Nota Fiscal de Serviços (NFS-e)">
       <div style={{ maxHeight: '78vh', overflowY: 'auto', paddingRight: 4 }}>
@@ -196,17 +213,24 @@ export function EmitirNfseModal({
           border: '1px solid #B8DDD2',
           marginBottom: 16,
           display: 'flex',
-          gap: 10,
-          alignItems: 'center'
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 10
         }}>
-          <ShieldCheck size={26} color="#1F5C52" style={{ flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>
-              Emissão Direta Simplificada • Padrão Nacional NFS-e
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <ShieldCheck size={26} color="#1F5C52" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>
+                Emissão Direta Padrão Nacional NFS-e
+              </div>
+              <div style={{ fontSize: 11, color: '#2C5A51', marginTop: 1 }}>
+                Última nota contábil: <strong>Nº {maiorNumeroExistente}</strong>
+              </div>
             </div>
-            <div style={{ fontSize: 11, color: '#2C5A51', marginTop: 1, lineHeight: 1.4 }}>
-              Insira o valor total do serviço prestado. O XML será gerado, assinado com seu Certificado A1 temporário e integrado ao Fluxo de Caixa.
-            </div>
+          </div>
+          <div style={{ textAlign: 'right', background: '#fff', border: '1px solid #B8DDD2', borderRadius: 8, padding: '4px 10px', flexShrink: 0 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: '#5C5A4F', textTransform: 'uppercase' }}>Próxima Nota</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#1F5C52', fontFamily: 'Georgia, serif' }}>Nº {proximoNumeroSugerido}</div>
           </div>
         </div>
 
@@ -513,7 +537,7 @@ export function EmitirNfseModal({
           ) : (
             <>
               <ShieldCheck size={16} />
-              <span>Assinar e Emitir NFS-e ({formatBRL(vNum)})</span>
+              <span>Assinar e Emitir NFS-e Nº {proximoNumeroSugerido} ({formatBRL(vNum)})</span>
             </>
           )}
         </button>
