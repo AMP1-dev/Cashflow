@@ -70,7 +70,7 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
   );
 }
 
-export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSenha, onVoltarEmpresa }) {
+export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSenha, onVoltarEmpresa, onAcessarEmpresa }) {
   const [busca, setBusca] = useState('');
   const [filtroStatus, setFiltroStatus] = useState('todos');
   const [selecionado, setSelecionado] = useState(null);
@@ -112,25 +112,25 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
           <div style={{ fontSize: 11, color: '#9298A3' }}>Painel administrativo</div>
           <div style={{ fontFamily: 'Georgia, serif', fontSize: 17 }}>Assinantes — AMP Flow</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {onVoltarEmpresa && (
             <button
               onClick={onVoltarEmpresa}
               style={{
-                background: 'rgba(232, 163, 61, 0.15)',
-                border: '1px solid rgba(232, 163, 61, 0.4)',
+                background: '#E8A33D',
+                border: 'none',
                 borderRadius: 8,
-                color: '#E8A33D',
-                padding: '6px 12px',
-                fontSize: 12,
-                fontWeight: 600,
+                color: '#0F2B27',
+                padding: '7px 14px',
+                fontSize: 12.5,
+                fontWeight: 700,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5
+                gap: 6
               }}
             >
-              <span>🏢 Minha Empresa</span>
+              <span>🚀 Acessar AMP Flow</span>
             </button>
           )}
           <button onClick={onSair} aria-label="Sair" style={{ background: 'none', border: 'none', color: '#9298A3', cursor: 'pointer', padding: 8 }}>
@@ -240,13 +240,14 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
           onAtualizarDados={onAtualizarDados}
           onClose={() => setSelecionado(null)}
           onRecuperarSenha={onRecuperarSenha}
+          onAcessarEmpresa={onAcessarEmpresa}
         />
       )}
     </div>
   );
 }
 
-export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, onRecuperarSenha }) {
+export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, onRecuperarSenha, onAcessarEmpresa }) {
   const [status, setStatus] = useState(assinante.status);
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
@@ -385,6 +386,31 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
           </div>
         )}
       </div>
+
+      {onAcessarEmpresa && (
+        <button
+          type="button"
+          onClick={() => onAcessarEmpresa(assinante)}
+          style={{
+            width: '100%',
+            padding: '13px',
+            borderRadius: 10,
+            border: 'none',
+            background: '#E8A33D',
+            color: '#0F2B27',
+            fontSize: 14,
+            fontWeight: 700,
+            cursor: 'pointer',
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 7
+          }}
+        >
+          <span>🚀 Entrar no AMP Flow desta empresa</span>
+        </button>
+      )}
 
       <button
         onClick={handleSalvar}

@@ -565,6 +565,43 @@ export default function CashFlowApp() {
     }
   }
 
+  async function abrirEmpresaDireto(empresa) {
+    if (!empresa) return;
+    const empresaId = empresa.id || empresa;
+    const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaId).single();
+    if (emp) {
+      setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
+      setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
+      carregarLancamentos(emp.id);
+    }
+  }
+
+  async function acessarMinhaEmpresaAdmin() {
+    if (empresaAtualObj) {
+      setSessao({ tipo: 'cliente', empresaId: empresaAtualObj.id, papel: empresaAtualObj.papel || 'dono', ehAdmin: true });
+      carregarLancamentos(empresaAtualObj.id);
+      return;
+    }
+    const { data: vincs } = await supabase
+      .from('empresa_usuarios')
+      .select('empresa_id, empresas (*)');
+
+    if (vincs && vincs.length > 0) {
+      const emp = vincs[0].empresas;
+      setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
+      setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
+      carregarLancamentos(emp.id);
+    } else {
+      const { data: emps } = await supabase.from('empresas').select('*').limit(1);
+      if (emps && emps.length > 0) {
+        const emp = emps[0];
+        setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
+        setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
+        carregarLancamentos(emp.id);
+      }
+    }
+  }
+
   async function sair() {
     await supabase.auth.signOut();
     setSessao(null);
@@ -595,7 +632,8 @@ export default function CashFlowApp() {
         onAtualizarDados={atualizarDadosAssinante} 
         onSair={sair} 
         onRecuperarSenha={redefinirSenha}
-        onVoltarEmpresa={empresaAtualObj ? () => setSessao({ tipo: 'cliente', empresaId: empresaAtualObj.id, papel: empresaAtualObj.papel || 'dono', ehAdmin: true }) : null}
+        onVoltarEmpresa={acessarMinhaEmpresaAdmin}
+        onAcessarEmpresa={abrirEmpresaDireto}
       />
     );
   }
