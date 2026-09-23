@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { 
   FileText, Download, CheckCircle, ShieldCheck, Printer, X, ExternalLink, 
-  Building2, User, Calendar, Hash, KeyRound 
+  Building2, User, Calendar, Hash, KeyRound, MessageCircle 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
-import { formatarCpfCnpj } from '../utils/nfseService';
+import { formatarCpfCnpj, gerarLinkWhatsAppNfse } from '../utils/nfseService';
 import { MESES } from '../utils/constants';
 
-export function EspelhoDanfseModal({ nota, onClose }) {
+export function EspelhoDanfseModal({ nota, empresa, onClose }) {
   if (!nota) return null;
 
   const {
@@ -28,6 +28,11 @@ export function EspelhoDanfseModal({ nota, onClose }) {
 
   function handleImprimir() {
     window.print();
+  }
+
+  function handleWhatsApp() {
+    const link = gerarLinkWhatsAppNfse(nota, empresa);
+    if (link) window.open(link, '_blank');
   }
 
   function handleDownloadXml() {
@@ -90,6 +95,25 @@ export function EspelhoDanfseModal({ nota, onClose }) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button
+              onClick={handleWhatsApp}
+              title="Compartilhar no WhatsApp do Cliente"
+              style={{
+                background: '#25D366',
+                border: 'none',
+                borderRadius: 8,
+                padding: '6px 11px',
+                color: '#fff',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5
+              }}
+            >
+              <MessageCircle size={13} /> WhatsApp
+            </button>
             <button
               onClick={handleImprimir}
               style={{
@@ -291,11 +315,32 @@ export function EspelhoDanfseModal({ nota, onClose }) {
         </div>
 
         {/* Rodapé do Modal */}
-        <div style={{ padding: '12px 18px', background: '#F0EDE3', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div style={{ padding: '12px 18px', background: '#F0EDE3', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
+            onClick={handleWhatsApp}
+            style={{
+              padding: '9px 16px',
+              borderRadius: 8,
+              border: 'none',
+              background: '#25D366',
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 7,
+              boxShadow: '0 2px 6px rgba(37, 211, 102, 0.35)'
+            }}
+          >
+            <MessageCircle size={17} />
+            <span>Enviar no WhatsApp</span>
+          </button>
+
           <button
             onClick={onClose}
             style={{
-              padding: '10px 18px',
+              padding: '9px 18px',
               borderRadius: 8,
               border: '1px solid #D1CFC7',
               background: '#fff',

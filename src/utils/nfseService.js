@@ -267,3 +267,33 @@ export const nfseService = {
     return novaNota;
   }
 };
+
+/**
+ * Gera o link com a mensagem formatada para envio da NFS-e autorizada via WhatsApp
+ */
+export function gerarLinkWhatsAppNfse(nota, empresa) {
+  if (!nota) return '';
+  const prestador = empresa?.razao_social || empresa?.nome_fantasia || nota?.emissor?.razaoSocial || 'Nossa Empresa';
+  const tomador = nota?.tomador?.razaoSocial || 'Cliente';
+  const valor = formatBRL(nota?.servico?.valorTotal || 0);
+  const numero = nota?.numero || '';
+  const desc = nota?.servico?.discriminacao || '';
+
+  const texto = 
+`📄 *NOTA FISCAL DE SERVIÇOS ELETRÔNICA (NFS-e)*
+*Prestador:* ${prestador}
+*Nº da Nota:* ${numero}
+*Tomador:* ${tomador}
+*Valor Total:* ${valor}
+*Serviço:* ${desc}
+
+✅ *Status:* Autorizada e emitida com sucesso.
+Em caso de dúvidas, estamos à inteira disposição!`;
+
+  const telRaw = somenteDigitos(nota?.tomador?.telefone || '');
+  if (telRaw.length >= 10) {
+    const telClean = telRaw.startsWith('55') ? telRaw : '55' + telRaw;
+    return `https://wa.me/${telClean}?text=${encodeURIComponent(texto)}`;
+  }
+  return `https://wa.me/?text=${encodeURIComponent(texto)}`;
+}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, Plus, RefreshCw, CheckCircle, ShieldCheck, Download, 
-  ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, AlertCircle 
+  ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, AlertCircle, MessageCircle 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
-import { formatarCpfCnpj, nfseService, resolverDescricaoRecorrente } from '../utils/nfseService';
+import { formatarCpfCnpj, nfseService, resolverDescricaoRecorrente, gerarLinkWhatsAppNfse } from '../utils/nfseService';
 import { MESES } from '../utils/constants';
 import { EmitirNfseModal } from '../components/EmitirNfseModal';
 import { EspelhoDanfseModal } from '../components/EspelhoDanfseModal';
@@ -276,13 +276,37 @@ export function NfseScreen({
                     </div>
                   </div>
 
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: '#0F2B27', fontFamily: 'Georgia, serif' }}>
                       {formatBRL(n.servico.valorTotal)}
                     </div>
                     <div style={{ fontSize: 10.5, color: '#1F5C52', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 3, marginTop: 2 }}>
                       <CheckCircle size={11} /> Autorizada
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const link = gerarLinkWhatsAppNfse(n, empresa);
+                        if (link) window.open(link, '_blank');
+                      }}
+                      title="Enviar no WhatsApp do Cliente"
+                      style={{
+                        background: '#EAF8EE',
+                        border: '1px solid #A3E4B5',
+                        color: '#15803D',
+                        borderRadius: 6,
+                        padding: '3px 8px',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        cursor: 'pointer',
+                        marginTop: 4
+                      }}
+                    >
+                      <MessageCircle size={12} /> WhatsApp
+                    </button>
                   </div>
                 </div>
               ))}
@@ -405,6 +429,7 @@ export function NfseScreen({
       {notaSelecionadaDanfse && (
         <EspelhoDanfseModal
           nota={notaSelecionadaDanfse}
+          empresa={empresa}
           onClose={() => setNotaSelecionadaDanfse(null)}
         />
       )}
