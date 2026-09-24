@@ -693,15 +693,46 @@ export default function CashFlowApp() {
 
   async function abrirEmpresaDireto(empresa) {
     if (!empresa) return;
-    const empresaId = empresa.id || empresa;
+    const empresaId = typeof empresa === 'string' ? empresa : (empresa.id || '');
+    if (!empresaId) return;
     sessionStorage.setItem('amp_admin_modo_empresa', empresaId);
-    const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaId).single();
-    if (emp) {
-      const modulos = extrairModulosEmpresa(emp);
-      setEmpresaAtualObj({ ...emp, ...modulos, ehAdmin: true, papel: 'dono' });
-      setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
-      carregarLancamentos(emp.id);
+
+    // Se já recebemos o objeto do assinante ou se ele está na lista local:
+    const assinanteLocal = (typeof empresa === 'object' && empresa.id)
+      ? empresa
+      : assinantesAdmin.find(a => a.id === empresaId);
+
+    let emp = null;
+    try {
+      const res = await supabase.from('empresas').select('*').eq('id', empresaId).single();
+      emp = res.data;
+    } catch (e) {
+      console.warn('Erro ao carregar empresa do Supabase:', e);
     }
+
+    const empresaFinal = emp || {
+      id: empresaId,
+      razao_social: assinanteLocal?.empresa || assinanteLocal?.razao_social || 'Minha Empresa',
+      nome_fantasia: assinanteLocal?.fantasia || assinanteLocal?.nome_fantasia || assinanteLocal?.empresa || 'Minha Loja',
+      cpf_titular: assinanteLocal?.cpf || assinanteLocal?.cpf_titular || '',
+      email_contato: assinanteLocal?.email || '',
+      telefone_contato: assinanteLocal?.telefone || '',
+      plano: assinanteLocal?.plano,
+      status: assinanteLocal?.status || 'ativo',
+    };
+
+    const modulos = extrairModulosEmpresa(emp || assinanteLocal || empresaFinal);
+    const objFinal = {
+      ...empresaFinal,
+      ...modulos,
+      ehAdmin: true,
+      papel: 'dono',
+      nome: assinanteLocal?.nome || assinanteLocal?.fantasia || empresaFinal.nome_fantasia || 'Administrador',
+    };
+
+    setEmpresaAtualObj(objFinal);
+    setSessao({ tipo: 'cliente', empresaId, papel: 'dono', ehAdmin: true });
+    carregarLancamentos(empresaId);
   }
 
   async function acessarMinhaEmpresaAdmin() {
@@ -711,25 +742,25 @@ export default function CashFlowApp() {
       carregarLancamentos(empresaAtualObj.id);
       return;
     }
+
     const { data: vincs } = await supabase
       .from('empresa_usuarios')
       .select('empresa_id, empresas (*)');
 
-    if (vincs && vincs.length > 0) {
+    if (vincs && vincs.length > 0 && vincs[0].empresas) {
       const emp = vincs[0].empresas;
-      sessionStorage.setItem('amp_admin_modo_empresa', emp.id);
-      setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
-      setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
-      carregarLancamentos(emp.id);
-    } else {
-      const { data: emps } = await supabase.from('empresas').select('*').limit(1);
-      if (emps && emps.length > 0) {
-        const emp = emps[0];
-        sessionStorage.setItem('amp_admin_modo_empresa', emp.id);
-        setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
-        setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
-        carregarLancamentos(emp.id);
-      }
+      abrirEmpresaDireto(emp);
+      return;
+    }
+
+    if (assinantesAdmin.length > 0) {
+      abrirEmpresaDireto(assinantesAdmin[0]);
+      return;
+    }
+
+    const { data: emps } = await supabase.from('empresas').select('*').limit(1);
+    if (emps && emps.length > 0) {
+      abrirEmpresaDireto(emps[0]);
     }
   }
 
@@ -770,7 +801,39 @@ export default function CashFlowApp() {
     );
   }
 
-  if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
+  if (!empresaAtualObj) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#FAF8F3', padding: 24, textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
+        <div style={{ width: 48, height: 48, borderRadius: 14, background: '#1F5C52', color: '#FAF8F3', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 700, marginBottom: 14, boxShadow: '0 4px 12px rgba(31,92,82,0.15)' }}>
+          R$
+        </div>
+        <div style={{ fontSize: 16, fontWeight: 700, color: '#0F2B27', marginBottom: 6 }}>Carregando dados da empresa...</div>
+        <div style={{ fontSize: 13, color: '#6B7280', maxWidth: 320, marginBottom: 20, lineHeight: 1.4 }}>
+          Aguarde um instante enquanto conectamos à sua loja.
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ padding: '9px 18px', borderRadius: 8, background: '#1F5C52', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+          >
+            Recarregar página
+          </button>
+          {sessao?.ehAdmin && (
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('amp_admin_modo_empresa');
+                setSessao({ tipo: 'admin' });
+                carregarPainelAdmin();
+              }}
+              style={{ padding: '9px 18px', borderRadius: 8, background: '#E8A33D', color: '#0F2B27', border: 'none', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+            >
+              Voltar ao Admin
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   const ehDono = empresaAtualObj?.papel !== 'funcionario';
   const ehAdmin = !!(empresaAtualObj?.ehAdmin || sessao?.ehAdmin);

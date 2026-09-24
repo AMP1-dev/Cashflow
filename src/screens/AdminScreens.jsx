@@ -609,8 +609,8 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
         <button
           type="button"
           onClick={() => {
-            onClose();
             onAcessarEmpresa(assinante);
+            onClose();
           }}
           style={{
             width: '100%',
