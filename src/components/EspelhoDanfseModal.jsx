@@ -31,8 +31,32 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
   const chaveFormatada = chaveAcesso || `354630626${emissor?.cnpj?.replace(/\D/g, '') || '10682233000175'}70000${String(numero).padStart(15, '0')}0014324`;
   const numDpsCalculado = dpsNumero || (parseInt(numero) > 11 ? String(parseInt(numero) - 11) : String(numero));
 
+  const nomeClienteLimpo = (tomador?.razaoSocial || 'Cliente')
+    .replace(/[\\/:*?"<>|]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ');
+  const mesFormatado = String(competenciaMes !== undefined ? (Number(competenciaMes) + 1) : (new Date().getMonth() + 1)).padStart(2, '0');
+  const anoFormatado = competenciaAno || new Date().getFullYear();
+  const nomeArquivoOficial = `${nomeClienteLimpo} - NFS-e Nº ${numero} - ${mesFormatado}-${anoFormatado}`;
+
   function handleImprimir() {
+    const tituloAntigo = document.title;
+    document.title = nomeArquivoOficial;
+
+    const restaurarTitulo = () => {
+      document.title = tituloAntigo;
+      window.removeEventListener('afterprint', restaurarTitulo);
+    };
+    window.addEventListener('afterprint', restaurarTitulo);
+
     window.print();
+
+    // Fallback de segurança para restaurar o título da página
+    setTimeout(() => {
+      if (document.title === nomeArquivoOficial) {
+        document.title = tituloAntigo;
+      }
+    }, 2500);
   }
 
   function handleWhatsApp() {
@@ -45,7 +69,7 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `NFSe_${numero}_${tomador.razaoSocial.replace(/\s+/g, '_')}.xml`;
+    a.download = `${nomeArquivoOficial}.xml`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -214,6 +238,28 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
               >
                 <X size={19} />
               </button>
+            </div>
+          </div>
+
+          {/* Sub-barra informativa com o nome exato do arquivo */}
+          <div className="danfse-no-print" style={{
+            background: '#163E37',
+            padding: '7px 16px',
+            color: '#B8DDD2',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 8,
+            flexWrap: 'wrap',
+            borderBottom: '1px solid #1F5C52'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ color: '#FAF8F3' }}>📁 Arquivo PDF:</span>
+              <strong style={{ color: '#9FE0C8' }}>{nomeArquivoOficial}.pdf</strong>
+            </div>
+            <div style={{ fontSize: '10.5px', color: '#D9EBE6' }}>
+              💡 Salve o PDF acima e depois clique em <strong>WhatsApp</strong> para anexá-lo ao cliente.
             </div>
           </div>
 

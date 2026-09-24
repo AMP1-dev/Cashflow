@@ -310,11 +310,12 @@ export const nfseService = {
  */
 export function gerarLinkWhatsAppNfse(nota, empresa) {
   if (!nota) return '';
-  const prestador = empresa?.razao_social || empresa?.nome_fantasia || nota?.emissor?.razaoSocial || 'Nossa Empresa';
+  const prestador = empresa?.razao_social || empresa?.nome_fantasia || nota?.emissor?.razaoSocial || 'AMP DO BRASIL SOLUÇÕES ADM. TECN. LTDA';
   const tomador = nota?.tomador?.razaoSocial || 'Cliente';
   const valor = formatBRL(nota?.servico?.valorTotal || 0);
   const numero = nota?.numero || '';
   const desc = nota?.servico?.discriminacao || '';
+  const chave = nota?.chaveAcesso || '';
 
   const texto = 
 `📄 *NOTA FISCAL DE SERVIÇOS ELETRÔNICA (NFS-e)*
@@ -323,9 +324,9 @@ export function gerarLinkWhatsAppNfse(nota, empresa) {
 *Tomador:* ${tomador}
 *Valor Total:* ${valor}
 *Serviço:* ${desc}
-
+${chave ? `*Chave de Acesso:* ${chave}\n` : ''}
 ✅ *Status:* Autorizada e emitida com sucesso.
-Em caso de dúvidas, estamos à inteira disposição!`;
+Segue em anexo o documento fiscal oficial (DANFSe em PDF). Qualquer dúvida, estamos à disposição!`;
 
   const telRaw = somenteDigitos(nota?.tomador?.telefone || '');
   if (telRaw.length >= 10) {
