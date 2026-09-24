@@ -23,6 +23,40 @@ import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
 import { NfseScreen } from './screens/NfseScreen';
 
+function extrairModulosEmpresa(empresa) {
+  let modNfse = empresa?.modulo_nfse;
+  let modTradutor = empresa?.modulo_tradutor;
+  let ultimoNum = empresa?.nfse_ultimo_numero;
+
+  if (empresa?.plano && typeof empresa.plano === 'string' && empresa.plano.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(empresa.plano);
+      if (parsed.modulo_nfse !== undefined && modNfse === undefined) modNfse = parsed.modulo_nfse;
+      if (parsed.modulo_tradutor !== undefined && modTradutor === undefined) modTradutor = parsed.modulo_tradutor;
+      if (parsed.nfse_ultimo_numero !== undefined && !ultimoNum) ultimoNum = parsed.nfse_ultimo_numero;
+    } catch (e) {}
+  }
+
+  // Fallback LocalStorage
+  if (modNfse === undefined && empresa?.id) {
+    const local = localStorage.getItem(`amp_modulo_nfse_${empresa.id}`);
+    if (local !== null) modNfse = local === 'true';
+  }
+  if (modTradutor === undefined && empresa?.id) {
+    const local = localStorage.getItem(`amp_modulo_tradutor_${empresa.id}`);
+    if (local !== null) modTradutor = local === 'true';
+  }
+  if (!ultimoNum && empresa?.id) {
+    ultimoNum = parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${empresa.id}`) || 0);
+  }
+
+  return {
+    modulo_nfse: !!modNfse,
+    modulo_tradutor: !!modTradutor,
+    nfse_ultimo_numero: ultimoNum || 0,
+  };
+}
+
 export default function CashFlowApp() {
   const [sessao, setSessao] = useState(null);
   const [empresaAtualObj, setEmpresaAtualObj] = useState(null);
@@ -88,10 +122,11 @@ export default function CashFlowApp() {
     if (vinculadas && vinculadas.length > 0) {
       const vinculo = vinculadas[0];
       const empresa = vinculo.empresas;
+      const modulos = extrairModulosEmpresa(empresa);
       const papel = vinculo.papel || 'dono';
       setSessao({ tipo: 'cliente', empresaId: empresa.id, papel, ehAdmin: !!profile?.eh_admin });
       // Injetamos o nome do profile e papel na empresa pra TopBar e BottomNav usarem
-      setEmpresaAtualObj({ ...empresa, nome: profile?.nome, papel, ehAdmin: !!profile?.eh_admin });
+      setEmpresaAtualObj({ ...empresa, ...modulos, nome: profile?.nome, papel, ehAdmin: !!profile?.eh_admin });
 
       if (!localStorage.getItem('avisoRegimeCaixaVisto')) {
         setShowAvisoModal(true);
@@ -190,14 +225,18 @@ export default function CashFlowApp() {
   async function carregarPainelAdmin() {
     const { data } = await supabase.from('empresas').select('*').order('criado_em', { ascending: false });
     if (data) {
-      setAssinantesAdmin(data.map(e => ({
-        id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
-        email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
-        vencimento: e.vencimento, valor_assinatura: e.valor_assinatura,
-        modulo_nfse: e.modulo_nfse ?? (localStorage.getItem(`amp_modulo_nfse_${e.id}`) === 'true'),
-        modulo_tradutor: e.modulo_tradutor ?? (localStorage.getItem(`amp_modulo_tradutor_${e.id}`) === 'true'),
-        nfse_ultimo_numero: e.nfse_ultimo_numero || parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${e.id}`) || 0),
-      })));
+      setAssinantesAdmin(data.map(e => {
+        const modulos = extrairModulosEmpresa(e);
+        return {
+          id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
+          email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
+          vencimento: e.vencimento, valor_assinatura: e.valor_assinatura,
+          plano: e.plano,
+          modulo_nfse: modulos.modulo_nfse,
+          modulo_tradutor: modulos.modulo_tradutor,
+          nfse_ultimo_numero: modulos.nfse_ultimo_numero,
+        };
+      }));
     }
   }
 
@@ -538,16 +577,30 @@ export default function CashFlowApp() {
   }
 
   async function atualizarDadosAssinante(id, dados) {
-    // Tenta atualizar no Supabase com todos os campos
-    let { error } = await supabase.from('empresas').update(dados).eq('id', id);
+    let payload = { ...dados };
 
-    // Se a coluna modulo_nfse ainda não existir no schema do banco Supabase, faz fallback salvando os campos padrão
-    if (error && error.message && error.message.includes('modulo_nfse')) {
-      const dadosSemNfse = { ...dados };
-      delete dadosSemNfse.modulo_nfse;
-      delete dadosSemNfse.nfse_ultimo_numero;
-      const res = await supabase.from('empresas').update(dadosSemNfse).eq('id', id);
-      error = res.error;
+    // Monta dados serializados em 'plano' para garantir persistência nativa e permanente no Supabase
+    const modulosJson = JSON.stringify({
+      plano: 'padrao',
+      modulo_nfse: !!dados.modulo_nfse,
+      modulo_tradutor: !!dados.modulo_tradutor,
+      nfse_ultimo_numero: dados.nfse_ultimo_numero || 0,
+    });
+    payload.plano = modulosJson;
+
+    // Tenta atualizar no Supabase com todos os campos
+    let { error } = await supabase.from('empresas').update(payload).eq('id', id);
+
+    // Se houver coluna que ainda não existe no schema do Supabase (ex: modulo_tradutor, modulo_nfse), remove dinamicamente os campos não encontrados e tenta de novo
+    while (error && error.message && error.message.includes('schema cache')) {
+      const match = error.message.match(/Could not find the '([^']+)' column/);
+      if (match && match[1]) {
+        delete payload[match[1]];
+        const res = await supabase.from('empresas').update(payload).eq('id', id);
+        error = res.error;
+      } else {
+        break;
+      }
     }
 
     // Persiste a flag de NFS-e e Tradutor no localStorage do dispositivo para funcionar imediatamente sem travar o painel
@@ -562,7 +615,7 @@ export default function CashFlowApp() {
     }
 
     if (!error) {
-      setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, ...dados } : a));
+      setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, ...dados, plano: modulosJson } : a));
       return { ok: true };
     } else {
       return { ok: false, erro: error.message };
@@ -574,7 +627,8 @@ export default function CashFlowApp() {
     const empresaId = empresa.id || empresa;
     const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaId).single();
     if (emp) {
-      setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
+      const modulos = extrairModulosEmpresa(emp);
+      setEmpresaAtualObj({ ...emp, ...modulos, ehAdmin: true, papel: 'dono' });
       setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
       carregarLancamentos(emp.id);
     }
