@@ -264,6 +264,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [moduloNfse, setModuloNfse] = useState(assinante.modulo_nfse ?? false);
   const [moduloTradutor, setModuloTradutor] = useState(assinante.modulo_tradutor ?? false);
   const [moduloAgendamento, setModuloAgendamento] = useState(assinante.modulo_agendamento ?? false);
+  const [categoriaAgendamento, setCategoriaAgendamento] = useState(assinante.categoria_agendamento || 'beleza');
   const [ultimoNumeroNfse, setUltimoNumeroNfse] = useState(assinante.nfse_ultimo_numero || '');
   const [salvando, setSalvando] = useState(false);
   const [enviandoLink, setEnviandoLink] = useState(false);
@@ -276,6 +277,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
     localStorage.setItem(`amp_modulo_nfse_${assinante.id}`, moduloNfse ? 'true' : 'false');
     localStorage.setItem(`amp_modulo_tradutor_${assinante.id}`, moduloTradutor ? 'true' : 'false');
     localStorage.setItem(`amp_modulo_agendamento_${assinante.id}`, moduloAgendamento ? 'true' : 'false');
+    localStorage.setItem(`amp_categoria_agendamento_${assinante.id}`, categoriaAgendamento);
 
     const resultado = await onAtualizarDados(assinante.id, {
       status,
@@ -284,6 +286,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       modulo_nfse: moduloNfse,
       modulo_tradutor: moduloTradutor,
       modulo_agendamento: moduloAgendamento,
+      categoria_agendamento: categoriaAgendamento,
       nfse_ultimo_numero: ultimoNumeroNfse ? parseInt(ultimoNumeroNfse) : 0,
     });
     setSalvando(false);
@@ -443,6 +446,25 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
             style={{ accentColor: '#D97706', width: 20, height: 20, cursor: 'pointer' }}
           />
         </label>
+
+        {moduloAgendamento && (
+          <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #FDE68A' }}>
+            <FieldLabel>Ramo / Perfil de Serviços desta Empresa</FieldLabel>
+            <select
+              value={categoriaAgendamento}
+              onChange={e => setCategoriaAgendamento(e.target.value)}
+              style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E1E3E6', fontSize: 13, boxSizing: 'border-box', background: '#fff', fontWeight: 600, color: '#0F2B27' }}
+            >
+              <option value="beleza">💇 Barbearia, Salão de Beleza & Estética</option>
+              <option value="saude">🩺 Consultório Médico, Clínico & Odontologia</option>
+              <option value="consultoria">💼 Consultoria, Advocacia & Serviços Especializados</option>
+              <option value="geral">🌐 Geral / Todos os Serviços</option>
+            </select>
+            <div style={{ fontSize: 10.5, color: '#7A7868', marginTop: 4 }}>
+              O app do assinante exibirá automaticamente apenas as sugestões e presets adequados a este ramo.
+            </div>
+          </div>
+        )}
       </div>
 
       {onAcessarEmpresa && (

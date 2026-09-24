@@ -9,12 +9,29 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
           <div style={{ fontSize: 11, color: '#9FBDB5' }}>{usuario}</div>
           <div style={{ fontSize: 15, fontWeight: 500 }}>{empresa.nome}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
           {onAbrirAdmin && (
             <button 
               onClick={onAbrirAdmin} 
               title="Painel Administrativo" 
-              style={{ background: 'rgba(232, 163, 61, 0.18)', border: '1px solid rgba(232, 163, 61, 0.4)', borderRadius: 8, color: '#E8A33D', cursor: 'pointer', padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}
+              style={{
+                height: 32,
+                padding: '0 9px',
+                borderRadius: 8,
+                background: 'rgba(232, 163, 61, 0.16)',
+                border: '1px solid rgba(232, 163, 61, 0.45)',
+                color: '#FCD34D',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                fontSize: 11.5,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+                flexShrink: 0
+              }}
             >
               <span>⚡ Admin</span>
             </button>
@@ -23,9 +40,26 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
             <button 
               onClick={onAbrirAgendamento} 
               title="Agenda & Atendimentos" 
-              style={{ background: 'rgba(245, 158, 11, 0.18)', border: '1px solid rgba(245, 158, 11, 0.45)', borderRadius: 8, color: '#FBBF24', cursor: 'pointer', padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}
+              style={{
+                height: 32,
+                padding: '0 9px',
+                borderRadius: 8,
+                background: 'rgba(245, 158, 11, 0.16)',
+                border: '1px solid rgba(245, 158, 11, 0.45)',
+                color: '#FDE047',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                fontSize: 11.5,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+                flexShrink: 0
+              }}
             >
-              <Calendar size={15} />
+              <Calendar size={14} />
               <span>Agenda</span>
             </button>
           )}
@@ -33,19 +67,76 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
             <button 
               onClick={onAbrirNfse} 
               title="Notas Fiscais de Serviços (NFS-e)" 
-              style={{ background: 'rgba(159, 224, 200, 0.15)', border: '1px solid rgba(159, 224, 200, 0.35)', borderRadius: 8, color: '#9FE0C8', cursor: 'pointer', padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}
+              style={{
+                height: 32,
+                padding: '0 9px',
+                borderRadius: 8,
+                background: 'rgba(159, 224, 200, 0.16)',
+                border: '1px solid rgba(159, 224, 200, 0.45)',
+                color: '#A7F3D0',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                fontSize: 11.5,
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+                flexShrink: 0
+              }}
             >
-              <FileText size={15} />
+              <FileText size={14} />
               <span>NFS-e</span>
             </button>
           )}
           {ehDono && onAbrirEquipe && (
-            <button onClick={onAbrirEquipe} title="Gerenciar Equipe" aria-label="Gerenciar Equipe" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 8, color: '#FAF8F3', cursor: 'pointer', padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 600 }}>
-              <Users size={15} />
+            <button 
+              onClick={onAbrirEquipe} 
+              title="Gerenciar Equipe" 
+              aria-label="Gerenciar Equipe" 
+              style={{
+                height: 32,
+                padding: '0 9px',
+                borderRadius: 8,
+                background: 'rgba(255, 255, 255, 0.10)',
+                border: '1px solid rgba(255, 255, 255, 0.22)',
+                color: '#FAF8F3',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                fontSize: 11.5,
+                fontWeight: 600,
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+                flexShrink: 0
+              }}
+            >
+              <Users size={14} />
               <span>Equipe</span>
             </button>
           )}
-          <button onClick={onLogout} aria-label="Sair" style={{ background: 'none', border: 'none', color: '#9FBDB5', cursor: 'pointer', padding: 6 }}>
+          <button 
+            onClick={onLogout} 
+            aria-label="Sair" 
+            title="Sair do sistema"
+            style={{
+              height: 32,
+              width: 32,
+              padding: 0,
+              borderRadius: 8,
+              background: 'none',
+              border: 'none',
+              color: '#9FBDB5',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}
+          >
             <LogOut size={18} />
           </button>
         </div>

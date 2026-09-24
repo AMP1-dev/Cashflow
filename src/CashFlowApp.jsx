@@ -28,6 +28,7 @@ function extrairModulosEmpresa(empresa) {
   let modNfse = empresa?.modulo_nfse;
   let modTradutor = empresa?.modulo_tradutor;
   let modAgendamento = empresa?.modulo_agendamento;
+  let catAgendamento = empresa?.categoria_agendamento;
   let ultimoNum = empresa?.nfse_ultimo_numero;
 
   if (empresa?.plano && typeof empresa.plano === 'string' && empresa.plano.startsWith('{')) {
@@ -36,6 +37,7 @@ function extrairModulosEmpresa(empresa) {
       if (parsed.modulo_nfse !== undefined && modNfse === undefined) modNfse = parsed.modulo_nfse;
       if (parsed.modulo_tradutor !== undefined && modTradutor === undefined) modTradutor = parsed.modulo_tradutor;
       if (parsed.modulo_agendamento !== undefined && modAgendamento === undefined) modAgendamento = parsed.modulo_agendamento;
+      if (parsed.categoria_agendamento !== undefined && catAgendamento === undefined) catAgendamento = parsed.categoria_agendamento;
       if (parsed.nfse_ultimo_numero !== undefined && !ultimoNum) ultimoNum = parsed.nfse_ultimo_numero;
     } catch (e) {}
   }
@@ -53,6 +55,9 @@ function extrairModulosEmpresa(empresa) {
     const local = localStorage.getItem(`amp_modulo_agendamento_${empresa.id}`);
     if (local !== null) modAgendamento = local === 'true';
   }
+  if (!catAgendamento && empresa?.id) {
+    catAgendamento = localStorage.getItem(`amp_categoria_agendamento_${empresa.id}`) || 'beleza';
+  }
   if (!ultimoNum && empresa?.id) {
     ultimoNum = parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${empresa.id}`) || 0);
   }
@@ -61,6 +66,7 @@ function extrairModulosEmpresa(empresa) {
     modulo_nfse: !!modNfse,
     modulo_tradutor: !!modTradutor,
     modulo_agendamento: !!modAgendamento,
+    categoria_agendamento: catAgendamento || 'beleza',
     nfse_ultimo_numero: ultimoNum || 0,
   };
 }
@@ -243,6 +249,7 @@ export default function CashFlowApp() {
           modulo_nfse: modulos.modulo_nfse,
           modulo_tradutor: modulos.modulo_tradutor,
           modulo_agendamento: modulos.modulo_agendamento,
+          categoria_agendamento: modulos.categoria_agendamento,
           nfse_ultimo_numero: modulos.nfse_ultimo_numero,
         };
       }));
@@ -594,6 +601,7 @@ export default function CashFlowApp() {
       modulo_nfse: !!dados.modulo_nfse,
       modulo_tradutor: !!dados.modulo_tradutor,
       modulo_agendamento: !!dados.modulo_agendamento,
+      categoria_agendamento: dados.categoria_agendamento || 'beleza',
       nfse_ultimo_numero: dados.nfse_ultimo_numero || 0,
     });
     payload.plano = modulosJson;
@@ -622,6 +630,9 @@ export default function CashFlowApp() {
     }
     if (dados.modulo_agendamento !== undefined) {
       localStorage.setItem(`amp_modulo_agendamento_${id}`, dados.modulo_agendamento ? 'true' : 'false');
+    }
+    if (dados.categoria_agendamento !== undefined) {
+      localStorage.setItem(`amp_categoria_agendamento_${id}`, dados.categoria_agendamento || 'beleza');
     }
     if (dados.nfse_ultimo_numero !== undefined) {
       localStorage.setItem(`amp_nfse_ultimo_numero_${id}`, String(dados.nfse_ultimo_numero || 0));
@@ -766,6 +777,7 @@ export default function CashFlowApp() {
               empresa={empresaAtualObj}
               mesAtual={mesAtual}
               anoAtual={anoAtual}
+              categoriaAgendamento={empresaAtualObj?.categoria_agendamento || 'beleza'}
               moduloNfseAtivo={moduloNfseAtivo}
               onVoltar={() => setTela('dashboard')}
               onAdicionarLancamentoAoCaixa={(l) => addLancamento(l)}

@@ -7,17 +7,26 @@ export const SERVICOS_SUGERIDOS = [
   { nome: 'Consulta Clínica / Médica', duracaoMin: 30, valorSugerido: 250, insumoEstimado: 25, categoria: 'saude' },
   { nome: 'Procedimento Clínico / Odonto', duracaoMin: 60, valorSugerido: 450, insumoEstimado: 60, categoria: 'saude' },
   { nome: 'Retorno Clínico', duracaoMin: 20, valorSugerido: 0, insumoEstimado: 10, categoria: 'saude' },
+  { nome: 'Exame / Avaliação Especializada', duracaoMin: 40, valorSugerido: 180, insumoEstimado: 20, categoria: 'saude' },
   
   // Beleza / Estética
   { nome: 'Corte de Cabelo / Barba', duracaoMin: 45, valorSugerido: 80, insumoEstimado: 10, categoria: 'beleza' },
-  { nome: 'Coloração / Mechas', duracaoMin: 120, valorSugerido: 280, insumoEstimado: 55, categoria: 'beleza' },
+  { nome: 'Coloração / Mechas / Luzes', duracaoMin: 120, valorSugerido: 280, insumoEstimado: 55, categoria: 'beleza' },
   { nome: 'Manicure & Pedicure', duracaoMin: 60, valorSugerido: 75, insumoEstimado: 12, categoria: 'beleza' },
   { nome: 'Procedimento Estético / Massagem', duracaoMin: 60, valorSugerido: 180, insumoEstimado: 35, categoria: 'beleza' },
+  { nome: 'Barboterapia / Barba Tradicional', duracaoMin: 30, valorSugerido: 60, insumoEstimado: 8, categoria: 'beleza' },
+  { nome: 'Escova & Penteado', duracaoMin: 45, valorSugerido: 90, insumoEstimado: 15, categoria: 'beleza' },
 
-  // Consultoria / Serviços Gerais
+  // Consultoria / Serviços Especializados
   { nome: 'Sessão de Consultoria / Parecer', duracaoMin: 60, valorSugerido: 200, insumoEstimado: 0, categoria: 'consultoria' },
-  { nome: 'Atendimento Técnico Especializado', duracaoMin: 60, valorSugerido: 150, insumoEstimado: 15, categoria: 'geral' },
+  { nome: 'Atendimento Técnico Especializado', duracaoMin: 60, valorSugerido: 150, insumoEstimado: 15, categoria: 'consultoria' },
+  { nome: 'Reunião Estratégica / Audiência', duracaoMin: 60, valorSugerido: 350, insumoEstimado: 0, categoria: 'consultoria' },
 ];
+
+export function getServicosSugeridosPorRamo(ramo = 'geral') {
+  if (!ramo || ramo === 'geral') return SERVICOS_SUGERIDOS;
+  return SERVICOS_SUGERIDOS.filter(s => s.categoria === ramo);
+}
 
 export const STATUS_AGENDAMENTO = {
   agendado: { label: 'Agendado', bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
@@ -89,34 +98,41 @@ export const agendamentoService = {
 
   /**
    * Converte a conclusão do agendamento em lançamentos de Caixa & DRE
+   * Suporta ajustes de valor no checkout (ex: inclusão de produtos extras e alteração de insumos)
    */
-  gerarLancamentosFinanceiros(agendamento) {
+  gerarLancamentosFinanceiros(agendamento, ajustes = {}) {
     const lancamentos = [];
     const diaAtual = new Date(agendamento.data + 'T12:00:00').getDate();
     const mesAtual = new Date(agendamento.data + 'T12:00:00').getMonth();
     const anoAtual = new Date(agendamento.data + 'T12:00:00').getFullYear();
 
-    // 1. Receita da Consulta / Atendimento
-    if (agendamento.valor > 0) {
+    const valorCobrado = ajustes.valorFinal !== undefined ? parseFloat(ajustes.valorFinal) : (agendamento.valor || 0);
+    const insumoReal = ajustes.insumoFinal !== undefined ? parseFloat(ajustes.insumoFinal) : (agendamento.insumoEstimado || 0);
+    const formaRecebimento = ajustes.formaPagamento || agendamento.formaPagamento || 'pix';
+    const descExtra = ajustes.descricaoExtra ? ` (+ ${ajustes.descricaoExtra})` : '';
+
+    // 1. Receita da Consulta / Atendimento no Caixa
+    if (valorCobrado > 0) {
       lancamentos.push({
         tipo: 'receita',
-        descricao: `${agendamento.servicoNome} — ${agendamento.clienteNome}`,
-        valor: agendamento.valor,
+        descricao: `${agendamento.servicoNome}${descExtra} — ${agendamento.clienteNome}`,
+        valor: valorCobrado,
         dia: diaAtual,
         mes: mesAtual,
         ano: anoAtual,
-        categoria: null,
-        formaRecebimento: 'avista',
+        categoria: 'servicos',
+        subcategoria: ajustes.subcategoriaReceita || 'Atendimentos / Serviços',
+        formaRecebimento: formaRecebimento === 'dinheiro' || formaRecebimento === 'pix' ? 'À vista/PIX' : 'À prazo',
         origemAgendamentoId: agendamento.id,
       });
     }
 
     // 2. Custo do Insumo / Material consumido (alimenta CMV da DRE)
-    if (agendamento.insumoEstimado > 0) {
+    if (insumoReal > 0) {
       lancamentos.push({
         tipo: 'despesa',
         descricao: `Insumos ref. ${agendamento.servicoNome} (${agendamento.clienteNome})`,
-        valor: agendamento.insumoEstimado,
+        valor: insumoReal,
         dia: diaAtual,
         mes: mesAtual,
         ano: anoAtual,
