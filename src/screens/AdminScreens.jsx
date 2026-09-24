@@ -187,6 +187,11 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
                           🧾 NFS-e ATIVA
                         </span>
                       )}
+                      {a.modulo_tradutor && (
+                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#064E3B', background: '#A7F3D0', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                          ✨ TRADUTOR IA
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
                     {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
@@ -252,6 +257,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
   const [moduloNfse, setModuloNfse] = useState(assinante.modulo_nfse ?? false);
+  const [moduloTradutor, setModuloTradutor] = useState(assinante.modulo_tradutor ?? false);
   const [ultimoNumeroNfse, setUltimoNumeroNfse] = useState(assinante.nfse_ultimo_numero || '');
   const [salvando, setSalvando] = useState(false);
   const [enviandoLink, setEnviandoLink] = useState(false);
@@ -262,12 +268,14 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
     setSalvando(true);
     // Também salva no localStorage como fallback para testes imediatos
     localStorage.setItem(`amp_modulo_nfse_${assinante.id}`, moduloNfse ? 'true' : 'false');
+    localStorage.setItem(`amp_modulo_tradutor_${assinante.id}`, moduloTradutor ? 'true' : 'false');
 
     const resultado = await onAtualizarDados(assinante.id, {
       status,
       vencimento: vencimento || null,
       valor_assinatura: valor ? parseFloat(valor) : null,
       modulo_nfse: moduloNfse,
+      modulo_tradutor: moduloTradutor,
       nfse_ultimo_numero: ultimoNumeroNfse ? parseInt(ultimoNumeroNfse) : 0,
     });
     setSalvando(false);
@@ -385,6 +393,27 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── CHAVE DE ATIVAÇÃO DO MÓDULO ANÁLISE HUMANIZADA (ADD-ON COBRADO) ── */}
+      <div style={{ background: '#FAF8F3', border: '1.5px solid #10B981', borderRadius: 12, padding: '14px', marginBottom: 20 }}>
+        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27', display: 'flex', alignItems: 'center', gap: 6 }}>
+              ✨ Análise Humanizada & WhatsApp
+              <span style={{ fontSize: 9.5, background: '#25D366', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>PREMIUM</span>
+            </div>
+            <div style={{ fontSize: 11, color: '#5C5A4F', marginTop: 2 }}>
+              Habilita o Tradutor Financeiro (PE, DRE vs Caixa, Reconciliação e Comparativo)
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={moduloTradutor}
+            onChange={e => setModuloTradutor(e.target.checked)}
+            style={{ accentColor: '#10B981', width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </label>
       </div>
 
       {onAcessarEmpresa && (

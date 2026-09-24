@@ -195,6 +195,7 @@ export default function CashFlowApp() {
         email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
         vencimento: e.vencimento, valor_assinatura: e.valor_assinatura,
         modulo_nfse: e.modulo_nfse ?? (localStorage.getItem(`amp_modulo_nfse_${e.id}`) === 'true'),
+        modulo_tradutor: e.modulo_tradutor ?? (localStorage.getItem(`amp_modulo_tradutor_${e.id}`) === 'true'),
         nfse_ultimo_numero: e.nfse_ultimo_numero || parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${e.id}`) || 0),
       })));
     }
@@ -549,9 +550,12 @@ export default function CashFlowApp() {
       error = res.error;
     }
 
-    // Persiste a flag de NFS-e no localStorage do dispositivo para funcionar imediatamente sem travar o painel
+    // Persiste a flag de NFS-e e Tradutor no localStorage do dispositivo para funcionar imediatamente sem travar o painel
     if (dados.modulo_nfse !== undefined) {
       localStorage.setItem(`amp_modulo_nfse_${id}`, dados.modulo_nfse ? 'true' : 'false');
+    }
+    if (dados.modulo_tradutor !== undefined) {
+      localStorage.setItem(`amp_modulo_tradutor_${id}`, dados.modulo_tradutor ? 'true' : 'false');
     }
     if (dados.nfse_ultimo_numero !== undefined) {
       localStorage.setItem(`amp_nfse_ultimo_numero_${id}`, String(dados.nfse_ultimo_numero || 0));
@@ -641,7 +645,9 @@ export default function CashFlowApp() {
   if (!empresaAtualObj) { return <div style={{ padding: 20, color: '#1C2421' }}>Carregando empresa...</div>; }
 
   const ehDono = empresaAtualObj?.papel !== 'funcionario';
-  const moduloNfseAtivo = !!(empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
+  const ehAdmin = !!(empresaAtualObj?.ehAdmin || sessao?.ehAdmin);
+  const moduloNfseAtivo = !!(ehAdmin || empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
+  const moduloTradutorAtivo = !!(ehAdmin || empresaAtualObj?.modulo_tradutor || localStorage.getItem(`amp_modulo_tradutor_${empresaAtualObj?.id}`) === 'true');
 
   return (
     <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
@@ -668,6 +674,7 @@ export default function CashFlowApp() {
               empresaId={empresaAtualObj.id}
               empresa={empresaAtualObj}
               papel={empresaAtualObj.papel}
+              podeVerTradutor={moduloTradutorAtivo}
               onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }}
               onEditar={abrirEdicao}
               onIrGestaoAVista={() => setTela('gestaoavista')}
@@ -702,6 +709,7 @@ export default function CashFlowApp() {
               anoAtual={anoAtual}
               empresaId={empresaAtualObj.id}
               empresa={empresaAtualObj}
+              podeVerTradutor={moduloTradutorAtivo}
               onSalvarEstoque={salvarEstoqueMensal}
             />
           )}
