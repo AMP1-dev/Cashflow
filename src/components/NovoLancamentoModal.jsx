@@ -553,28 +553,40 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
                   Toque em qualquer item abaixo para aplicar a classificação correta e preencher a descrição automaticamente:
                 </div>
 
-                {/* Pílulas/Abas dos Grupos do Plano de Contas */}
-                <div style={{ display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 6, marginBottom: 10 }}>
+                {/* Grade dos Grupos do Plano de Contas - Todos 100% visíveis sem rolagem lateral oculta */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 6, marginBottom: 12 }}>
                   {PLANO_DE_CONTAS_SUGERIDO.map(grupo => {
                     const ativo = grupoPlanoAberto === grupo.id;
+                    const rotulosCurto = {
+                      custos_diretos: '📦 Custos Diretos (CMV)',
+                      despesas_variaveis: '⚡ Despesas Variáveis',
+                      estrutura_ocupacao: '🏢 Fixas - Estrutura',
+                      pessoal_gestao: '👥 Fixas - Equipe & Adm',
+                      marketing_comercial: '📣 Fixas - Marketing',
+                      financeiras_bancos: '🏦 Juros & Bancos',
+                    };
+                    const rotulo = rotulosCurto[grupo.id] || grupo.grupo.split(' (')[0];
+
                     return (
                       <button
                         key={grupo.id}
                         type="button"
                         onClick={() => setGrupoPlanoAberto(grupo.id)}
                         style={{
-                          padding: '5px 9px',
-                          borderRadius: 7,
+                          padding: '7px 8px',
+                          borderRadius: 8,
                           fontSize: 11,
-                          fontWeight: ativo ? 700 : 500,
-                          whiteSpace: 'nowrap',
-                          border: `1px solid ${ativo ? grupo.badgeColor : '#E5E0D5'}`,
-                          background: ativo ? grupo.badgeBg : '#F5F3ED',
-                          color: ativo ? grupo.badgeColor : '#6B685D',
+                          fontWeight: ativo ? 700 : 600,
+                          textAlign: 'center',
+                          border: `1.5px solid ${ativo ? grupo.badgeColor : '#E5E0D5'}`,
+                          background: ativo ? grupo.badgeBg : '#F9F8F5',
+                          color: ativo ? grupo.badgeColor : '#555248',
                           cursor: 'pointer',
+                          boxShadow: ativo ? '0 1px 3px rgba(0,0,0,0.06)' : 'none',
+                          transition: 'all 0.15s ease',
                         }}
                       >
-                        {grupo.grupo.split(' (')[0]}
+                        {rotulo}
                       </button>
                     );
                   })}
@@ -594,7 +606,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
                       <p style={{ fontSize: 10.5, color: '#7C796E', margin: '0 0 8px 0', lineHeight: 1.3 }}>
                         {grupoSel.descricao}
                       </p>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                         {grupoSel.itens.map(item => {
                           const selecionado = categoria === grupoSel.categoria && (subcategoria === item.sub || subcategoria === item.nome);
                           return (
@@ -610,21 +622,21 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
                                 setSugestaoEscolhidaManualmente(true);
                               }}
                               style={{
-                                padding: '5px 8px',
-                                borderRadius: 6,
-                                fontSize: 11,
+                                padding: '6px 10px',
+                                borderRadius: 7,
+                                fontSize: 11.5,
                                 cursor: 'pointer',
-                                border: `1px solid ${selecionado ? grupoSel.badgeColor : '#DDD8CE'}`,
+                                border: `1.5px solid ${selecionado ? grupoSel.badgeColor : '#DCD7CC'}`,
                                 background: selecionado ? grupoSel.badgeBg : '#fff',
-                                color: selecionado ? grupoSel.badgeColor : '#3A3831',
-                                fontWeight: selecionado ? 700 : 400,
-                                display: 'flex',
+                                color: selecionado ? grupoSel.badgeColor : '#2C2B25',
+                                fontWeight: selecionado ? 700 : 500,
+                                display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 4,
+                                gap: 5,
                                 transition: 'all 0.15s',
                               }}
                             >
-                              {selecionado && <Check size={11} color={grupoSel.badgeColor} />}
+                              {selecionado && <Check size={12} color={grupoSel.badgeColor} />}
                               <span>{item.nome}</span>
                             </button>
                           );

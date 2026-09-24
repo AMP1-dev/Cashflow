@@ -2,24 +2,55 @@ import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, Layou
 import { MESES } from '../utils/constants';
 
 export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAbrirEquipe, ehDono, onAbrirNfse, onAbrirAgendamento, onAbrirAdmin }) {
+  const temBotoesModulos = Boolean(onAbrirAdmin || (ehDono && (onAbrirAgendamento || onAbrirNfse || onAbrirEquipe)));
+
   return (
     <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10, borderRadius: '0 0 20px 20px', boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <div style={{ fontSize: 11, color: '#9FBDB5' }}>{usuario}</div>
-          <div style={{ fontSize: 15, fontWeight: 500 }}>{empresa.nome}</div>
+      {/* LINHA 1: Nome da empresa e Usuário (Largura total) + Botão Sair */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 11, color: '#9FBDB5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuario}</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#FAF8F3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: 0.2 }}>{empresa.nome}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
+        <button 
+          onClick={onLogout} 
+          aria-label="Sair" 
+          title="Sair do sistema"
+          style={{
+            height: 32,
+            padding: '0 10px',
+            borderRadius: 8,
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            color: '#9FBDB5',
+            cursor: 'pointer',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            fontSize: 12,
+            fontWeight: 500,
+            flexShrink: 0
+          }}
+        >
+          <LogOut size={14} />
+          <span>Sair</span>
+        </button>
+      </div>
+
+      {/* LINHA 2: Barra dedicada de botões de Módulos */}
+      {temBotoesModulos && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
           {onAbrirAdmin && (
             <button 
               onClick={onAbrirAdmin} 
               title="Painel Administrativo" 
               style={{
-                height: 32,
-                padding: '0 9px',
+                height: 30,
+                padding: '0 10px',
                 borderRadius: 8,
-                background: 'rgba(232, 163, 61, 0.16)',
-                border: '1px solid rgba(232, 163, 61, 0.45)',
+                background: 'rgba(232, 163, 61, 0.18)',
+                border: '1px solid rgba(232, 163, 61, 0.5)',
                 color: '#FCD34D',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -41,11 +72,11 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
               onClick={onAbrirAgendamento} 
               title="Agenda & Atendimentos" 
               style={{
-                height: 32,
-                padding: '0 9px',
+                height: 30,
+                padding: '0 10px',
                 borderRadius: 8,
-                background: 'rgba(245, 158, 11, 0.16)',
-                border: '1px solid rgba(245, 158, 11, 0.45)',
+                background: 'rgba(245, 158, 11, 0.18)',
+                border: '1px solid rgba(245, 158, 11, 0.5)',
                 color: '#FDE047',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -59,7 +90,7 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
                 flexShrink: 0
               }}
             >
-              <Calendar size={14} />
+              <Calendar size={13} />
               <span>Agenda</span>
             </button>
           )}
@@ -68,11 +99,11 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
               onClick={onAbrirNfse} 
               title="Notas Fiscais de Serviços (NFS-e)" 
               style={{
-                height: 32,
-                padding: '0 9px',
+                height: 30,
+                padding: '0 10px',
                 borderRadius: 8,
-                background: 'rgba(159, 224, 200, 0.16)',
-                border: '1px solid rgba(159, 224, 200, 0.45)',
+                background: 'rgba(159, 224, 200, 0.18)',
+                border: '1px solid rgba(159, 224, 200, 0.5)',
                 color: '#A7F3D0',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -86,7 +117,7 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
                 flexShrink: 0
               }}
             >
-              <FileText size={14} />
+              <FileText size={13} />
               <span>NFS-e</span>
             </button>
           )}
@@ -96,11 +127,11 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
               title="Gerenciar Equipe" 
               aria-label="Gerenciar Equipe" 
               style={{
-                height: 32,
-                padding: '0 9px',
+                height: 30,
+                padding: '0 10px',
                 borderRadius: 8,
-                background: 'rgba(255, 255, 255, 0.10)',
-                border: '1px solid rgba(255, 255, 255, 0.22)',
+                background: 'rgba(255, 255, 255, 0.12)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
                 color: '#FAF8F3',
                 cursor: 'pointer',
                 display: 'inline-flex',
@@ -114,33 +145,12 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
                 flexShrink: 0
               }}
             >
-              <Users size={14} />
+              <Users size={13} />
               <span>Equipe</span>
             </button>
           )}
-          <button 
-            onClick={onLogout} 
-            aria-label="Sair" 
-            title="Sair do sistema"
-            style={{
-              height: 32,
-              width: 32,
-              padding: 0,
-              borderRadius: 8,
-              background: 'none',
-              border: 'none',
-              color: '#9FBDB5',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}
-          >
-            <LogOut size={18} />
-          </button>
         </div>
-      </div>
+      )}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 12 }}>
         <button onClick={() => setMesAtual(m => (m + 11) % 12)} aria-label="Mês anterior" style={{ background: 'none', border: 'none', color: '#E8A33D', cursor: 'pointer', padding: 4 }}>
           <ChevronLeft size={20} />

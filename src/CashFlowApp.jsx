@@ -30,6 +30,7 @@ function extrairModulosEmpresa(empresa) {
   let modAgendamento = empresa?.modulo_agendamento;
   let catAgendamento = empresa?.categoria_agendamento;
   let ultimoNum = empresa?.nfse_ultimo_numero;
+  let nomeResp = empresa?.nome_responsavel;
 
   if (empresa?.plano && typeof empresa.plano === 'string' && empresa.plano.startsWith('{')) {
     try {
@@ -39,6 +40,7 @@ function extrairModulosEmpresa(empresa) {
       if (parsed.modulo_agendamento !== undefined && modAgendamento === undefined) modAgendamento = parsed.modulo_agendamento;
       if (parsed.categoria_agendamento !== undefined && catAgendamento === undefined) catAgendamento = parsed.categoria_agendamento;
       if (parsed.nfse_ultimo_numero !== undefined && !ultimoNum) ultimoNum = parsed.nfse_ultimo_numero;
+      if (parsed.nome_responsavel !== undefined && !nomeResp) nomeResp = parsed.nome_responsavel;
     } catch (e) {}
   }
 
@@ -61,6 +63,9 @@ function extrairModulosEmpresa(empresa) {
   if (!ultimoNum && empresa?.id) {
     ultimoNum = parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${empresa.id}`) || 0);
   }
+  if (!nomeResp && empresa?.id) {
+    nomeResp = localStorage.getItem(`amp_nome_responsavel_${empresa.id}`) || '';
+  }
 
   return {
     modulo_nfse: !!modNfse,
@@ -68,6 +73,7 @@ function extrairModulosEmpresa(empresa) {
     modulo_agendamento: !!modAgendamento,
     categoria_agendamento: catAgendamento || 'beleza',
     nfse_ultimo_numero: ultimoNum || 0,
+    nome_responsavel: nomeResp || '',
   };
 }
 
@@ -151,6 +157,18 @@ export default function CashFlowApp() {
         setTela('diagnostico');
       }
     } else if (profile?.eh_admin) {
+      // Se o administrador estava navegando na visão de uma empresa específica, respeita o modo empresa
+      const empresaModoAdminId = sessionStorage.getItem('amp_admin_modo_empresa');
+      if (empresaModoAdminId) {
+        const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaModoAdminId).single();
+        if (emp) {
+          const modulos = extrairModulosEmpresa(emp);
+          setEmpresaAtualObj({ ...emp, ...modulos, ehAdmin: true, papel: 'dono', nome: profile?.nome || 'Administrador' });
+          setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
+          carregarLancamentos(emp.id);
+          return;
+        }
+      }
       setSessao({ tipo: 'admin' });
       carregarPainelAdmin();
       return;
@@ -242,9 +260,17 @@ export default function CashFlowApp() {
       setAssinantesAdmin(data.map(e => {
         const modulos = extrairModulosEmpresa(e);
         return {
-          id: e.id, empresa: e.razao_social, fantasia: e.nome_fantasia, cpf: e.cpf_titular,
-          email: e.email_contato, telefone: e.telefone_contato, status: e.status, criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
-          vencimento: e.vencimento, valor_assinatura: e.valor_assinatura,
+          id: e.id,
+          empresa: e.razao_social,
+          fantasia: e.nome_fantasia,
+          cpf: e.cpf_titular,
+          nome: modulos.nome_responsavel || e.nome_responsavel || '',
+          email: e.email_contato,
+          telefone: e.telefone_contato,
+          status: e.status,
+          criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
+          vencimento: e.vencimento,
+          valor_assinatura: e.valor_assinatura,
           plano: e.plano,
           modulo_nfse: modulos.modulo_nfse,
           modulo_tradutor: modulos.modulo_tradutor,
@@ -596,20 +622,26 @@ export default function CashFlowApp() {
     let payload = { ...dados };
 
     // Monta dados serializados em 'plano' para garantir persistência nativa e permanente no Supabase
+    let planoBase = {};
+    if (dados.plano && typeof dados.plano === 'string' && dados.plano.startsWith('{')) {
+      try { planoBase = JSON.parse(dados.plano); } catch (e) {}
+    }
     const modulosJson = JSON.stringify({
+      ...planoBase,
       plano: 'padrao',
       modulo_nfse: !!dados.modulo_nfse,
       modulo_tradutor: !!dados.modulo_tradutor,
       modulo_agendamento: !!dados.modulo_agendamento,
       categoria_agendamento: dados.categoria_agendamento || 'beleza',
       nfse_ultimo_numero: dados.nfse_ultimo_numero || 0,
+      nome_responsavel: dados.nome_responsavel !== undefined ? dados.nome_responsavel : (planoBase.nome_responsavel || ''),
     });
     payload.plano = modulosJson;
 
     // Tenta atualizar no Supabase com todos os campos
     let { error } = await supabase.from('empresas').update(payload).eq('id', id);
 
-    // Se houver coluna que ainda não existe no schema do Supabase (ex: modulo_tradutor, modulo_nfse), remove dinamicamente os campos não encontrados e tenta de novo
+    // Se houver coluna que ainda não existe no schema do Supabase (ex: modulo_tradutor, modulo_nfse, nome_responsavel), remove dinamicamente os campos não encontrados e tenta de novo
     while (error && error.message && error.message.includes('schema cache')) {
       const match = error.message.match(/Could not find the '([^']+)' column/);
       if (match && match[1]) {
@@ -621,7 +653,7 @@ export default function CashFlowApp() {
       }
     }
 
-    // Persiste as flags de módulos no localStorage do dispositivo para funcionar imediatamente sem travar o painel
+    // Persiste no localStorage do dispositivo para funcionar imediatamente sem travar o painel
     if (dados.modulo_nfse !== undefined) {
       localStorage.setItem(`amp_modulo_nfse_${id}`, dados.modulo_nfse ? 'true' : 'false');
     }
@@ -637,9 +669,22 @@ export default function CashFlowApp() {
     if (dados.nfse_ultimo_numero !== undefined) {
       localStorage.setItem(`amp_nfse_ultimo_numero_${id}`, String(dados.nfse_ultimo_numero || 0));
     }
+    if (dados.nome_responsavel !== undefined) {
+      localStorage.setItem(`amp_nome_responsavel_${id}`, dados.nome_responsavel);
+    }
 
     if (!error) {
-      setAssinantesAdmin(prev => prev.map(a => a.id === id ? { ...a, ...dados, plano: modulosJson } : a));
+      setAssinantesAdmin(prev => prev.map(a => a.id === id ? {
+        ...a,
+        ...dados,
+        nome: dados.nome_responsavel !== undefined ? dados.nome_responsavel : a.nome,
+        empresa: dados.razao_social !== undefined ? dados.razao_social : a.empresa,
+        fantasia: dados.nome_fantasia !== undefined ? dados.nome_fantasia : a.fantasia,
+        cpf: dados.cpf_titular !== undefined ? dados.cpf_titular : a.cpf,
+        email: dados.email_contato !== undefined ? dados.email_contato : a.email,
+        telefone: dados.telefone_contato !== undefined ? dados.telefone_contato : a.telefone,
+        plano: modulosJson,
+      } : a));
       return { ok: true };
     } else {
       return { ok: false, erro: error.message };
@@ -649,6 +694,7 @@ export default function CashFlowApp() {
   async function abrirEmpresaDireto(empresa) {
     if (!empresa) return;
     const empresaId = empresa.id || empresa;
+    sessionStorage.setItem('amp_admin_modo_empresa', empresaId);
     const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaId).single();
     if (emp) {
       const modulos = extrairModulosEmpresa(emp);
@@ -660,6 +706,7 @@ export default function CashFlowApp() {
 
   async function acessarMinhaEmpresaAdmin() {
     if (empresaAtualObj) {
+      sessionStorage.setItem('amp_admin_modo_empresa', empresaAtualObj.id);
       setSessao({ tipo: 'cliente', empresaId: empresaAtualObj.id, papel: empresaAtualObj.papel || 'dono', ehAdmin: true });
       carregarLancamentos(empresaAtualObj.id);
       return;
@@ -670,6 +717,7 @@ export default function CashFlowApp() {
 
     if (vincs && vincs.length > 0) {
       const emp = vincs[0].empresas;
+      sessionStorage.setItem('amp_admin_modo_empresa', emp.id);
       setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
       setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
       carregarLancamentos(emp.id);
@@ -677,6 +725,7 @@ export default function CashFlowApp() {
       const { data: emps } = await supabase.from('empresas').select('*').limit(1);
       if (emps && emps.length > 0) {
         const emp = emps[0];
+        sessionStorage.setItem('amp_admin_modo_empresa', emp.id);
         setEmpresaAtualObj({ ...emp, ehAdmin: true, papel: 'dono' });
         setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
         carregarLancamentos(emp.id);
@@ -685,6 +734,7 @@ export default function CashFlowApp() {
   }
 
   async function sair() {
+    sessionStorage.removeItem('amp_admin_modo_empresa');
     await supabase.auth.signOut();
     setSessao(null);
     setTelaAuth('login');
@@ -739,7 +789,7 @@ export default function CashFlowApp() {
         onAbrirEquipe={() => setShowEquipeModal(true)}
         onAbrirAgendamento={moduloAgendamentoAtivo ? () => setTela('agendamento') : null}
         onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
-        onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
+        onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { sessionStorage.removeItem('amp_admin_modo_empresa'); setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
         ehDono={ehDono}
       />
 

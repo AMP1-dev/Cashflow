@@ -89,6 +89,19 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
     });
   }, [assinantes, busca, filtroStatus]);
 
+  const [pagina, setPagina] = useState(1);
+  const ITENS_POR_PAGINA = 10;
+
+  useEffect(() => {
+    setPagina(1);
+  }, [busca, filtroStatus]);
+
+  const totalPaginas = Math.ceil(filtrados.length / ITENS_POR_PAGINA) || 1;
+  const assinantesPaginados = useMemo(() => {
+    const inicio = (pagina - 1) * ITENS_POR_PAGINA;
+    return filtrados.slice(inicio, inicio + ITENS_POR_PAGINA);
+  }, [filtrados, pagina]);
+
   const cancelados = useMemo(() => {
     if (filtroStatus !== 'todos') return [];
     return assinantes.filter(a => {
@@ -170,44 +183,94 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
         {filtrados.length === 0 ? (
           <EmptyState text="Nenhum assinante encontrado." />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {filtrados.map(a => {
-              const st = STATUS_ASSINATURA[a.status];
-              return (
-                <button
-                  key={a.id}
-                  onClick={() => setSelecionado(a.id)}
-                  style={{ width: '100%', textAlign: 'left', background: '#fff', borderRadius: 12, border: '1px solid #E1E3E6', padding: '12px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontSize: 13.5, fontWeight: 600 }}>{a.fantasia || a.empresa}</span>
-                      {a.modulo_nfse && (
-                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
-                          🧾 NFS-e ATIVA
-                        </span>
-                      )}
-                      {a.modulo_tradutor && (
-                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#064E3B', background: '#A7F3D0', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
-                          ✨ TRADUTOR IA
-                        </span>
-                      )}
-                      {a.modulo_agendamento && (
-                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#92400E', background: '#FEF3C7', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
-                          🗓️ AGENDA
-                        </span>
-                      )}
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {assinantesPaginados.map(a => {
+                const st = STATUS_ASSINATURA[a.status];
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => setSelecionado(a.id)}
+                    style={{ width: '100%', textAlign: 'left', background: '#fff', borderRadius: 12, border: '1px solid #E1E3E6', padding: '12px 14px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                  >
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 13.5, fontWeight: 700, color: '#111827' }}>{a.fantasia || a.empresa}</span>
+                        {a.modulo_nfse && (
+                          <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                            🧾 NFS-e ATIVA
+                          </span>
+                        )}
+                        {a.modulo_tradutor && (
+                          <span style={{ fontSize: 9.5, fontWeight: 800, color: '#064E3B', background: '#A7F3D0', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                            ✨ TRADUTOR IA
+                          </span>
+                        )}
+                        {a.modulo_agendamento && (
+                          <span style={{ fontSize: 9.5, fontWeight: 800, color: '#92400E', background: '#FEF3C7', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                            🗓️ AGENDA
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ fontSize: 11.5, color: '#4B5563', marginTop: 3 }}>
+                        {a.nome ? <strong>{a.nome} · </strong> : ''}{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}
+                      </div>
+                      {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
                     </div>
-                    <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
-                    {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
-                  </div>
-                  <span style={{ fontSize: 10.5, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 9px', borderRadius: 7, flexShrink: 0, marginLeft: 10 }}>
-                    {st.label}
+                    <span style={{ fontSize: 10.5, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 9px', borderRadius: 7, flexShrink: 0, marginLeft: 10 }}>
+                      {st.label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Controles de Paginação */}
+            {totalPaginas > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid #E5E7EB', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ fontSize: 12, color: '#6B7280' }}>
+                  Mostrando {((pagina - 1) * ITENS_POR_PAGINA) + 1}–{Math.min(pagina * ITENS_POR_PAGINA, filtrados.length)} de {filtrados.length} empresas
+                </div>
+                <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                  <button
+                    disabled={pagina <= 1}
+                    onClick={() => setPagina(p => Math.max(1, p - 1))}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: '1px solid #D1D5DB',
+                      background: pagina <= 1 ? '#F3F4F6' : '#fff',
+                      color: pagina <= 1 ? '#9CA3AF' : '#1F2937',
+                      cursor: pagina <= 1 ? 'not-allowed' : 'pointer',
+                      fontSize: 12,
+                      fontWeight: 600
+                    }}
+                  >
+                    ← Anterior
+                  </button>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: '#1F2937', padding: '0 6px' }}>
+                    {pagina} / {totalPaginas}
                   </span>
-                </button>
-              );
-            })}
-          </div>
+                  <button
+                    disabled={pagina >= totalPaginas}
+                    onClick={() => setPagina(p => Math.min(totalPaginas, p + 1))}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 8,
+                      border: '1px solid #D1D5DB',
+                      background: pagina >= totalPaginas ? '#F3F4F6' : '#fff',
+                      color: pagina >= totalPaginas ? '#9CA3AF' : '#1F2937',
+                      cursor: pagina >= totalPaginas ? 'not-allowed' : 'pointer',
+                      fontSize: 12,
+                      fontWeight: 600
+                    }}
+                  >
+                    Próxima →
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         )}
         {filtroStatus === 'todos' && cancelados.length > 0 && (
           <div style={{ marginTop: 24, borderTop: '1px solid #E1E3E6', paddingTop: 16 }}>
@@ -258,6 +321,13 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
 }
 
 export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, onRecuperarSenha, onAcessarEmpresa }) {
+  const [formEmpresa, setFormEmpresa] = useState(assinante.empresa || '');
+  const [formFantasia, setFormFantasia] = useState(assinante.fantasia || '');
+  const [formCpf, setFormCpf] = useState(assinante.cpf || '');
+  const [formNome, setFormNome] = useState(assinante.nome || '');
+  const [formEmail, setFormEmail] = useState(assinante.email || '');
+  const [formTelefone, setFormTelefone] = useState(assinante.telefone || '');
+
   const [status, setStatus] = useState(assinante.status);
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
@@ -288,6 +358,12 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       modulo_agendamento: moduloAgendamento,
       categoria_agendamento: categoriaAgendamento,
       nfse_ultimo_numero: ultimoNumeroNfse ? parseInt(ultimoNumeroNfse) : 0,
+      razao_social: formEmpresa.trim(),
+      nome_fantasia: formFantasia.trim(),
+      cpf_titular: formCpf.trim(),
+      nome_responsavel: formNome.trim(),
+      email_contato: formEmail.trim(),
+      telefone_contato: formTelefone.trim(),
     });
     setSalvando(false);
     if (!resultado.ok) alert('Erro ao salvar: ' + resultado.erro);
@@ -295,19 +371,20 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   }
 
   async function handleRecuperarSenha() {
-    if (!assinante.email || !assinante.email.includes('@')) {
-      setErroLink('Este assinante não possui e-mail cadastrado.');
+    const emailAlvo = formEmail.trim() || assinante.email;
+    if (!emailAlvo || !emailAlvo.includes('@')) {
+      setErroLink('Este assinante não possui e-mail válido cadastrado.');
       return;
     }
     setEnviandoLink(true);
     setMsgLink('');
     setErroLink('');
     try {
-      const res = await onRecuperarSenha(assinante.email.trim());
+      const res = await onRecuperarSenha(emailAlvo);
       if (res && !res.ok) {
         setErroLink('Erro ao enviar: ' + (res.erro || 'Falha no envio'));
       } else {
-        setMsgLink(`✅ Link enviado com sucesso para ${assinante.email}!`);
+        setMsgLink(`✅ Link enviado com sucesso para ${emailAlvo}!`);
       }
     } catch (e) {
       setErroLink('Erro inesperado: ' + (e.message || String(e)));
@@ -317,15 +394,76 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   }
 
   return (
-    <ModalShell onClose={onClose} titulo={assinante.fantasia || assinante.empresa}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
-        <DetalheLinha label="Razão social / Nome" valor={assinante.empresa} />
-        <DetalheLinha label="Nome fantasia" valor={assinante.fantasia || '—'} />
-        <DetalheLinha label="CPF" valor={assinante.cpf} />
-        <DetalheLinha label="Responsável" valor={assinante.nome || '—'} />
-        <DetalheLinha label="Email" valor={assinante.email || '—'} />
-        <DetalheLinha label="Telefone" valor={assinante.telefone || '—'} />
-        <DetalheLinha label="Assinante desde" valor={assinante.criadoEm} />
+    <ModalShell onClose={onClose} titulo={formFantasia || formEmpresa || assinante.fantasia || assinante.empresa}>
+      {/* ── SEÇÃO EDITÁVEL DE DADOS CADASTRAIS ── */}
+      <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: 14, marginBottom: 18 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>🏢 Dados Cadastrais & Responsável</span>
+          <span style={{ fontSize: 11, fontWeight: 400, color: '#64748B' }}>Desde {assinante.criadoEm}</span>
+        </div>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
+          <div>
+            <FieldLabel>Razão Social / Nome Completo</FieldLabel>
+            <input
+              type="text"
+              value={formEmpresa}
+              onChange={e => setFormEmpresa(e.target.value)}
+              placeholder="Razão social ou nome civil"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+          </div>
+          <div>
+            <FieldLabel>Nome Fantasia</FieldLabel>
+            <input
+              type="text"
+              value={formFantasia}
+              onChange={e => setFormFantasia(e.target.value)}
+              placeholder="Nome da loja ou marca"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+          </div>
+          <div>
+            <FieldLabel>CPF ou CNPJ</FieldLabel>
+            <input
+              type="text"
+              value={formCpf}
+              onChange={e => setFormCpf(e.target.value)}
+              placeholder="000.000.000-00 ou CNPJ"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+          </div>
+          <div>
+            <FieldLabel>Nome do Responsável</FieldLabel>
+            <input
+              type="text"
+              value={formNome}
+              onChange={e => setFormNome(e.target.value)}
+              placeholder="Nome do gestor / titular"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+          </div>
+          <div>
+            <FieldLabel>E-mail de Contato / Acesso</FieldLabel>
+            <input
+              type="email"
+              value={formEmail}
+              onChange={e => setFormEmail(e.target.value)}
+              placeholder="email@empresa.com"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+          </div>
+          <div>
+            <FieldLabel>Telefone / WhatsApp</FieldLabel>
+            <input
+              type="text"
+              value={formTelefone}
+              onChange={e => setFormTelefone(e.target.value)}
+              placeholder="(00) 00000-0000"
+              style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+            />
+          </div>
+        </div>
       </div>
 
       <FieldLabel>Status da assinatura</FieldLabel>
@@ -470,7 +608,10 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       {onAcessarEmpresa && (
         <button
           type="button"
-          onClick={() => onAcessarEmpresa(assinante)}
+          onClick={() => {
+            onClose();
+            onAcessarEmpresa(assinante);
+          }}
           style={{
             width: '100%',
             padding: '13px',
