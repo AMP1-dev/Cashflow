@@ -1,12 +1,13 @@
-import { ChevronRight, PackageCheck, Settings2 } from 'lucide-react';
+import { ChevronRight, PackageCheck, Settings2, Sparkles } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { EmptyState } from '../components/UIComponents';
 import { supabase } from '../lib/supabase';
 import { MESES } from '../utils/constants';
 import { formatBRL, formatCompactoBRL } from '../utils/formatters';
+import { TradutorFinanceiroModal } from '../components/TradutorFinanceiroModal';
 import * as XLSX from 'xlsx';
 
-export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, empresaId, onSalvarEstoque }) {
+export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, empresaId, onSalvarEstoque, empresa }) {
 
   // ─── Regime de Apuração (Caixa vs Competência) ──────────────────────────
   const [regime, setRegime] = useState('caixa'); // 'caixa' | 'competencia'
@@ -26,6 +27,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
   const [pctCmvStr, setPctCmvStr] = useState('');
   const [modalCmvAberto, setModalCmvAberto] = useState(false);
   const [salvandoCmv, setSalvandoCmv] = useState(false);
+  const [modalTradutorAberto, setModalTradutorAberto] = useState(false);
 
   useEffect(() => {
     if (!empresaId || mesAtual === undefined || anoAtual === undefined) return;
@@ -284,6 +286,53 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
       {!semDados && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
+          {/* Botão de Destaque: Tradutor Financeiro & WhatsApp */}
+          <button
+            onClick={() => setModalTradutorAberto(true)}
+            style={{
+              width: '100%',
+              padding: '12px 14px',
+              borderRadius: 14,
+              border: '1px solid #10B981',
+              background: 'linear-gradient(135deg, #0F2B27 0%, #173E38 100%)',
+              color: '#FAF8F3',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              marginBottom: 4,
+              boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)',
+              transition: 'transform 0.15s ease'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                padding: '6px 8px',
+                borderRadius: 8,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 6px rgba(16,185,129,0.3)'
+              }}>
+                <Sparkles size={16} color="#fff" />
+              </div>
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: '#FAF8F3', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Traduzir Diagnóstico (Linguagem Humana)
+                  <span style={{ fontSize: 10, background: '#25D366', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>WhatsApp</span>
+                </div>
+                <div style={{ fontSize: 11, color: '#9FE0C8' }}>
+                  Explicação do Ponto de Equilíbrio, DRE vs Caixa e comparativo
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#9FE0C8', fontSize: 12, fontWeight: 600 }}>
+              <span>Abrir</span>
+              <ChevronRight size={15} />
+            </div>
+          </button>
+
           {/* Botões de ação */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
             <button onClick={() => setModalEstoqueAberto(true)} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #1F5C52', background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#1F5C52' }}>
@@ -503,6 +552,18 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal do Tradutor Financeiro Inteligente & WhatsApp */}
+      {modalTradutorAberto && (
+        <TradutorFinanceiroModal
+          lancamentosAno={lancamentosAno || lancamentos}
+          mesAtual={mesAtual}
+          anoAtual={anoAtual}
+          pctCmvConfig={pctCmvConfig}
+          empresa={empresa}
+          onClose={() => setModalTradutorAberto(false)}
+        />
       )}
     </div>
   );

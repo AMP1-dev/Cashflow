@@ -662,9 +662,11 @@ export default function CashFlowApp() {
           {tela === 'dashboard' && (
             <Dashboard
               lancamentos={lancamentosEmpresa}
+              lancamentosAno={lancamentosAno}
               mesAtual={mesAtual}
               anoAtual={anoAtual}
               empresaId={empresaAtualObj.id}
+              empresa={empresaAtualObj}
               papel={empresaAtualObj.papel}
               onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }}
               onEditar={abrirEdicao}
@@ -699,6 +701,7 @@ export default function CashFlowApp() {
               mesAtual={mesAtual}
               anoAtual={anoAtual}
               empresaId={empresaAtualObj.id}
+              empresa={empresaAtualObj}
               onSalvarEstoque={salvarEstoqueMensal}
             />
           )}

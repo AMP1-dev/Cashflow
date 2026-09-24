@@ -1,15 +1,17 @@
-import { ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronDown, X, Presentation, FileText, Target, CheckCircle2, AlertTriangle, TrendingUp, ShieldCheck, HelpCircle, UploadCloud } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronDown, X, Presentation, FileText, Target, CheckCircle2, AlertTriangle, TrendingUp, ShieldCheck, HelpCircle, UploadCloud, Sparkles } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { EmptyState } from '../components/UIComponents';
 import { RelatorioBancosModal } from '../components/RelatorioBancosModal';
+import { TradutorFinanceiroModal } from '../components/TradutorFinanceiroModal';
 import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 'dono', onNovo, onEditar, onIrGestaoAVista, onAbrirImportacao, onAbrirNfse }) {
+export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, empresaId, empresa, papel = 'dono', onNovo, onEditar, onIrGestaoAVista, onAbrirImportacao, onAbrirNfse }) {
   const ehDono = papel !== 'funcionario';
   const [pctCmv, setPctCmv] = useState(0);
   const [peExpandido, setPeExpandido] = useState(false);
+  const [showTradutorModal, setShowTradutorModal] = useState(false);
 
   useEffect(() => {
     if (!empresaId || mesAtual === undefined || anoAtual === undefined) return;
@@ -285,6 +287,20 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                setShowTradutorModal(true);
+              }} 
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #10B981', background: 'linear-gradient(135deg, #0F2B27 0%, #1A4740 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#FAF8F3', fontSize: 12, fontWeight: 700, boxShadow: '0 2px 6px rgba(15,43,39,0.15)' }}
+            >
+              <Sparkles size={14} color="#10B981" />
+              <span>Traduzir Diagnóstico (Linguagem Humana)</span>
+              <span style={{ fontSize: 9.5, background: '#25D366', color: '#fff', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>WhatsApp</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 if (onIrGestaoAVista) onIrGestaoAVista();
               }} 
               style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #CFEAD9', background: '#F5FAF7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#1F5C52', fontSize: 12, fontWeight: 600 }}
@@ -429,6 +445,17 @@ export function Dashboard({ lancamentos, mesAtual, anoAtual, empresaId, papel = 
           mesLabel={MESES[mesAtual]}
           ano={anoAtual}
           onClose={() => setShowRelatorioModal(false)}
+        />
+      )}
+
+      {showTradutorModal && (
+        <TradutorFinanceiroModal
+          lancamentosAno={lancamentosAno || lancamentos}
+          mesAtual={mesAtual}
+          anoAtual={anoAtual}
+          pctCmvConfig={pctCmv}
+          empresa={empresa}
+          onClose={() => setShowTradutorModal(false)}
         />
       )}
     </div>
