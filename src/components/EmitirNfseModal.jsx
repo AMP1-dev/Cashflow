@@ -431,19 +431,26 @@ export function EmitirNfseModal({
           </div>
 
           {/* Mini resumo tributário */}
-          <div style={{ marginTop: 10, background: '#F8F6F1', borderRadius: 8, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11.5 }}>
-            <span style={{ color: '#5C5A4F' }}>
-              Alíquota ISS: <strong>{aliquotaIss}%</strong> • ISS Previsto: <strong>{formatBRL(issPrevisto)}</strong>
-            </span>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 5, cursor: 'pointer', color: '#1C2421', fontWeight: 600 }}>
-              <input
-                type="checkbox"
-                checked={issRetido}
-                onChange={e => setIssRetido(e.target.checked)}
-                style={{ accentColor: '#1F5C52' }}
-              />
-              ISS Retido na fonte?
-            </label>
+          <div style={{ marginTop: 10, background: '#F8F6F1', borderRadius: 8, padding: '10px 12px', fontSize: 11.5 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 4 }}>
+              <span style={{ color: '#5C5A4F' }}>
+                Alíquota ISS: <strong>{aliquotaIss}%</strong> • ISS Calculado: <strong>{formatBRL(issPrevisto)}</strong>
+              </span>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', color: '#1C2421', fontWeight: 700 }}>
+                <input
+                  type="checkbox"
+                  checked={issRetido}
+                  onChange={e => setIssRetido(e.target.checked)}
+                  style={{ accentColor: '#1F5C52', width: 16, height: 16 }}
+                />
+                ISS Retido pelo Tomador (Cliente)?
+              </label>
+            </div>
+            <div style={{ fontSize: 10.5, color: issRetido ? '#B91C1C' : '#15803D', fontWeight: 600 }}>
+              {issRetido 
+                ? '⚠️ Atenção: ISS Retido marcado. O cliente descontará ' + formatBRL(issPrevisto) + ' do pagamento e recolherá a guia para a Prefeitura (Valor Líquido a receber: ' + formatBRL(vNum - issPrevisto) + ').'
+                : '✓ Não Retido: Você mesmo quem recolhe no Simples Nacional (DAS). O cliente pagará o valor integral de ' + formatBRL(vNum) + '.'}
+            </div>
           </div>
         </div>
 
