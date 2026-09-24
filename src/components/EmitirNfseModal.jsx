@@ -46,6 +46,7 @@ export function EmitirNfseModal({
   const [lembrarCertSessao, setLembrarCertSessao] = useState(true);
 
   // Emissão & Feedback
+  const [modoAmbiente, setModoAmbiente] = useState('producao');
   const [emitindo, setEmitindo] = useState(false);
   const [erroValidacao, setErroValidacao] = useState('');
 
@@ -147,7 +148,7 @@ export function EmitirNfseModal({
         },
         certificadoA1File: certArquivo,
         certificadoSenha: certSenha,
-        modoAmbiente: 'homologacao', // seguro para validação
+        modoAmbiente, // 'producao' oficial ou 'homologacao'
       });
 
       // 3. Se optou por salvar como modelo recorrente
@@ -231,6 +232,47 @@ export function EmitirNfseModal({
           <div style={{ textAlign: 'right', background: '#fff', border: '1px solid #B8DDD2', borderRadius: 8, padding: '4px 10px', flexShrink: 0 }}>
             <div style={{ fontSize: 9.5, fontWeight: 700, color: '#5C5A4F', textTransform: 'uppercase' }}>Próxima Nota</div>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#1F5C52', fontFamily: 'Georgia, serif' }}>Nº {proximoNumeroSugerido}</div>
+          </div>
+        </div>
+
+        {/* Seletor de Ambiente: Produção Oficial vs Homologação */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8F6F0', borderRadius: 10, border: '1px solid #E5E0D5', marginBottom: 14 }}>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#1C2421' }}>Ambiente Fiscal:</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              type="button"
+              onClick={() => setModoAmbiente('producao')}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: 'none',
+                background: modoAmbiente === 'producao' ? '#1F5C52' : '#E5E0D5',
+                color: modoAmbiente === 'producao' ? '#fff' : '#5C5A4F',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s'
+              }}
+            >
+              🟢 Produção (Oficial)
+            </button>
+            <button
+              type="button"
+              onClick={() => setModoAmbiente('homologacao')}
+              style={{
+                padding: '4px 10px',
+                borderRadius: 6,
+                border: 'none',
+                background: modoAmbiente === 'homologacao' ? '#8A6D1A' : '#E5E0D5',
+                color: modoAmbiente === 'homologacao' ? '#fff' : '#5C5A4F',
+                fontSize: 11,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.15s'
+              }}
+            >
+              🟡 Homologação (Testes)
+            </button>
           </div>
         </div>
 

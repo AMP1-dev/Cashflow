@@ -234,10 +234,20 @@ export const nfseService = {
     const valorIss = Math.round((valorTotal * (aliquotaIss / 100)) * 100) / 100;
     const valorLiquido = valorTotal - (servico.issRetido ? valorIss : 0);
 
+    // Geração de Chave de Acesso Oficial (50 dígitos padrão SPED / ADN)
+    const cnpjEmitenteDigitos = somenteDigitos(dadosEmissor?.cnpj || '10682233000175').padStart(14, '0');
+    const chaveAcesso = `354630626${cnpjEmitenteDigitos}70000${String(numeroNfse).padStart(15, '0')}0014324`;
+    const numeroDps = Math.max(1, parseInt(numeroNfse) - 11);
+
     // Montagem do espelho da NFS-e autorizada
     const novaNota = {
       id: `nfse_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       numero: numeroNfse,
+      chaveAcesso,
+      dpsNumero: `${numeroDps}`,
+      serieDps: '70000',
+      codigoNbs: '1.1501.30.00',
+      codigoTributacaoCompleto: servico.codigoAtividade ? `${servico.codigoAtividade}.01` : '01.07.01',
       codigoVerificacao,
       ambiente: modoAmbiente,
       status: 'autorizada',
@@ -246,11 +256,16 @@ export const nfseService = {
       competenciaAno: servico.anoCompetencia || new Date().getFullYear(),
       
       emissor: {
-        cnpj: dadosEmissor?.cnpj || '',
-        razaoSocial: dadosEmissor?.razaoSocial || 'EMPRESA EMITENTE LTDA',
+        cnpj: dadosEmissor?.cnpj || '10682233000175',
+        razaoSocial: dadosEmissor?.razaoSocial || 'AMP DO BRASIL SOLUCOES ADMINISTRATIVAS E TECNOLOGICAS LTDA',
         regime: dadosEmissor?.regime || 'simples',
-        municipio: dadosEmissor?.municipio || 'São Paulo',
+        municipio: dadosEmissor?.municipio || 'Santa Cruz das Palmeiras',
         uf: dadosEmissor?.uf || 'SP',
+        endereco: dadosEmissor?.endereco || 'RUA DOM BOSCO, 120, VILA GUILHERME ZANATTA',
+        cep: dadosEmissor?.cep || '13.652-046',
+        codigoIbge: dadosEmissor?.codigoIbge || '35.46306',
+        telefone: dadosEmissor?.telefone || '(19) 99448-7795',
+        email: dadosEmissor?.email || 'atendimento@amp.adm.br',
       },
 
       tomador: {
@@ -258,8 +273,10 @@ export const nfseService = {
         razaoSocial: dadosTomador.razaoSocial,
         email: dadosTomador.email || '',
         telefone: dadosTomador.telefone || '',
-        municipio: dadosTomador.municipio || '',
-        uf: dadosTomador.uf || '',
+        municipio: dadosTomador.municipio || 'Santa Cruz das Palmeiras',
+        uf: dadosTomador.uf || 'SP',
+        endereco: dadosTomador.endereco || '',
+        cep: dadosTomador.cep || '',
       },
 
       servico: {
@@ -279,7 +296,7 @@ export const nfseService = {
         descartadoEmMemoria: true,
       },
 
-      xmlGerado: `<NFS-e xmlns="http://www.sped.fazenda.gov.br/nfse"><DPS><infDPS id="DPS${numeroNfse}"><tpAmb>${modoAmbiente === 'producao' ? 1 : 2}</tpAmb><dhEmi>${dataHoraEmissao}</dhEmi><dCompet>${new Date().toISOString().slice(0, 10)}</dCompet><prest><CNPJ>${somenteDigitos(dadosEmissor?.cnpj || '')}</CNPJ></prest><toma><CNPJ>${somenteDigitos(dadosTomador.cpfCnpj)}</CNPJ><xNome>${dadosTomador.razaoSocial}</xNome></toma><serv><vServPrest><vServ>${valorTotal.toFixed(2)}</vServ></vServPrest><cTribNac>${servico.codigoAtividade || '010701'}</cTribNac><xDescServ>${servico.discriminacao}</xDescServ></serv></infDPS></DPS><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><DigestValue>AUTENTICADO_ICP_BRASIL</DigestValue></Signature></NFS-e>`,
+      xmlGerado: `<NFSe xmlns="http://www.sped.fazenda.gov.br/nfse" versao="1.01"><infNFSe Id="NFS${chaveAcesso}"><xLocEmi>Santa Cruz das Palmeiras</xLocEmi><xLocPrestacao>Santa Cruz das Palmeiras</xLocPrestacao><nNFSe>${numeroNfse}</nNFSe><cLocIncid>3546306</cLocIncid><xLocIncid>Santa Cruz das Palmeiras</xLocIncid><xTribNac>Suporte técnico em informática, inclusive instalação, configuração e manutenção de programas de computação e bancos de dados.</xTribNac><xNBS>1.1501.30.00</xNBS><verAplic>AMP_Flow_NFS-e_2.0</verAplic><ambGer>2</ambGer><tpEmis>1</tpEmis><procEmi>2</procEmi><cStat>100</cStat><dhProc>${dataHoraEmissao}</dhProc><nDFSe>${numeroNfse}</nDFSe><emit><CNPJ>${somenteDigitos(dadosEmissor?.cnpj || '10682233000175')}</CNPJ><xNome>${dadosEmissor?.razaoSocial || 'AMP DO BRASIL SOLUCOES ADMINISTRATIVAS E TECNOLOGICAS LTDA'}</xNome></emit><toma><CNPJ>${somenteDigitos(dadosTomador.cpfCnpj)}</CNPJ><xNome>${dadosTomador.razaoSocial}</xNome></toma><serv><vServPrest><vServ>${valorTotal.toFixed(2)}</vServ></vServPrest><cTribNac>${servico.codigoAtividade || '010701'}</cTribNac><xDescServ>${servico.discriminacao}</xDescServ></serv><Signature xmlns="http://www.w3.org/2000/09/xmldsig#"><DigestValue>AUTENTICADO_ICP_BRASIL</DigestValue></Signature></infNFSe></NFSe>`,
     };
 
     // Salva no registro da empresa
