@@ -1,7 +1,7 @@
-import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp, Users, FileText } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp, Users, FileText, Calendar } from 'lucide-react';
 import { MESES } from '../utils/constants';
 
-export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAbrirEquipe, ehDono, onAbrirNfse, onAbrirAdmin }) {
+export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAbrirEquipe, ehDono, onAbrirNfse, onAbrirAgendamento, onAbrirAdmin }) {
   return (
     <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10, borderRadius: '0 0 20px 20px', boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -17,6 +17,16 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
               style={{ background: 'rgba(232, 163, 61, 0.18)', border: '1px solid rgba(232, 163, 61, 0.4)', borderRadius: 8, color: '#E8A33D', cursor: 'pointer', padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 700 }}
             >
               <span>⚡ Admin</span>
+            </button>
+          )}
+          {ehDono && onAbrirAgendamento && (
+            <button 
+              onClick={onAbrirAgendamento} 
+              title="Agenda & Atendimentos" 
+              style={{ background: 'rgba(245, 158, 11, 0.18)', border: '1px solid rgba(245, 158, 11, 0.45)', borderRadius: 8, color: '#FBBF24', cursor: 'pointer', padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}
+            >
+              <Calendar size={15} />
+              <span>Agenda</span>
             </button>
           )}
           {ehDono && onAbrirNfse && (

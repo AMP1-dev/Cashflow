@@ -22,10 +22,12 @@ import { FluxoCaixa } from './screens/FluxoCaixaScreen';
 import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
 import { NfseScreen } from './screens/NfseScreen';
+import { AgendamentoScreen } from './screens/AgendamentoScreen';
 
 function extrairModulosEmpresa(empresa) {
   let modNfse = empresa?.modulo_nfse;
   let modTradutor = empresa?.modulo_tradutor;
+  let modAgendamento = empresa?.modulo_agendamento;
   let ultimoNum = empresa?.nfse_ultimo_numero;
 
   if (empresa?.plano && typeof empresa.plano === 'string' && empresa.plano.startsWith('{')) {
@@ -33,6 +35,7 @@ function extrairModulosEmpresa(empresa) {
       const parsed = JSON.parse(empresa.plano);
       if (parsed.modulo_nfse !== undefined && modNfse === undefined) modNfse = parsed.modulo_nfse;
       if (parsed.modulo_tradutor !== undefined && modTradutor === undefined) modTradutor = parsed.modulo_tradutor;
+      if (parsed.modulo_agendamento !== undefined && modAgendamento === undefined) modAgendamento = parsed.modulo_agendamento;
       if (parsed.nfse_ultimo_numero !== undefined && !ultimoNum) ultimoNum = parsed.nfse_ultimo_numero;
     } catch (e) {}
   }
@@ -46,6 +49,10 @@ function extrairModulosEmpresa(empresa) {
     const local = localStorage.getItem(`amp_modulo_tradutor_${empresa.id}`);
     if (local !== null) modTradutor = local === 'true';
   }
+  if (modAgendamento === undefined && empresa?.id) {
+    const local = localStorage.getItem(`amp_modulo_agendamento_${empresa.id}`);
+    if (local !== null) modAgendamento = local === 'true';
+  }
   if (!ultimoNum && empresa?.id) {
     ultimoNum = parseInt(localStorage.getItem(`amp_nfse_ultimo_numero_${empresa.id}`) || 0);
   }
@@ -53,6 +60,7 @@ function extrairModulosEmpresa(empresa) {
   return {
     modulo_nfse: !!modNfse,
     modulo_tradutor: !!modTradutor,
+    modulo_agendamento: !!modAgendamento,
     nfse_ultimo_numero: ultimoNum || 0,
   };
 }
@@ -234,6 +242,7 @@ export default function CashFlowApp() {
           plano: e.plano,
           modulo_nfse: modulos.modulo_nfse,
           modulo_tradutor: modulos.modulo_tradutor,
+          modulo_agendamento: modulos.modulo_agendamento,
           nfse_ultimo_numero: modulos.nfse_ultimo_numero,
         };
       }));
@@ -584,6 +593,7 @@ export default function CashFlowApp() {
       plano: 'padrao',
       modulo_nfse: !!dados.modulo_nfse,
       modulo_tradutor: !!dados.modulo_tradutor,
+      modulo_agendamento: !!dados.modulo_agendamento,
       nfse_ultimo_numero: dados.nfse_ultimo_numero || 0,
     });
     payload.plano = modulosJson;
@@ -603,12 +613,15 @@ export default function CashFlowApp() {
       }
     }
 
-    // Persiste a flag de NFS-e e Tradutor no localStorage do dispositivo para funcionar imediatamente sem travar o painel
+    // Persiste as flags de módulos no localStorage do dispositivo para funcionar imediatamente sem travar o painel
     if (dados.modulo_nfse !== undefined) {
       localStorage.setItem(`amp_modulo_nfse_${id}`, dados.modulo_nfse ? 'true' : 'false');
     }
     if (dados.modulo_tradutor !== undefined) {
       localStorage.setItem(`amp_modulo_tradutor_${id}`, dados.modulo_tradutor ? 'true' : 'false');
+    }
+    if (dados.modulo_agendamento !== undefined) {
+      localStorage.setItem(`amp_modulo_agendamento_${id}`, dados.modulo_agendamento ? 'true' : 'false');
     }
     if (dados.nfse_ultimo_numero !== undefined) {
       localStorage.setItem(`amp_nfse_ultimo_numero_${id}`, String(dados.nfse_ultimo_numero || 0));
@@ -702,6 +715,7 @@ export default function CashFlowApp() {
   const ehAdmin = !!(empresaAtualObj?.ehAdmin || sessao?.ehAdmin);
   const moduloNfseAtivo = !!(ehAdmin || empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
   const moduloTradutorAtivo = !!(ehAdmin || empresaAtualObj?.modulo_tradutor || localStorage.getItem(`amp_modulo_tradutor_${empresaAtualObj?.id}`) === 'true');
+  const moduloAgendamentoAtivo = !!(ehAdmin || empresaAtualObj?.modulo_agendamento || localStorage.getItem(`amp_modulo_agendamento_${empresaAtualObj?.id}`) === 'true');
 
   return (
     <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
@@ -712,6 +726,7 @@ export default function CashFlowApp() {
         mesAtual={mesAtual}
         setMesAtual={setMesAtual}
         onAbrirEquipe={() => setShowEquipeModal(true)}
+        onAbrirAgendamento={moduloAgendamentoAtivo ? () => setTela('agendamento') : null}
         onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
         onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
         ehDono={ehDono}
@@ -744,6 +759,20 @@ export default function CashFlowApp() {
               onRemove={removeLancamento}
               onEditar={abrirEdicao}
               onAbrirImportacao={() => setShowImportarModal(true)}
+            />
+          )}
+          {tela === 'agendamento' && moduloAgendamentoAtivo && (
+            <AgendamentoScreen
+              empresa={empresaAtualObj}
+              mesAtual={mesAtual}
+              anoAtual={anoAtual}
+              moduloNfseAtivo={moduloNfseAtivo}
+              onVoltar={() => setTela('dashboard')}
+              onAdicionarLancamentoAoCaixa={(l) => addLancamento(l)}
+              onAbrirEmissaoNfse={(dados) => {
+                setDadosIniciaisNfseAvulso(dados);
+                setShowNfseModalAvulso(true);
+              }}
             />
           )}
           {tela === 'nfse' && ehDono && moduloNfseAtivo && (

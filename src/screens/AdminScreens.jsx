@@ -192,6 +192,11 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
                           ✨ TRADUTOR IA
                         </span>
                       )}
+                      {a.modulo_agendamento && (
+                        <span style={{ fontSize: 9.5, fontWeight: 800, color: '#92400E', background: '#FEF3C7', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                          🗓️ AGENDA
+                        </span>
+                      )}
                     </div>
                     <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
                     {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
@@ -258,6 +263,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
   const [moduloNfse, setModuloNfse] = useState(assinante.modulo_nfse ?? false);
   const [moduloTradutor, setModuloTradutor] = useState(assinante.modulo_tradutor ?? false);
+  const [moduloAgendamento, setModuloAgendamento] = useState(assinante.modulo_agendamento ?? false);
   const [ultimoNumeroNfse, setUltimoNumeroNfse] = useState(assinante.nfse_ultimo_numero || '');
   const [salvando, setSalvando] = useState(false);
   const [enviandoLink, setEnviandoLink] = useState(false);
@@ -269,6 +275,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
     // Também salva no localStorage como fallback para testes imediatos
     localStorage.setItem(`amp_modulo_nfse_${assinante.id}`, moduloNfse ? 'true' : 'false');
     localStorage.setItem(`amp_modulo_tradutor_${assinante.id}`, moduloTradutor ? 'true' : 'false');
+    localStorage.setItem(`amp_modulo_agendamento_${assinante.id}`, moduloAgendamento ? 'true' : 'false');
 
     const resultado = await onAtualizarDados(assinante.id, {
       status,
@@ -276,6 +283,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       valor_assinatura: valor ? parseFloat(valor) : null,
       modulo_nfse: moduloNfse,
       modulo_tradutor: moduloTradutor,
+      modulo_agendamento: moduloAgendamento,
       nfse_ultimo_numero: ultimoNumeroNfse ? parseInt(ultimoNumeroNfse) : 0,
     });
     setSalvando(false);
@@ -412,6 +420,27 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
             checked={moduloTradutor}
             onChange={e => setModuloTradutor(e.target.checked)}
             style={{ accentColor: '#10B981', width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </label>
+      </div>
+
+      {/* ── CHAVE DE ATIVAÇÃO DO MÓDULO AGENDAMENTOS (ADD-ON COBRADO) ── */}
+      <div style={{ background: '#FAF8F3', border: '1.5px solid #D97706', borderRadius: 12, padding: '14px', marginBottom: 20 }}>
+        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27', display: 'flex', alignItems: 'center', gap: 6 }}>
+              🗓️ Agenda & Atendimentos Inteligentes
+              <span style={{ fontSize: 9.5, background: '#D97706', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>PREMIUM</span>
+            </div>
+            <div style={{ fontSize: 11, color: '#5C5A4F', marginTop: 2 }}>
+              Habilita a agenda para clínicas, consultórios, salões e profissionais com integração direta ao Caixa e DRE
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={moduloAgendamento}
+            onChange={e => setModuloAgendamento(e.target.checked)}
+            style={{ accentColor: '#D97706', width: 20, height: 20, cursor: 'pointer' }}
           />
         </label>
       </div>
