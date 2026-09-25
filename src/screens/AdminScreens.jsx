@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, LogOut } from 'lucide-react';
 import { STATUS_ASSINATURA } from '../utils/constants';
 import { ModalShell, FieldLabel, EmptyState } from '../components/UIComponents';
