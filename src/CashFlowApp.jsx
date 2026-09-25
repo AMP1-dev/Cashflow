@@ -25,6 +25,7 @@ import { FormacaoPrecoScreen } from './screens/FormacaoPrecoScreen';
 import { GestaoAVistaScreen } from './screens/GestaoAVistaScreen';
 import { NfseScreen } from './screens/NfseScreen';
 import { AgendamentoScreen } from './screens/AgendamentoScreen';
+import { PaginaAgendamentoPublico } from './screens/PaginaAgendamentoPublico';
 
 function extrairModulosEmpresa(empresa) {
   let modNfse = empresa?.modulo_nfse;
@@ -84,6 +85,19 @@ export default function CashFlowApp() {
   const [empresaAtualObj, setEmpresaAtualObj] = useState(null);
   const [telaAuth, setTelaAuth] = useState('login');
   const [emailRecuperacao, setEmailRecuperacao] = useState('');
+
+  // Auto-Agendamento Público (via link externo ?agenda=ID ou /agendar/ID)
+  const [empresaAgendamentoPublicoId, setEmpresaAgendamentoPublicoId] = useState(() => {
+    try {
+      const url = new URL(window.location.href);
+      const param = url.searchParams.get('agenda') || url.searchParams.get('agendar');
+      if (param) return param;
+      const pathParts = url.pathname.split('/').filter(Boolean);
+      if (pathParts[0] === 'agendar' && pathParts[1]) return pathParts[1];
+      if (pathParts[0] === 'agenda' && pathParts[1]) return pathParts[1];
+    } catch (e) {}
+    return null;
+  });
 
   const isNovoCadastroRef = useRef(false);
 
@@ -852,6 +866,24 @@ export default function CashFlowApp() {
     setSessao(null);
     setTelaAuth('login');
     setTela('dashboard');
+  }
+
+  // ─── ROTA PÚBLICA DE AUTO-AGENDAMENTO (Sem necessidade de login do cliente) ───
+  if (empresaAgendamentoPublicoId) {
+    return (
+      <PaginaAgendamentoPublico
+        empresaId={empresaAgendamentoPublicoId}
+        onVoltar={() => {
+          try {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('agenda');
+            url.searchParams.delete('agendar');
+            window.history.pushState({}, '', url.pathname + (url.search ? url.search : ''));
+          } catch (e) {}
+          setEmpresaAgendamentoPublicoId(null);
+        }}
+      />
+    );
   }
 
   if (!sessao) {

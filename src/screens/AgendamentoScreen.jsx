@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Calendar, Clock, User, Plus, CheckCircle2, AlertCircle, 
   MessageCircle, DollarSign, FileText, ArrowLeft, ChevronLeft, ChevronRight, 
-  Trash2, Edit3, X, Sparkles, Filter, ShoppingBag 
+  Trash2, Edit3, X, Sparkles, Filter, ShoppingBag,
+  Share2, Copy, Check, ExternalLink, Globe
 } from 'lucide-react';
 import { formatBRL, formatCompacto, daysInMonth, somenteDigitos } from '../utils/formatters';
 import { MESES } from '../utils/constants';
@@ -12,6 +13,7 @@ import {
   getServicosSugeridosPorRamo 
 } from '../utils/agendamentoService';
 import { FieldLabel, inputStyle, ModalShell } from '../components/UIComponents';
+import { PaginaAgendamentoPublico } from './PaginaAgendamentoPublico';
 
 export function AgendamentoScreen({ 
   empresa, 
@@ -36,6 +38,42 @@ export function AgendamentoScreen({
   const [modalNovoAberto, setModalNovoAberto] = useState(false);
   const [modalFinalizar, setModalFinalizar] = useState(null); // agendamento selecionado para checkout
   const [agendamentoEditando, setAgendamentoEditando] = useState(null);
+
+  // Auto-Agendamento Online Público
+  const [copiadoLink, setCopiadoLink] = useState(false);
+  const [modalPreviewOnline, setModalPreviewOnline] = useState(false);
+
+  // Sincroniza agendamentos em tempo real do Supabase
+  useEffect(() => {
+    if (empresa?.id) {
+      agendamentoService.getAgendamentosAsync(empresa.id).then(res => {
+        if (res && res.length > 0) setLista(res);
+      });
+    }
+  }, [empresa?.id]);
+
+  const linkAgendamentoPublico = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    return `${window.location.origin}/?agenda=${empresa?.id || ''}`;
+  }, [empresa?.id]);
+
+  function handleCopiarLink() {
+    if (!linkAgendamentoPublico) return;
+    navigator.clipboard.writeText(linkAgendamentoPublico).then(() => {
+      setCopiadoLink(true);
+      setTimeout(() => setCopiadoLink(false), 2500);
+    }).catch(() => {
+      prompt('Copie o link abaixo para compartilhar com seus clientes:', linkAgendamentoPublico);
+    });
+  }
+
+  function handleCompartilharWhatsApp() {
+    const nomeEmp = empresa.nome_fantasia || empresa.razao_social || 'Nosso Espaço';
+    const msg = encodeURIComponent(
+      `✨ *Agendamento Online - ${nomeEmp}*\n\nOlá! Agora você pode agendar seu horário de forma rápida e 100% online direto pelo seu celular:\n\n👉 ${linkAgendamentoPublico}\n\nEscolha o serviço, a data e o melhor horário disponível para você. Te esperamos! 📅`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
+  }
 
   // Formulário de Novo/Edição
   const [formCliente, setFormCliente] = useState('');
@@ -336,6 +374,124 @@ export function AgendamentoScreen({
         </button>
       )}
 
+      {/* ── CARD PÁGINA PÚBLICA DE AUTO-AGENDAMENTO DO CLIENTE ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #F0FDF4 0%, #FFFFFF 100%)',
+        border: '1.5px solid #86EFAC',
+        borderRadius: 14,
+        padding: '14px 16px',
+        marginBottom: 16,
+        boxShadow: '0 3px 10px rgba(22,101,52,0.06)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <span style={{
+              width: 28, height: 28, borderRadius: 8, background: '#16A34A', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
+            }}>
+              <Globe size={16} />
+            </span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#14532D' }}>
+                Sua Página de Auto-Agendamento Online
+              </div>
+              <div style={{ fontSize: 11, color: '#4B5563' }}>
+                Seu cliente abre o link no celular, escolhe o serviço e agenda sozinho 24h por dia
+              </div>
+            </div>
+          </div>
+          <span style={{ fontSize: 10.5, fontWeight: 700, color: '#15803D', background: '#DCFCE7', padding: '3px 8px', borderRadius: 6 }}>
+            Ativo & Pronto
+          </span>
+        </div>
+
+        {/* Link Input & Actions */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          background: '#fff',
+          border: '1px solid #D1D5DB',
+          borderRadius: 9,
+          padding: '6px 8px',
+          marginTop: 6,
+          flexWrap: 'wrap'
+        }}>
+          <div style={{
+            flex: '1 1 180px',
+            fontSize: 11.5,
+            color: '#374151',
+            fontFamily: 'monospace',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {linkAgendamentoPublico}
+          </div>
+
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button
+              onClick={handleCopiarLink}
+              style={{
+                padding: '6px 11px',
+                borderRadius: 7,
+                border: '1px solid #16A34A',
+                background: copiadoLink ? '#16A34A' : '#F0FDF4',
+                color: copiadoLink ? '#fff' : '#15803D',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {copiadoLink ? <Check size={13} /> : <Copy size={13} />}
+              {copiadoLink ? 'Copiado!' : 'Copiar Link'}
+            </button>
+
+            <button
+              onClick={handleCompartilharWhatsApp}
+              style={{
+                padding: '6px 11px',
+                borderRadius: 7,
+                border: 'none',
+                background: '#25D366',
+                color: '#fff',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4
+              }}
+            >
+              <MessageCircle size={13} /> Enviar WhatsApp
+            </button>
+
+            <button
+              onClick={() => setModalPreviewOnline(true)}
+              style={{
+                padding: '6px 11px',
+                borderRadius: 7,
+                border: '1px solid #CBD5E1',
+                background: '#F8FAFC',
+                color: '#334155',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4
+              }}
+            >
+              <ExternalLink size={13} /> Ver como Cliente
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* ── NAVEGADOR DO MÊS / ANO DA AGENDA ── */}
       <div style={{
         background: '#0F2B27',
@@ -624,6 +780,23 @@ export function AgendamentoScreen({
                         {ag.formaPagamento && (
                           <span style={{ fontSize: 10, color: '#7A7868', background: '#F0EDE3', padding: '2px 6px', borderRadius: 5 }}>
                             {ag.formaPagamento.toUpperCase()}
+                          </span>
+                        )}
+
+                        {ag.origem === 'online' && (
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: '#0369A1',
+                            background: '#E0F2FE',
+                            border: '1px solid #BAE6FD',
+                            padding: '2px 6px',
+                            borderRadius: 5,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3
+                          }}>
+                            <Globe size={10} /> Online
                           </span>
                         )}
                       </div>
@@ -1065,6 +1238,22 @@ export function AgendamentoScreen({
                 </button>
               )}
             </div>
+          </div>
+        </ModalShell>
+      )}
+
+      {/* Modal de Preview da Página Pública do Cliente */}
+      {modalPreviewOnline && (
+        <ModalShell
+          title="Pré-visualização: Como o Cliente enxerga no Celular"
+          onClose={() => setModalPreviewOnline(false)}
+          maxWidth={500}
+        >
+          <div style={{ maxHeight: '82vh', overflowY: 'auto', margin: '-16px' }}>
+            <PaginaAgendamentoPublico
+              empresaId={empresa.id}
+              onVoltar={() => setModalPreviewOnline(false)}
+            />
           </div>
         </ModalShell>
       )}
