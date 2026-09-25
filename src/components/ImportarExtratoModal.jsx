@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { UploadCloud, CheckCircle2, AlertCircle, FileText, ArrowRight, Trash2, Check, RefreshCw } from 'lucide-react';
+import * as XLSX from 'xlsx';
 import { ModalShell } from './UIComponents';
 import { BANCOS } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
@@ -57,7 +58,7 @@ export function parseOFX(text) {
   return transacoes;
 }
 
-// Parser inteligente para CSV bancário
+// Parser inteligente para CSV bancário e de Maquininhas de Cartão (Stone, PagBank, Mercado Pago, Cielo, Rede, etc.)
 export function parseCSV(text) {
   const linhas = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
   if (linhas.length < 2) return [];
@@ -69,22 +70,47 @@ export function parseCSV(text) {
   const cabecalho = linhas[0].toLowerCase().split(separador).map(c => c.replace(/["']/g, '').trim());
 
   let idxData = cabecalho.findIndex(c => c.includes('data') || c.includes('dt') || c.includes('date'));
-  let idxDesc = cabecalho.findIndex(c => c.includes('descri') || c.includes('historico') || c.includes('memo') || c.includes('detalhe') || c.includes('transa'));
-  let idxValor = cabecalho.findIndex(c => (c.includes('valor') || c.includes('amount') || c.includes('val')) && !c.includes('saldo'));
+  let idxDesc = cabecalho.findIndex(c => c.includes('descri') || c.includes('historico') || c.includes('histórico') || c.includes('memo') || c.includes('detalhe') || c.includes('transa') || c.includes('resumo'));
+  
+  // Colunas específicas de Maquininha / Adquirente
+  const idxBandeira = cabecalho.findIndex(c => c.includes('bandeira') || c.includes('brand') || c.includes('cartao') || c.includes('cartão'));
+  const idxModalidade = cabecalho.findIndex(c => c.includes('modalidade') || c.includes('forma') || c.includes('tipo de oper') || c.includes('tipo oper') || c.includes('produto') || (c.includes('tipo') && !c.includes('tipo de conta')));
+  const idxParcelas = cabecalho.findIndex(c => c.includes('parcela') || c.includes('plano'));
+  const idxStatus = cabecalho.findIndex(c => c.includes('status') || c.includes('situacao') || c.includes('situação') || c.includes('estado'));
+  const idxValorLiquido = cabecalho.findIndex(c => (c.includes('liquido') || c.includes('líquido') || c.includes('liq')) && !c.includes('saldo'));
+  const idxValorBruto = cabecalho.findIndex(c => (c.includes('bruto') || c.includes('valor da venda') || c.includes('valor trans') || c.includes('total')) && !c.includes('saldo'));
+  const idxValorComum = cabecalho.findIndex(c => (c.includes('valor') || c.includes('amount') || c.includes('val')) && !c.includes('saldo'));
+
+  // Priorização de valor: se tiver líquido (maquininha), usa líquido; senão valor bruto; senão valor comum
+  let idxValor = idxValorLiquido !== -1 ? idxValorLiquido : (idxValorBruto !== -1 ? idxValorBruto : idxValorComum);
+
+  const ehMaquininha = idxBandeira !== -1 || idxModalidade !== -1 || idxValorLiquido !== -1;
 
   if (idxData === -1) idxData = 0;
-  if (idxDesc === -1) idxDesc = 1;
+  if (idxDesc === -1 && !ehMaquininha) idxDesc = 1;
   if (idxValor === -1) idxValor = 2;
 
   const transacoes = [];
 
   for (let i = 1; i < linhas.length; i++) {
     const colunas = linhas[i].split(separador).map(c => c.replace(/["']/g, '').trim());
-    if (colunas.length <= Math.max(idxData, idxDesc, idxValor)) continue;
+    if (colunas.length <= Math.max(idxData, idxValor)) continue;
+
+    // Se tiver status e for cancelada/estornada, ignora
+    if (idxStatus !== -1 && colunas[idxStatus]) {
+      const st = colunas[idxStatus].toLowerCase();
+      if (st.includes('cancel') || st.includes('estorn') || st.includes('rejeit') || st.includes('recus') || st.includes('negad') || st.includes('falh')) {
+        continue;
+      }
+    }
 
     const dataStr = colunas[idxData];
-    const desc = colunas[idxDesc] || 'Transação CSV';
     let valStr = colunas[idxValor];
+
+    // Se o valor líquido for zero ou vazio e tiver valor bruto, usa o bruto
+    if ((!valStr || parseFloat(valStr) === 0) && idxValorBruto !== -1 && colunas[idxValorBruto]) {
+      valStr = colunas[idxValorBruto];
+    }
 
     if (!dataStr || !valStr) continue;
 
@@ -100,12 +126,12 @@ export function parseCSV(text) {
 
     let dia, mes, ano;
     if (dataStr.includes('/')) {
-      const partes = dataStr.split('/');
+      const partes = dataStr.split(' ')[0].split('/');
       dia = parseInt(partes[0]);
       mes = parseInt(partes[1]) - 1;
       ano = parseInt(partes[2]);
     } else if (dataStr.includes('-')) {
-      const partes = dataStr.split('-');
+      const partes = dataStr.split(' ')[0].split('-');
       if (partes[0].length === 4) {
         ano = parseInt(partes[0]);
         mes = parseInt(partes[1]) - 1;
@@ -118,7 +144,33 @@ export function parseCSV(text) {
     }
 
     if (dia && mes !== undefined && !isNaN(dia) && !isNaN(mes)) {
-      const tipo = valorRaw < 0 ? 'despesa' : 'receita';
+      let desc = (idxDesc !== -1 && colunas[idxDesc]) ? colunas[idxDesc] : '';
+      let formaRecebimento = null;
+
+      if (ehMaquininha) {
+        const mod = idxModalidade !== -1 ? colunas[idxModalidade] : '';
+        const band = idxBandeira !== -1 ? colunas[idxBandeira] : '';
+        const parc = idxParcelas !== -1 ? colunas[idxParcelas] : '';
+
+        const partesDesc = [];
+        if (mod) partesDesc.push(mod);
+        if (band) partesDesc.push(band);
+        if (parc && parc !== '1' && parc !== '1x' && !mod.includes(parc)) partesDesc.push(parc);
+
+        desc = partesDesc.length > 0 ? `Venda Cartão ${partesDesc.join(' - ')}` : (desc || 'Venda Cartão / Maquininha');
+
+        const modLower = (mod || '').toLowerCase();
+        if (modLower.includes('créd') || modLower.includes('cred') || modLower.includes('parc') || modLower.includes('prazo')) {
+          formaRecebimento = 'À prazo';
+        } else {
+          formaRecebimento = 'À vista/PIX';
+        }
+      }
+
+      if (!desc) desc = 'Lançamento Extrato';
+
+      const tipo = ehMaquininha ? 'receita' : (valorRaw < 0 ? 'despesa' : 'receita');
+
       transacoes.push({
         idTemp: Math.random().toString(36).substring(2, 9),
         descricao: desc,
@@ -127,6 +179,9 @@ export function parseCSV(text) {
         dia,
         mes,
         ano: ano || new Date().getFullYear(),
+        formaRecebimento: formaRecebimento || (tipo === 'receita' ? 'À vista/PIX' : null),
+        banco: ehMaquininha ? 'Maquininha' : null,
+        meio_pagamento: ehMaquininha ? 'Maquininha de Cartão' : 'Extrato Bancário',
         selecionado: true,
       });
     }
@@ -183,45 +238,71 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
     );
   }
 
+  function processarConteudo(textoOuBuffer, formato) {
+    let parsed = [];
+    if (formato === 'ofx') {
+      parsed = parseOFX(textoOuBuffer);
+    } else {
+      parsed = parseCSV(textoOuBuffer);
+    }
+
+    if (parsed.length === 0) {
+      alert('Não foi possível identificar transações válidas neste arquivo. Verifique se o arquivo contém extratos ou relatórios com data e valor.');
+      return;
+    }
+
+    const processados = parsed.map(t => {
+      const duplicado = checarDuplicata(t);
+      const { categoria, subcategoria } = autoSugerirCategoria(t.descricao, t.tipo);
+      return {
+        ...t,
+        banco: t.banco || bancoSelecionado || '',
+        categoria,
+        subcategoria,
+        duplicado,
+        selecionado: !duplicado,
+      };
+    });
+
+    setTransacoes(processados);
+    setEtapa(2);
+  }
+
   function handleFileChange(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     setNomeArquivo(file.name);
-    const reader = new FileReader();
+    const nome = file.name.toLowerCase();
 
-    reader.onload = (evt) => {
-      const content = evt.target.result;
-      let parsed = [];
-      if (file.name.toLowerCase().endsWith('.ofx')) {
-        parsed = parseOFX(content);
-      } else {
-        parsed = parseCSV(content);
-      }
-
-      if (parsed.length === 0) {
-        alert('Não foi possível identificar transações válidas neste arquivo. Verifique o formato OFX ou CSV.');
-        return;
-      }
-
-      const processados = parsed.map(t => {
-        const duplicado = checarDuplicata(t);
-        const { categoria, subcategoria } = autoSugerirCategoria(t.descricao, t.tipo);
-        return {
-          ...t,
-          banco: bancoSelecionado || '',
-          categoria,
-          subcategoria,
-          duplicado,
-          selecionado: !duplicado,
-        };
-      });
-
-      setTransacoes(processados);
-      setEtapa(2);
-    };
-
-    reader.readAsText(file, 'ISO-8859-1');
+    if (nome.endsWith('.xlsx') || nome.endsWith('.xls')) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+          processarConteudo(csvContent, 'csv');
+        } catch (err) {
+          alert('Erro ao ler planilha Excel da maquininha: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else if (nome.endsWith('.ofx')) {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        processarConteudo(evt.target.result, 'ofx');
+      };
+      reader.readAsText(file, 'ISO-8859-1');
+    } else {
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        processarConteudo(evt.target.result, 'csv');
+      };
+      reader.readAsText(file, 'ISO-8859-1');
+    }
   }
 
   function toggleItem(idTemp) {
@@ -253,9 +334,9 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
         ano: t.ano,
         categoria: t.tipo === 'despesa' ? (t.categoria || 'fixa') : null,
         subcategoria: t.tipo === 'despesa' ? (t.subcategoria || null) : null,
-        formaRecebimento: t.tipo === 'receita' ? 'À vista/PIX' : null,
+        formaRecebimento: t.formaRecebimento || (t.tipo === 'receita' ? 'À vista/PIX' : null),
         banco: t.banco || bancoSelecionado || null,
-        meio_pagamento: 'Extrato Bancário',
+        meio_pagamento: t.meio_pagamento || 'Extrato Bancário',
       })));
       onClose();
     } catch (err) {
@@ -266,23 +347,23 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
   }
 
   return (
-    <ModalShell onClose={onClose} titulo="Importar e Conciliar Extrato (OFX / CSV)">
+    <ModalShell onClose={onClose} titulo="Importar Extrato Bancário & Maquininhas">
       {etapa === 1 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <div style={{ fontSize: 13, color: '#5C5A4F', lineHeight: 1.4 }}>
-            Faça upload do extrato emitido pelo banco em formato <strong>.OFX</strong> (recomendado) ou <strong>.CSV</strong> para importar lançamentos com detecção de duplicatas e sugestão de categorias.
+            Faça upload do extrato bancário (<strong>.OFX</strong> ou <strong>.CSV</strong>) ou da planilha de vendas da sua maquininha de cartão (<strong>.CSV</strong> ou <strong>.XLSX</strong> da Stone, PagBank, Mercado Pago, Cielo, Rede, InfinitePay, etc.).
           </div>
 
           <div>
             <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: '#5C5A4F', marginBottom: 4 }}>
-              Banco / Conta Padrão (Opcional)
+              Banco / Canal Padrão (Opcional)
             </label>
             <select
               value={bancoSelecionado}
               onChange={e => setBancoSelecionado(e.target.value)}
               style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #E5E0D5', fontSize: 13.5, background: '#fff' }}
             >
-              <option value="">Selecionar banco padrão do arquivo...</option>
+              <option value="">Selecionar banco ou maquininha padrão...</option>
               {BANCOS.map(b => <option key={b} value={b}>{b}</option>)}
             </select>
           </div>
@@ -305,11 +386,11 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
               Toque aqui para escolher o arquivo
             </div>
             <div style={{ fontSize: 11.5, color: '#6A8A82' }}>
-              Extrato bancário em .OFX ou .CSV
+              Extratos bancários (.OFX, .CSV) e Maquininhas (.CSV, .XLSX)
             </div>
             <input
               type="file"
-              accept=".ofx,.csv,text/csv,application/vnd.ms-excel"
+              accept=".ofx,.csv,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={handleFileChange}
               style={{ display: 'none' }}
             />

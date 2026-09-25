@@ -189,6 +189,7 @@ export const BANCOS = [
   'Nubank', 'Itaú', 'Bradesco', 'Santander', 'Banco do Brasil',
   'Caixa Econômica Federal', 'BTG Pactual', 'Inter', 'C6 Bank', 'XP',
   'Sicoob', 'Sicredi', 'Safra', 'BV', 'Banrisul', 'Agibank', 'Neon',
-  'Original', 'PicPay', 'Mercado Pago', 'PagSeguro', 'Cresol',
-  'Daycoval', 'Bmg', 'Modal', 'Sofisa', 'Fibra', 'Pine', 'Outro',
+  'Original', 'PicPay', 'Mercado Pago', 'PagBank', 'PagSeguro',
+  'Stone', 'Ton', 'Cielo', 'Rede', 'InfinitePay', 'Getnet',
+  'Maquininha de Cartão', 'Cresol', 'Daycoval', 'Bmg', 'Modal', 'Outro',
 ];

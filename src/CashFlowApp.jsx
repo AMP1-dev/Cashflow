@@ -881,9 +881,9 @@ export default function CashFlowApp() {
 
   const ehDono = empresaAtualObj?.papel !== 'funcionario';
   const ehAdmin = !!(empresaAtualObj?.ehAdmin || sessao?.ehAdmin);
-  const moduloNfseAtivo = !!(ehAdmin || empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
-  const moduloTradutorAtivo = !!(ehAdmin || empresaAtualObj?.modulo_tradutor || localStorage.getItem(`amp_modulo_tradutor_${empresaAtualObj?.id}`) === 'true');
-  const moduloAgendamentoAtivo = !!(ehAdmin || empresaAtualObj?.modulo_agendamento || localStorage.getItem(`amp_modulo_agendamento_${empresaAtualObj?.id}`) === 'true');
+  const moduloNfseAtivo = !!(empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
+  const moduloTradutorAtivo = !!(empresaAtualObj?.modulo_tradutor || localStorage.getItem(`amp_modulo_tradutor_${empresaAtualObj?.id}`) === 'true');
+  const moduloAgendamentoAtivo = !!(empresaAtualObj?.modulo_agendamento || localStorage.getItem(`amp_modulo_agendamento_${empresaAtualObj?.id}`) === 'true');
 
   return (
     <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
