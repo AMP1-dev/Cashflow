@@ -154,7 +154,13 @@ export const agendamentoService = {
       status: agendamento.status,
       origem: agendamento.origem,
       observacoes: agendamento.observacoes
-    }).then().catch(() => {});
+    }).then(({ error }) => {
+      if (error) {
+        console.warn('[Agendamento] Erro no Supabase (verifique se a tabela agendamentos foi criada no SQL Editor):', error);
+      }
+    }).catch(err => {
+      console.warn('[Agendamento] Falha de rede/Supabase:', err);
+    });
 
     return agendamento;
   },

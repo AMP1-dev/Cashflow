@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Calendar as CalendarIcon, Clock, CheckCircle2, User, Phone, 
   MapPin, Sparkles, MessageCircle, ChevronLeft, ChevronRight, 
-  ArrowLeft, Check, AlertCircle, Share2 
+  ArrowLeft, Check, AlertCircle, Share2, CalendarDays 
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { formatBRL, daysInMonth, somenteDigitos } from '../utils/formatters';
@@ -12,20 +12,61 @@ import {
   getServicosSugeridosPorRamo 
 } from '../utils/agendamentoService';
 
+/**
+ * Função utilitária para chamar o WhatsApp nativo no celular sem passar por telas intermediárias de navegador
+ */
+function abrirWhatsAppDireto(telefone, texto) {
+  const telLimpo = somenteDigitos(telefone || '');
+  const telFinal = telLimpo ? (telLimpo.startsWith('55') ? telLimpo : '55' + telLimpo) : '';
+  const textoCodificado = encodeURIComponent(texto);
+
+  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent || '');
+
+  if (isMobile) {
+    const appUrl = telFinal 
+      ? `whatsapp://send?phone=${telFinal}&text=${textoCodificado}`
+      : `whatsapp://send?text=${textoCodificado}`;
+
+    window.location.href = appUrl;
+
+    // Fallback de segurança se o app nativo não responder em 1.5s
+    setTimeout(() => {
+      const webUrl = telFinal
+        ? `https://api.whatsapp.com/send?phone=${telFinal}&text=${textoCodificado}`
+        : `https://api.whatsapp.com/send?text=${textoCodificado}`;
+      window.open(webUrl, '_blank');
+    }, 1500);
+  } else {
+    const webUrl = telFinal
+      ? `https://api.whatsapp.com/send?phone=${telFinal}&text=${textoCodificado}`
+      : `https://api.whatsapp.com/send?text=${textoCodificado}`;
+    window.open(webUrl, '_blank');
+  }
+}
+
 export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
   const [empresa, setEmpresa] = useState(null);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState(null);
 
-  // Estados do Agendamento
-  const [passo, setPasso] = useState(1); // 1: Serviço, 2: Data/Hora, 3: Dados, 4: Sucesso
-  const [servicoSelecionado, setServicoSelecionado] = useState(null);
+  // Fluxo em Etapas:
+  // 1: Data no Calendário (focado na primeira dobra da tela)
+  // 2: Horários Disponíveis do dia selecionado
+  // 3: Escolha do Serviço e Dados do Cliente
+  // 4: Sucesso & Envio direto no WhatsApp
+  const [passo, setPasso] = useState(1);
 
   const hoje = new Date();
-  const [mesAgenda, setMesAgenda] = useState(hoje.getMonth());
-  const [anoAgenda, setAnoAgenda] = useState(hoje.getFullYear());
-  const [dataSelecionada, setDataSelecionada] = useState(() => hoje.toISOString().split('T')[0]);
+  const hojeAno = hoje.getFullYear();
+  const hojeMes = hoje.getMonth();
+  const hojeDia = hoje.getDate();
+  const hojeIso = hoje.toISOString().split('T')[0];
+
+  const [mesAgenda, setMesAgenda] = useState(hojeMes);
+  const [anoAgenda, setAnoAgenda] = useState(hojeAno);
+  const [dataSelecionada, setDataSelecionada] = useState(hojeIso);
   const [horarioSelecionado, setHorarioSelecionado] = useState('');
+  const [servicoSelecionado, setServicoSelecionado] = useState(null);
 
   // Dados do Cliente
   const [clienteNome, setClienteNome] = useState('');
@@ -53,7 +94,6 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
           .maybeSingle();
 
         if (error || !data) {
-          // Fallback caso seja teste local ou ID não cadastrado na nuvem
           const cacheStr = localStorage.getItem(`amp_empresa_${empresaId}`);
           if (cacheStr) {
             setEmpresa(JSON.parse(cacheStr));
@@ -92,7 +132,11 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
   // Lista de Serviços Disponíveis para a Categoria da Empresa
   const listaServicos = useMemo(() => {
     const cat = empresa?.categoria_agendamento || 'beleza';
-    return getServicosSugeridosPorRamo(cat);
+    const servs = getServicosSugeridosPorRamo(cat);
+    if (!servicoSelecionado && servs.length > 0) {
+      setServicoSelecionado(servs[0]);
+    }
+    return servs;
   }, [empresa?.categoria_agendamento]);
 
   // Calendário
@@ -104,6 +148,42 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
   const horariosDisponiveis = useMemo(() => {
     return agendamentoService.getHorariosDisponiveis(empresaId, dataSelecionada);
   }, [empresaId, dataSelecionada]);
+
+  function navegarMes(delta) {
+    let novoMes = mesAgenda + delta;
+    let novoAno = anoAgenda;
+    if (novoMes > 11) {
+      novoMes = 0;
+      novoAno += 1;
+    } else if (novoMes < 0) {
+      novoMes = 11;
+      novoAno -= 1;
+    }
+
+    // Não permite navegar para meses no passado
+    if (novoAno < hojeAno || (novoAno === hojeAno && novoMes < hojeMes)) {
+      return;
+    }
+
+    setMesAgenda(novoMes);
+    setAnoAgenda(novoAno);
+  }
+
+  // Toque na data: seleciona e avança imediatamente para os horários
+  function handleSelecionarDia(diaNum) {
+    const diaStr = String(diaNum).padStart(2, '0');
+    const mesStr = String(mesAgenda + 1).padStart(2, '0');
+    const dataIso = `${anoAgenda}-${mesStr}-${diaStr}`;
+    setDataSelecionada(dataIso);
+    setHorarioSelecionado('');
+    setPasso(2); // Vai direto para horários
+  }
+
+  // Toque no horário: seleciona e avança imediatamente para os detalhes
+  function handleSelecionarHorario(h) {
+    setHorarioSelecionado(h);
+    setPasso(3); // Vai direto para serviço e contato
+  }
 
   // Formatação de telefone
   function handleTelefoneChange(v) {
@@ -117,13 +197,17 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
 
   // Finalizar Agendamento
   async function handleConfirmarAgendamento(e) {
-    e.preventDefault();
+    if (e) e.preventDefault();
     if (!clienteNome.trim()) {
       alert('Por favor, informe seu nome completo.');
       return;
     }
     if (somenteDigitos(clienteTelefone).length < 10) {
-      alert('Por favor, informe um WhatsApp válido com DDD.');
+      alert('Por favor, informe seu WhatsApp com DDD.');
+      return;
+    }
+    if (!servicoSelecionado) {
+      alert('Por favor, selecione o serviço desejado.');
       return;
     }
 
@@ -150,12 +234,21 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
     }
   }
 
+  function handleSalvarEEnviarWhatsApp() {
+    if (!agendamentoConfirmado) return;
+    const telDestino = empresa?.telefone_contato || empresa?.telefone;
+    const dataBr = agendamentoConfirmado.data.split('-').reverse().join('/');
+    const msg = `✨ *Novo Agendamento Realizado!*\n\nOlá, *${nomeEmpresa}*! Acabei de fazer um agendamento online:\n\n👤 *Cliente:* ${agendamentoConfirmado.clienteNome}\n📱 *WhatsApp:* ${agendamentoConfirmado.clienteTelefone}\n📅 *Data:* ${dataBr}\n⏰ *Horário:* ${agendamentoConfirmado.horario}\n💼 *Serviço:* ${agendamentoConfirmado.servicoNome}\n💰 *Valor:* ${formatBRL(agendamentoConfirmado.valor)}${agendamentoConfirmado.observacoes ? `\n📝 *Obs:* ${agendamentoConfirmado.observacoes}` : ''}\n\nFavor confirmar minha reserva. Muito obrigado(a)! 😊`;
+
+    abrirWhatsAppDireto(telDestino, msg);
+  }
+
   if (carregando) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF8F3', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid #1F5C52', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', margin: '0 auto 12px' }} />
-          <div style={{ fontSize: 14, fontWeight: 600, color: '#1F5C52' }}>Carregando agenda online...</div>
+          <div style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid #1F5C52', borderTopColor: 'transparent', animation: 'spin 0.8s linear infinite', margin: '0 auto 10px' }} />
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#1F5C52' }}>Carregando agenda online...</div>
         </div>
       </div>
     );
@@ -165,11 +258,11 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#FAF8F3', padding: 20, textAlign: 'center', fontFamily: 'system-ui, sans-serif' }}>
         <div style={{ background: '#fff', borderRadius: 16, padding: 24, border: '1px solid #E5E0D5', maxWidth: 400 }}>
-          <AlertCircle size={40} color="#DC2626" style={{ margin: '0 auto 12px' }} />
-          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Página Indisponível</h2>
+          <AlertCircle size={38} color="#DC2626" style={{ margin: '0 auto 10px' }} />
+          <h2 style={{ fontSize: 17, fontWeight: 700, color: '#111827', margin: '0 0 8px' }}>Página Indisponível</h2>
           <p style={{ fontSize: 13, color: '#4B5563', margin: '0 0 16px' }}>{erro}</p>
           {onVoltar && (
-            <button onClick={onVoltar} style={{ padding: '9px 16px', background: '#1F5C52', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
+            <button onClick={onVoltar} style={{ padding: '8px 16px', background: '#1F5C52', color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>
               Voltar
             </button>
           )}
@@ -178,507 +271,660 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
     );
   }
 
-  const nomeEmpresa = empresa?.nome_fantasia || empresa?.razao_social || 'Estabelecimento';
+  const nomeEmpresa = empresa?.nome_fantasia || empresa?.razao_social || 'Nosso Espaço';
+  const dataSelecionadaFormatada = dataSelecionada ? dataSelecionada.split('-').reverse().join('/') : '';
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#F4F1EA',
+      background: '#F8F6F0',
       fontFamily: 'var(--font-sans, system-ui, -apple-system, sans-serif)',
       color: '#1C2421',
-      paddingBottom: 40
+      display: 'flex',
+      flexDirection: 'column'
     }}>
-      {/* ── TOPO COM IDENTIFICAÇÃO DO ESTABELECIMENTO ── */}
+      {/* ── CABEÇALHO COMPACTO (ALTURA REDUZIDA PARA CABER NA PRIMEIRA PÁGINA) ── */}
       <header style={{
-        background: 'linear-gradient(135deg, #0F2B27 0%, #173E38 100%)',
+        background: '#0F2B27',
         color: '#FAF8F3',
-        padding: '24px 20px 28px',
-        textAlign: 'center',
-        position: 'relative',
-        boxShadow: '0 4px 14px rgba(15,43,39,0.15)'
+        padding: '10px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.12)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 50
       }}>
-        {onVoltar && (
-          <button
-            onClick={onVoltar}
-            style={{
-              position: 'absolute',
-              left: 16,
-              top: 20,
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
-            }}
-          >
-            <ArrowLeft size={16} />
-          </button>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
+          {onVoltar && (
+            <button
+              onClick={onVoltar}
+              title="Voltar"
+              style={{
+                background: 'rgba(255,255,255,0.15)',
+                border: 'none',
+                borderRadius: 8,
+                width: 30,
+                height: 30,
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                flexShrink: 0
+              }}
+            >
+              <ArrowLeft size={16} />
+            </button>
+          )}
 
-        <div style={{
-          width: 52,
-          height: 52,
-          borderRadius: 16,
-          background: 'linear-gradient(135deg, #1F5C52 0%, #2A7A6D 100%)',
-          border: '2px solid rgba(255,255,255,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 10px',
-          boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
-        }}>
-          <CalendarIcon size={26} color="#9FE0C8" />
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: 'linear-gradient(135deg, #1F5C52 0%, #2A7A6D 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#9FE0C8',
+            fontWeight: 800,
+            fontSize: 14,
+            flexShrink: 0
+          }}>
+            <CalendarIcon size={17} />
+          </div>
+
+          <div style={{ overflow: 'hidden' }}>
+            <div style={{
+              fontSize: 14,
+              fontWeight: 800,
+              color: '#FFFFFF',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              maxWidth: '210px'
+            }}>
+              {nomeEmpresa}
+            </div>
+            <div style={{ fontSize: 10.5, color: '#A7D4C8', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <span>Agendamento Online</span>
+              <span>•</span>
+              <span style={{ color: '#FDE68A', fontWeight: 600 }}>Horários Livres</span>
+            </div>
+          </div>
         </div>
 
-        <h1 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px', letterSpacing: -0.3, fontFamily: 'Georgia, serif' }}>
-          {nomeEmpresa}
-        </h1>
-
-        <div style={{ fontSize: 12, color: '#9FBDB5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <span>Agendamento Online 24h</span>
-          <span>•</span>
-          <span>Horário em Tempo Real</span>
-        </div>
-
-        {/* Badge de Fidelidade */}
+        {/* Indicador de Etapas Compacto */}
         <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'rgba(245, 158, 11, 0.18)',
-          border: '1px solid rgba(245, 158, 11, 0.4)',
-          borderRadius: 20,
-          padding: '4px 12px',
-          marginTop: 12,
+          background: 'rgba(255,255,255,0.12)',
+          padding: '4px 9px',
+          borderRadius: 14,
           fontSize: 11,
           fontWeight: 700,
-          color: '#FDE68A'
+          color: '#E8A33D',
+          whiteSpace: 'nowrap',
+          flexShrink: 0
         }}>
-          <Sparkles size={12} color="#FDE68A" />
-          <span>Ganhe pontos no Clube de Fidelidade ao comparecer!</span>
+          {passo === 1 && '1. Escolha a Data'}
+          {passo === 2 && '2. Escolha a Hora'}
+          {passo === 3 && '3. Seus Dados'}
+          {passo === 4 && '✓ Concluído'}
         </div>
       </header>
 
-      {/* ── CORPO PRINCIPAL ── */}
-      <main style={{ maxWidth: 540, margin: '-14px auto 0', padding: '0 16px' }}>
+      {/* ── CONTEÚDO PRINCIPAL (DEDICADO & OTIMIZADO MOBILE) ── */}
+      <main style={{ flex: 1, padding: '12px 14px 28px', maxWidth: 480, margin: '0 auto', width: '100%' }}>
 
-        {/* ── PASSO 1: ESCOLHA DO SERVIÇO ── */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            PASSO 1: CALENDÁRIO EM FORMATO COMPACTO (CABE NA PRIMEIRA PÁGINA)
+        ═══════════════════════════════════════════════════════════════════ */}
         {passo === 1 && (
-          <div style={{ background: '#fff', borderRadius: 16, padding: '20px', border: '1px solid #E5E0D5', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F2B27', marginBottom: 4 }}>
-              1. Escolha o serviço desejado
-            </div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 16 }}>
-              Selecione o procedimento para consultar os horários vagos.
+          <div>
+            <div style={{ textAlign: 'center', marginBottom: 10 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0F2B27', margin: 0 }}>
+                Selecione o Dia Desejado
+              </h2>
+              <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>
+                Toque na data para ver a disponibilidade de horários
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {listaServicos.map((s, idx) => {
-                const selecionado = servicoSelecionado?.nome === s.nome;
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => setServicoSelecionado(s)}
-                    style={{
-                      border: selecionado ? '2px solid #1F5C52' : '1.5px solid #E5E0D5',
-                      background: selecionado ? '#F2FAF7' : '#FFFFFF',
-                      borderRadius: 12,
-                      padding: '12px 14px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      transition: 'all 0.15s ease'
-                    }}
-                  >
-                    <div style={{ flex: 1, paddingRight: 10 }}>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: selecionado ? '#0F2B27' : '#1F2937' }}>
-                        {s.nome}
-                      </div>
-                      <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 3, display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Clock size={12} />
-                        <span>Duração estimada: ~{s.duracaoMin} min</span>
-                      </div>
-                    </div>
+            {/* Painel do Calendário */}
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: 16,
+              border: '1.5px solid #E5E0D5',
+              padding: '12px 12px 14px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+            }}>
+              {/* Barra de Mês e Navegação */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 10,
+                padding: '2px 4px'
+              }}>
+                <button
+                  onClick={() => navegarMes(-1)}
+                  disabled={anoAgenda === hojeAno && mesAgenda === hojeMes}
+                  style={{
+                    background: anoAgenda === hojeAno && mesAgenda === hojeMes ? '#F3F4F6' : '#F0FDF4',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: 8,
+                    width: 32,
+                    height: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: anoAgenda === hojeAno && mesAgenda === hojeMes ? '#9CA3AF' : '#1F5C52',
+                    cursor: anoAgenda === hojeAno && mesAgenda === hojeMes ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <ChevronLeft size={18} />
+                </button>
 
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ fontSize: 15, fontWeight: 800, color: '#1F5C52', fontFamily: 'Georgia, serif' }}>
-                        {formatBRL(s.valorSugerido)}
-                      </div>
-                      <div style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: '50%',
-                        border: selecionado ? 'none' : '2px solid #CBD5E1',
-                        background: selecionado ? '#1F5C52' : 'transparent',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff'
-                      }}>
-                        {selecionado && <Check size={13} strokeWidth={3} />}
-                      </div>
-                    </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#0F2B27' }}>
+                    {MESES[mesAgenda]} de {anoAgenda}
                   </div>
-                );
-              })}
-            </div>
+                </div>
 
-            <button
-              disabled={!servicoSelecionado}
-              onClick={() => setPasso(2)}
-              style={{
-                width: '100%',
-                marginTop: 20,
-                padding: '14px',
-                borderRadius: 12,
-                border: 'none',
-                background: servicoSelecionado ? 'linear-gradient(135deg, #1F5C52 0%, #2A7A6D 100%)' : '#E2E8F0',
-                color: servicoSelecionado ? '#fff' : '#94A3B8',
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: servicoSelecionado ? 'pointer' : 'not-allowed',
-                boxShadow: servicoSelecionado ? '0 4px 12px rgba(31,92,82,0.25)' : 'none'
-              }}
-            >
-              Continuar para Data & Horário →
-            </button>
-          </div>
-        )}
-
-        {/* ── PASSO 2: ESCOLHA DA DATA & HORÁRIO NO CALENDÁRIO ── */}
-        {passo === 2 && (
-          <div style={{ background: '#fff', borderRadius: 16, padding: '20px', border: '1px solid #E5E0D5', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-              <button
-                onClick={() => setPasso(1)}
-                style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
-              >
-                <ArrowLeft size={14} /> Alterar serviço ({servicoSelecionado?.nome})
-              </button>
-            </div>
-
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F2B27', marginBottom: 4 }}>
-              2. Escolha o dia e o horário
-            </div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 16 }}>
-              Toque no dia desejado para ver os horários livres.
-            </div>
-
-            {/* Navegador de Mês */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', padding: '10px 14px', borderRadius: 12, marginBottom: 14, border: '1px solid #E2E8F0' }}>
-              <button
-                onClick={() => {
-                  if (mesAgenda === 0) {
-                    setMesAgenda(11);
-                    setAnoAgenda(a => a - 1);
-                  } else {
-                    setMesAgenda(m => m - 1);
-                  }
-                }}
-                style={{ background: '#fff', border: '1px solid #CBD5E1', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                <ChevronLeft size={16} />
-              </button>
-
-              <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2B27' }}>
-                {MESES[mesAgenda]} de {anoAgenda}
+                <button
+                  onClick={() => navegarMes(1)}
+                  style={{
+                    background: '#F0FDF4',
+                    border: '1px solid #D1D5DB',
+                    borderRadius: 8,
+                    width: 32,
+                    height: 32,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#1F5C52',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <ChevronRight size={18} />
+                </button>
               </div>
 
-              <button
-                onClick={() => {
-                  if (mesAgenda === 11) {
-                    setMesAgenda(0);
-                    setAnoAgenda(a => a + 1);
-                  } else {
-                    setMesAgenda(m => m + 1);
-                  }
-                }}
-                style={{ background: '#fff', border: '1px solid #CBD5E1', borderRadius: 8, width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-
-            {/* Grade do Calendário */}
-            <div style={{ marginBottom: 18 }}>
-              {/* Dias da Semana */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, textAlign: 'center', marginBottom: 6 }}>
+              {/* Cabeçalho dos Dias da Semana */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
                 {diasSemana.map((d, i) => (
-                  <span key={i} style={{ fontSize: 11, fontWeight: 700, color: i === 0 ? '#DC2626' : '#6B7280' }}>
+                  <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: i === 0 || i === 6 ? '#9CA3AF' : '#64748B' }}>
                     {d}
-                  </span>
+                  </div>
                 ))}
               </div>
 
-              {/* Dias do Mês */}
+              {/* Grade dos Dias do Mês */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>
-                {Array.from({ length: offsetSemana }).map((_, i) => (
+                {Array.from({ length: offsetSemana }, (_, i) => (
                   <div key={`offset-${i}`} />
                 ))}
 
-                {Array.from({ length: totalDiasMes }).map((_, i) => {
-                  const dia = i + 1;
-                  const dataStr = `${anoAgenda}-${String(mesAgenda + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
-                  const isHoje = dataStr === hoje.toISOString().split('T')[0];
-                  const isSelecionado = dataStr === dataSelecionada;
-                  const isPassado = new Date(dataStr + 'T23:59:59') < hoje;
+                {Array.from({ length: totalDiasMes }, (_, i) => i + 1).map(dia => {
+                  const diaStr = String(dia).padStart(2, '0');
+                  const mesStr = String(mesAgenda + 1).padStart(2, '0');
+                  const dataIso = `${anoAgenda}-${mesStr}-${diaStr}`;
+                  
+                  const isPassado = (
+                    anoAgenda < hojeAno ||
+                    (anoAgenda === hojeAno && mesAgenda < hojeMes) ||
+                    (anoAgenda === hojeAno && mesAgenda === hojeMes && dia < hojeDia)
+                  );
+                  const isHoje = dataIso === hojeIso;
+                  const isSelecionado = dataIso === dataSelecionada;
 
                   return (
                     <button
                       key={dia}
+                      onClick={() => !isPassado && handleSelecionarDia(dia)}
                       disabled={isPassado}
-                      onClick={() => {
-                        setDataSelecionada(dataStr);
-                        setHorarioSelecionado('');
-                      }}
                       style={{
-                        padding: '10px 4px',
+                        height: 44,
                         borderRadius: 10,
-                        border: isSelecionado ? '2px solid #1F5C52' : (isHoje ? '1px solid #1F5C52' : '1px solid #E5E7EB'),
-                        background: isSelecionado ? '#1F5C52' : (isHoje ? '#E6F4EA' : (isPassado ? '#F3F4F6' : '#FFFFFF')),
-                        color: isSelecionado ? '#FFFFFF' : (isPassado ? '#9CA3AF' : '#111827'),
-                        fontWeight: isSelecionado || isHoje ? 800 : 500,
-                        fontSize: 12.5,
+                        border: isSelecionado 
+                          ? '2px solid #0F2B27' 
+                          : isHoje 
+                            ? '1.5px solid #16A34A' 
+                            : '1px solid #E2E8F0',
+                        background: isPassado
+                          ? '#F8FAFC'
+                          : isSelecionado
+                            ? '#0F2B27'
+                            : isHoje
+                              ? '#F0FDF4'
+                              : '#FFFFFF',
+                        color: isPassado
+                          ? '#CBD5E1'
+                          : isSelecionado
+                            ? '#FAF8F3'
+                            : isHoje
+                              ? '#15803D'
+                              : '#1F2937',
+                        fontWeight: isSelecionado || isHoje ? 800 : 600,
+                        fontSize: 13.5,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         cursor: isPassado ? 'not-allowed' : 'pointer',
-                        textAlign: 'center',
-                        transition: 'all 0.1s ease'
+                        transition: 'all 0.15s ease',
+                        boxShadow: isSelecionado ? '0 3px 8px rgba(15,43,39,0.2)' : 'none'
                       }}
                     >
-                      {dia}
+                      <span>{dia}</span>
+                      {isHoje && (
+                        <span style={{ fontSize: 8.5, color: isSelecionado ? '#FDE68A' : '#16A34A', fontWeight: 800, marginTop: -2 }}>
+                          Hoje
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* Grade de Horários Livres */}
-            <div style={{ borderTop: '1px solid #E5E0D5', paddingTop: 16 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0F2B27', marginBottom: 2 }}>
-                Horários Livres para {dataSelecionada.split('-').reverse().join('/')}:
-              </div>
-              <div style={{ fontSize: 11.5, color: '#6B7280', marginBottom: 12 }}>
-                Toque no horário de sua preferência.
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 8 }}>
-                {horariosDisponiveis.map(h => {
-                  const sel = horarioSelecionado === h.horario;
-                  return (
-                    <button
-                      key={h.horario}
-                      disabled={!h.disponivel}
-                      onClick={() => setHorarioSelecionado(h.horario)}
-                      style={{
-                        padding: '9px 4px',
-                        borderRadius: 8,
-                        border: sel ? '2px solid #1F5C52' : (h.disponivel ? '1px solid #CBD5E1' : '1px solid #E5E7EB'),
-                        background: sel ? '#1F5C52' : (h.disponivel ? '#F8FAFC' : '#F1F5F9'),
-                        color: sel ? '#FFFFFF' : (h.disponivel ? '#1E293B' : '#94A3B8'),
-                        fontSize: 12.5,
-                        fontWeight: sel ? 800 : 600,
-                        cursor: h.disponivel ? 'pointer' : 'not-allowed',
-                        textDecoration: h.disponivel ? 'none' : 'line-through'
-                      }}
-                    >
-                      {h.horario}
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Dica amigável */}
+            <div style={{
+              background: '#FEF9C3',
+              border: '1px solid #FDE047',
+              borderRadius: 10,
+              padding: '8px 12px',
+              marginTop: 12,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              fontSize: 11.5,
+              color: '#854D0E'
+            }}>
+              <Sparkles size={15} color="#CA8A04" style={{ flexShrink: 0 }} />
+              <span>Clique no dia desejado para ver os horários em tempo real.</span>
             </div>
-
-            <button
-              disabled={!horarioSelecionado}
-              onClick={() => setPasso(3)}
-              style={{
-                width: '100%',
-                marginTop: 20,
-                padding: '14px',
-                borderRadius: 12,
-                border: 'none',
-                background: horarioSelecionado ? 'linear-gradient(135deg, #1F5C52 0%, #2A7A6D 100%)' : '#E2E8F0',
-                color: horarioSelecionado ? '#fff' : '#94A3B8',
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: horarioSelecionado ? 'pointer' : 'not-allowed',
-                boxShadow: horarioSelecionado ? '0 4px 12px rgba(31,92,82,0.25)' : 'none'
-              }}
-            >
-              Continuar para Seus Dados →
-            </button>
           </div>
         )}
 
-        {/* ── PASSO 3: SEUS DADOS & CONFIRMAÇÃO ── */}
-        {passo === 3 && (
-          <form onSubmit={handleConfirmarAgendamento} style={{ background: '#fff', borderRadius: 16, padding: '20px', border: '1px solid #E5E0D5', boxShadow: '0 4px 16px rgba(0,0,0,0.04)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+        {/* ═══════════════════════════════════════════════════════════════════
+            PASSO 2: HORÁRIOS DISPONÍVEIS DO DIA (ÚNICA TELA / SEM DISTRAÇÕES)
+        ═══════════════════════════════════════════════════════════════════ */}
+        {passo === 2 && (
+          <div>
+            {/* Botão Voltar para Data */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <button
-                type="button"
-                onClick={() => setPasso(2)}
-                style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
+                onClick={() => setPasso(1)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: 8,
+                  padding: '6px 11px',
+                  color: '#1F5C52',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
               >
-                <ArrowLeft size={14} /> Voltar à data e horário
+                <ArrowLeft size={14} /> Trocar Data
               </button>
+
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#166534', background: '#DCFCE7', padding: '4px 10px', borderRadius: 8 }}>
+                📅 {dataSelecionadaFormatada}
+              </span>
             </div>
 
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#0F2B27', marginBottom: 4 }}>
-              3. Seus Dados de Contato
-            </div>
-            <div style={{ fontSize: 12, color: '#6B7280', marginBottom: 16 }}>
-              Utilizaremos seu WhatsApp para enviar a confirmação e lembrete do horário.
-            </div>
-
-            {/* Resumo do Atendimento */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '12px 14px', marginBottom: 18 }}>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#0F2B27' }}>{servicoSelecionado?.nome}</div>
-              <div style={{ fontSize: 12, color: '#4B5563', marginTop: 3 }}>
-                🗓️ {dataSelecionada.split('-').reverse().join('/')} às ⏰ {horarioSelecionado}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 800, color: '#1F5C52', marginTop: 4, fontFamily: 'Georgia, serif' }}>
-                Valor: {formatBRL(servicoSelecionado?.valorSugerido || 0)}
+            <div style={{ textAlign: 'center', marginBottom: 12 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0F2B27', margin: 0 }}>
+                Qual o Melhor Horário para Você?
+              </h2>
+              <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>
+                Toque no horário para avançar para a confirmação
               </div>
             </div>
 
-            {/* Formulário */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>
-                  Seu Nome Completo *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={clienteNome}
-                  onChange={e => setClienteNome(e.target.value)}
-                  placeholder="Ex: João da Silva"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13.5, boxSizing: 'border-box' }}
-                />
-              </div>
+            {/* Grade de Horários */}
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: 16,
+              border: '1.5px solid #E5E0D5',
+              padding: '14px',
+              boxShadow: '0 4px 16px rgba(0,0,0,0.04)'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(95px, 1fr))', gap: 8 }}>
+                {horariosDisponiveis.map(item => {
+                  const isSel = horarioSelecionado === item.horario;
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>
-                  Seu WhatsApp (com DDD) *
-                </label>
-                <input
-                  type="tel"
-                  required
-                  value={clienteTelefone}
-                  onChange={e => handleTelefoneChange(e.target.value)}
-                  placeholder="(19) 99999-9999"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13.5, boxSizing: 'border-box' }}
-                />
-              </div>
+                  if (!item.disponivel) {
+                    return (
+                      <div
+                        key={item.horario}
+                        style={{
+                          padding: '11px 8px',
+                          borderRadius: 9,
+                          background: '#F1F5F9',
+                          border: '1px solid #E2E8F0',
+                          color: '#94A3B8',
+                          textAlign: 'center',
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          cursor: 'not-allowed'
+                        }}
+                      >
+                        <div style={{ textDecoration: 'line-through' }}>{item.horario}</div>
+                        <div style={{ fontSize: 9.5, color: '#94A3B8', marginTop: 1 }}>{item.motivo}</div>
+                      </div>
+                    );
+                  }
 
-              <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>
-                  Observações para o profissional (opcional)
-                </label>
-                <textarea
-                  rows={2}
-                  value={observacoes}
-                  onChange={e => setObservacoes(e.target.value)}
-                  placeholder="Alguma preferência ou detalhe adicional?"
-                  style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', resize: 'vertical' }}
-                />
+                  return (
+                    <button
+                      key={item.horario}
+                      onClick={() => handleSelecionarHorario(item.horario)}
+                      style={{
+                        padding: '11px 8px',
+                        borderRadius: 9,
+                        border: isSel ? '2px solid #16A34A' : '1.5px solid #BBF7D0',
+                        background: isSel ? '#16A34A' : '#F0FDF4',
+                        color: isSel ? '#FFFFFF' : '#14532D',
+                        textAlign: 'center',
+                        fontSize: 13.5,
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: 2,
+                        transition: 'all 0.15s ease',
+                        boxShadow: '0 2px 4px rgba(22,163,74,0.08)'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Clock size={12} color={isSel ? '#fff' : '#16A34A'} />
+                        <span>{item.horario}</span>
+                      </div>
+                      <div style={{ fontSize: 9.5, color: isSel ? '#E2E8F0' : '#15803D', fontWeight: 600 }}>
+                        Disponível
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-
-            <button
-              type="submit"
-              disabled={enviando}
-              style={{
-                width: '100%',
-                marginTop: 20,
-                padding: '14px',
-                borderRadius: 12,
-                border: 'none',
-                background: 'linear-gradient(135deg, #1F5C52 0%, #2A7A6D 100%)',
-                color: '#fff',
-                fontSize: 14.5,
-                fontWeight: 800,
-                cursor: enviando ? 'wait' : 'pointer',
-                boxShadow: '0 4px 14px rgba(31,92,82,0.3)'
-              }}
-            >
-              {enviando ? 'Confirmando Agendamento...' : '✓ Confirmar Meu Agendamento'}
-            </button>
-          </form>
+          </div>
         )}
 
-        {/* ── PASSO 4: SUCESSO & AÇÕES PÓS-AGENDAMENTO ── */}
+        {/* ═══════════════════════════════════════════════════════════════════
+            PASSO 3: SERVIÇO & SEUS DADOS (FINALIZAÇÃO)
+        ═══════════════════════════════════════════════════════════════════ */}
+        {passo === 3 && (
+          <div>
+            {/* Botão Voltar para Horários */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <button
+                onClick={() => setPasso(2)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: 8,
+                  padding: '6px 11px',
+                  color: '#1F5C52',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <ArrowLeft size={14} /> Trocar Horário
+              </button>
+
+              <span style={{ fontSize: 11.5, fontWeight: 700, color: '#0F2B27', background: '#E2E8F0', padding: '4px 10px', borderRadius: 8 }}>
+                📅 {dataSelecionadaFormatada} às {horarioSelecionado}
+              </span>
+            </div>
+
+            <form onSubmit={handleConfirmarAgendamento} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Seleção do Serviço */}
+              <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E0D5', padding: '14px' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2B27', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Sparkles size={15} color="#E8A33D" />
+                  <span>Selecione o Serviço</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 7, maxHeight: 190, overflowY: 'auto' }}>
+                  {listaServicos.map(s => {
+                    const isSel = servicoSelecionado?.nome === s.nome;
+                    return (
+                      <div
+                        key={s.nome}
+                        onClick={() => setServicoSelecionado(s)}
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: 9,
+                          border: isSel ? '2px solid #16A34A' : '1px solid #E2E8F0',
+                          background: isSel ? '#F0FDF4' : '#FAFAFA',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          transition: 'all 0.15s ease'
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: isSel ? '#14532D' : '#1F2937' }}>
+                            {s.nome}
+                          </div>
+                          <div style={{ fontSize: 11, color: '#64748B', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                            <Clock size={11} /> {s.duracaoMin} min
+                          </div>
+                        </div>
+
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#15803D' }}>
+                            {s.valorSugerido > 0 ? formatBRL(s.valorSugerido) : 'A combinar'}
+                          </div>
+                          {isSel && (
+                            <div style={{ fontSize: 10, color: '#16A34A', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'flex-end', marginTop: 1 }}>
+                              <Check size={12} /> Escolhido
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Formulário de Identificação */}
+              <div style={{ background: '#FFFFFF', borderRadius: 14, border: '1px solid #E5E0D5', padding: '14px' }}>
+                <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2B27', marginBottom: 12 }}>
+                  Seus Dados para Contato
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>
+                    Nome Completo *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: João da Silva"
+                      value={clienteNome}
+                      onChange={e => setClienteNome(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '11px 12px 11px 36px',
+                        borderRadius: 9,
+                        border: '1.5px solid #CBD5E1',
+                        fontSize: 13.5,
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                    <User size={16} color="#94A3B8" style={{ position: 'absolute', left: 11, top: 13 }} />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>
+                    Seu WhatsApp com DDD *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="(19) 99999-9999"
+                      value={clienteTelefone}
+                      onChange={e => handleTelefoneChange(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '11px 12px 11px 36px',
+                        borderRadius: 9,
+                        border: '1.5px solid #CBD5E1',
+                        fontSize: 13.5,
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                    <Phone size={16} color="#94A3B8" style={{ position: 'absolute', left: 11, top: 13 }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#374151', marginBottom: 4 }}>
+                    Observações / Preferências (Opcional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Ex: Primeira vez no espaço, prefiro atendimento rápido..."
+                    value={observacoes}
+                    onChange={e => setObservacoes(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: 9,
+                      border: '1.5px solid #CBD5E1',
+                      fontSize: 12.5,
+                      outline: 'none',
+                      resize: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Botão de Confirmação */}
+              <button
+                type="submit"
+                disabled={enviando}
+                style={{
+                  background: 'linear-gradient(135deg, #15803D 0%, #166534 100%)',
+                  color: '#FFFFFF',
+                  padding: '14px',
+                  borderRadius: 12,
+                  border: 'none',
+                  fontSize: 14.5,
+                  fontWeight: 800,
+                  cursor: enviando ? 'wait' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  boxShadow: '0 4px 12px rgba(22,101,52,0.3)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {enviando ? (
+                  <span>Salvando agendamento...</span>
+                ) : (
+                  <>
+                    <CheckCircle2 size={18} />
+                    <span>Confirmar Agendamento</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            PASSO 4: SUCESSO & ENVIO NO WHATSAPP NATIVO DO CELULAR
+        ═══════════════════════════════════════════════════════════════════ */}
         {passo === 4 && agendamentoConfirmado && (
-          <div style={{ background: '#fff', borderRadius: 16, padding: '28px 20px', border: '1px solid #E5E0D5', textAlign: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+          <div style={{ textAlign: 'center' }}>
             <div style={{
-              width: 64,
-              height: 64,
+              width: 54,
+              height: 54,
               borderRadius: '50%',
               background: '#DCFCE7',
               color: '#15803D',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 16px'
+              margin: '6px auto 12px',
+              border: '2px solid #86EFAC'
             }}>
-              <CheckCircle2 size={38} />
+              <CheckCircle2 size={32} />
             </div>
 
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#0F2B27', margin: '0 0 6px', fontFamily: 'Georgia, serif' }}>
+            <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F2B27', margin: '0 0 4px' }}>
               Agendamento Confirmado!
             </h2>
-            <p style={{ fontSize: 13, color: '#4B5563', margin: '0 0 20px' }}>
-              Olá, <strong>{agendamentoConfirmado.clienteNome}</strong>! Seu horário foi reservado com sucesso no sistema da empresa <strong>{nomeEmpresa}</strong>.
+            <p style={{ fontSize: 12, color: '#4B5563', margin: '0 0 16px' }}>
+              Seu horário foi registrado na agenda de <strong>{nomeEmpresa}</strong>.
             </p>
 
-            {/* Card com Detalhes */}
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '16px', marginBottom: 20, textAlign: 'left' }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#0F2B27', marginBottom: 8 }}>
-                📋 Resumo da Reserva
+            {/* Resumo da Reserva */}
+            <div style={{ background: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: 14, padding: '14px', marginBottom: 16, textAlign: 'left', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#0F2B27', marginBottom: 8 }}>
+                📋 Detalhes da sua Reserva:
               </div>
-              <div style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>
+              <div style={{ fontSize: 12.5, color: '#334155', marginBottom: 4 }}>
                 <strong>Serviço:</strong> {agendamentoConfirmado.servicoNome}
               </div>
-              <div style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>
+              <div style={{ fontSize: 12.5, color: '#334155', marginBottom: 4 }}>
                 <strong>Data & Hora:</strong> {agendamentoConfirmado.data.split('-').reverse().join('/')} às {agendamentoConfirmado.horario}
               </div>
-              <div style={{ fontSize: 13, color: '#334155', marginBottom: 4 }}>
-                <strong>Local:</strong> {nomeEmpresa}
+              <div style={{ fontSize: 12.5, color: '#334155', marginBottom: 4 }}>
+                <strong>Cliente:</strong> {agendamentoConfirmado.clienteNome}
               </div>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#1F5C52', marginTop: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 800, color: '#15803D', marginTop: 8 }}>
                 Valor: {formatBRL(agendamentoConfirmado.valor)}
               </div>
             </div>
 
-            {/* Ações: WhatsApp & Google Agenda */}
+            {/* Ações: WhatsApp no Celular & Google Agenda */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <a
-                href={agendamentoService.gerarLinkWhatsAppLembrete(agendamentoConfirmado, empresa)}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                type="button"
+                onClick={handleSalvarEEnviarWhatsApp}
                 style={{
                   background: '#25D366',
                   color: '#fff',
-                  borderRadius: 10,
+                  borderRadius: 12,
                   padding: '13px',
-                  fontSize: 13.5,
-                  fontWeight: 700,
-                  textDecoration: 'none',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 8,
-                  boxShadow: '0 2px 8px rgba(37,211,102,0.25)'
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(37,211,102,0.3)',
+                  transition: 'transform 0.15s ease'
                 }}
               >
-                <MessageCircle size={18} />
-                <span>Salvar & Enviar no WhatsApp da Empresa</span>
-              </a>
+                <MessageCircle size={19} />
+                <span>Abrir no WhatsApp da Empresa</span>
+              </button>
 
               <a
                 href={agendamentoService.gerarLinkGoogleCalendar(agendamentoConfirmado, empresa)}
@@ -688,8 +934,8 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
                   background: '#FFFFFF',
                   color: '#1F2937',
                   border: '1px solid #CBD5E1',
-                  borderRadius: 10,
-                  padding: '12px',
+                  borderRadius: 12,
+                  padding: '11px',
                   fontSize: 13,
                   fontWeight: 700,
                   textDecoration: 'none',
@@ -706,7 +952,6 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
               <button
                 onClick={() => {
                   setPasso(1);
-                  setServicoSelecionado(null);
                   setHorarioSelecionado('');
                   setAgendamentoConfirmado(null);
                 }}
@@ -714,11 +959,11 @@ export function PaginaAgendamentoPublico({ empresaId, onVoltar }) {
                   background: 'none',
                   border: 'none',
                   color: '#6B7280',
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: 600,
                   cursor: 'pointer',
                   padding: '8px',
-                  marginTop: 6
+                  marginTop: 4
                 }}
               >
                 Fazer outro agendamento
