@@ -1,23 +1,37 @@
 import { Activity, ChevronLeft, ChevronRight, ClipboardList, FileBarChart, LayoutDashboard, ListChecks, LogOut, Plus, Tag, TrendingUp, Users, FileText, Calendar } from 'lucide-react';
 import { MESES } from '../utils/constants';
 
-export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAbrirEquipe, ehDono, onAbrirNfse, onAbrirAgendamento, onAbrirAdmin }) {
-  const temBotoesModulos = Boolean(onAbrirAdmin || (ehDono && (onAbrirAgendamento || onAbrirNfse || onAbrirEquipe)));
+export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual }) {
+  const nomeEmpresa = empresa?.nome || 'Minha Empresa';
+  const nomeUsuario = usuario || 'Minha Conta';
 
   return (
-    <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10, borderRadius: '0 0 20px 20px', boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)' }}>
-      {/* LINHA 1: Nome da empresa e Usuário (Largura total) + Botão Sair */}
+    <div className="no-print" style={{ background: '#0F2B27', color: '#FAF8F3', padding: '14px 16px 12px', position: 'sticky', top: 0, zIndex: 10, borderRadius: '0 0 20px 20px', boxShadow: '0 4px 14px rgba(15, 43, 39, 0.18)' }}>
+      {/* LINHA 1: Usuário + Nome da Empresa + Botão Sair */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 11, color: '#9FBDB5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{usuario}</div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: '#FAF8F3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: 0.2 }}>{empresa.nome}</div>
+          <div style={{ fontSize: 11, color: '#9FBDB5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2 }}>
+            {nomeUsuario}
+          </div>
+          <div style={{ 
+            fontSize: nomeEmpresa.length > 32 ? 14 : 16, 
+            fontWeight: 700, 
+            color: '#FAF8F3', 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis', 
+            whiteSpace: 'nowrap', 
+            letterSpacing: 0.2,
+            lineHeight: 1.25
+          }}>
+            {nomeEmpresa}
+          </div>
         </div>
         <button 
           onClick={onLogout} 
           aria-label="Sair" 
           title="Sair do sistema"
           style={{
-            height: 32,
+            height: 30,
             padding: '0 10px',
             borderRadius: 8,
             background: 'rgba(255, 255, 255, 0.08)',
@@ -27,136 +41,26 @@ export function TopBar({ empresa, usuario, onLogout, mesAtual, setMesAtual, onAb
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 6,
-            fontSize: 12,
+            gap: 5,
+            fontSize: 11.5,
             fontWeight: 500,
             flexShrink: 0
           }}
         >
-          <LogOut size={14} />
+          <LogOut size={13} />
           <span>Sair</span>
         </button>
       </div>
 
-      {/* LINHA 2: Barra dedicada de botões de Módulos */}
-      {temBotoesModulos && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
-          {onAbrirAdmin && (
-            <button 
-              onClick={onAbrirAdmin} 
-              title="Painel Administrativo" 
-              style={{
-                height: 30,
-                padding: '0 10px',
-                borderRadius: 8,
-                background: 'rgba(232, 163, 61, 0.18)',
-                border: '1px solid rgba(232, 163, 61, 0.5)',
-                color: '#FCD34D',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5,
-                fontSize: 11.5,
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
-                flexShrink: 0
-              }}
-            >
-              <span>⚡ Admin</span>
-            </button>
-          )}
-          {ehDono && onAbrirAgendamento && (
-            <button 
-              onClick={onAbrirAgendamento} 
-              title="Agenda & Atendimentos" 
-              style={{
-                height: 30,
-                padding: '0 10px',
-                borderRadius: 8,
-                background: 'rgba(245, 158, 11, 0.18)',
-                border: '1px solid rgba(245, 158, 11, 0.5)',
-                color: '#FDE047',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5,
-                fontSize: 11.5,
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
-                flexShrink: 0
-              }}
-            >
-              <Calendar size={13} />
-              <span>Agenda</span>
-            </button>
-          )}
-          {ehDono && onAbrirNfse && (
-            <button 
-              onClick={onAbrirNfse} 
-              title="Notas Fiscais de Serviços (NFS-e)" 
-              style={{
-                height: 30,
-                padding: '0 10px',
-                borderRadius: 8,
-                background: 'rgba(159, 224, 200, 0.18)',
-                border: '1px solid rgba(159, 224, 200, 0.5)',
-                color: '#A7F3D0',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5,
-                fontSize: 11.5,
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
-                flexShrink: 0
-              }}
-            >
-              <FileText size={13} />
-              <span>NFS-e</span>
-            </button>
-          )}
-          {ehDono && onAbrirEquipe && (
-            <button 
-              onClick={onAbrirEquipe} 
-              title="Gerenciar Equipe" 
-              aria-label="Gerenciar Equipe" 
-              style={{
-                height: 30,
-                padding: '0 10px',
-                borderRadius: 8,
-                background: 'rgba(255, 255, 255, 0.12)',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                color: '#FAF8F3',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 5,
-                fontSize: 11.5,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
-                flexShrink: 0
-              }}
-            >
-              <Users size={13} />
-              <span>Equipe</span>
-            </button>
-          )}
-        </div>
-      )}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 12 }}>
-        <button onClick={() => setMesAtual(m => (m + 11) % 12)} aria-label="Mês anterior" style={{ background: 'none', border: 'none', color: '#E8A33D', cursor: 'pointer', padding: 4 }}>
+      {/* LINHA 2: Navegador de Mês Amplo e Claro */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, marginTop: 10 }}>
+        <button onClick={() => setMesAtual(m => (m + 11) % 12)} aria-label="Mês anterior" style={{ background: 'none', border: 'none', color: '#E8A33D', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
           <ChevronLeft size={20} />
         </button>
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: 16, minWidth: 130, textAlign: 'center' }}>{MESES[mesAtual]}</div>
-        <button onClick={() => setMesAtual(m => (m + 1) % 12)} aria-label="Próximo mês" style={{ background: 'none', border: 'none', color: '#E8A33D', cursor: 'pointer', padding: 4 }}>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: 16, fontWeight: 600, minWidth: 130, textAlign: 'center', color: '#FAF8F3', letterSpacing: 0.3 }}>
+          {MESES[mesAtual]}
+        </div>
+        <button onClick={() => setMesAtual(m => (m + 1) % 12)} aria-label="Próximo mês" style={{ background: 'none', border: 'none', color: '#E8A33D', cursor: 'pointer', padding: '4px 8px', display: 'flex', alignItems: 'center' }}>
           <ChevronRight size={20} />
         </button>
       </div>

@@ -1,4 +1,4 @@
-import { ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronDown, X, Presentation, FileText, Target, CheckCircle2, AlertTriangle, TrendingUp, ShieldCheck, HelpCircle, UploadCloud, Sparkles } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, ChevronRight, ChevronDown, X, Presentation, FileText, Target, CheckCircle2, AlertTriangle, TrendingUp, ShieldCheck, HelpCircle, UploadCloud, Sparkles, Calendar, Users, Zap } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { EmptyState } from '../components/UIComponents';
@@ -7,7 +7,25 @@ import { TradutorFinanceiroModal } from '../components/TradutorFinanceiroModal';
 import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
 
-export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, empresaId, empresa, papel = 'dono', podeVerTradutor = false, onNovo, onEditar, onIrGestaoAVista, onAbrirImportacao, onAbrirNfse }) {
+export function Dashboard({ 
+  lancamentos, 
+  lancamentosAno, 
+  mesAtual, 
+  anoAtual, 
+  empresaId, 
+  empresa, 
+  papel = 'dono', 
+  podeVerTradutor = false, 
+  onNovo, 
+  onEditar, 
+  onIrGestaoAVista, 
+  onAbrirImportacao, 
+  onAbrirNfse,
+  onAbrirAgendamento,
+  onAbrirAdmin,
+  onAbrirEquipe,
+  ehAdmin 
+}) {
   const ehDono = papel !== 'funcionario';
   const [pctCmv, setPctCmv] = useState(0);
   const [peExpandido, setPeExpandido] = useState(false);
@@ -104,10 +122,59 @@ export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
   const [recentesAbertos, setRecentesAbertos] = useState(false);
   const [showRelatorioModal, setShowRelatorioModal] = useState(false);
 
+  const botoesModulos = useMemo(() => {
+    const list = [];
+    if (onAbrirAdmin) {
+      list.push({
+        id: 'admin',
+        label: 'Admin',
+        icon: Zap,
+        onClick: onAbrirAdmin,
+        color: '#92400E',
+        border: '1px solid rgba(232, 163, 61, 0.45)',
+        bg: '#FFFDF5',
+      });
+    }
+    if (ehDono && onAbrirAgendamento) {
+      list.push({
+        id: 'agenda',
+        label: 'Agenda',
+        icon: Calendar,
+        onClick: onAbrirAgendamento,
+        color: '#92400E',
+        border: '1px solid rgba(245, 158, 11, 0.40)',
+        bg: '#FFFDF5',
+      });
+    }
+    if (ehDono && onAbrirNfse) {
+      list.push({
+        id: 'nfse',
+        label: 'NFS-e',
+        icon: FileText,
+        onClick: onAbrirNfse,
+        color: '#1F5C52',
+        border: '1px solid rgba(31, 92, 82, 0.35)',
+        bg: '#F2FAF7',
+      });
+    }
+    if (ehDono && onAbrirEquipe) {
+      list.push({
+        id: 'equipe',
+        label: 'Equipe',
+        icon: Users,
+        onClick: onAbrirEquipe,
+        color: '#374151',
+        border: '1px solid #D1D5DB',
+        bg: '#FFFFFF',
+      });
+    }
+    return list;
+  }, [onAbrirAdmin, ehDono, onAbrirAgendamento, onAbrirNfse, onAbrirEquipe]);
+
   return (
     <div style={{ padding: 16 }}>
       {/* ── CARD PRINCIPAL: SALDO DO CAIXA (COMPACTO & ELEGANTE) ── */}
-      <div style={{ background: '#0F2B27', borderRadius: 16, padding: '18px 16px 16px', color: '#FAF8F3', marginBottom: 14, boxShadow: '0 4px 14px rgba(15,43,39,0.15)', textAlign: 'center' }}>
+      <div style={{ background: '#0F2B27', borderRadius: 16, padding: '18px 16px 16px', color: '#FAF8F3', marginBottom: botoesModulos.length > 0 ? 10 : 14, boxShadow: '0 4px 14px rgba(15,43,39,0.15)', textAlign: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 }}>
           Saldo em Caixa (Financeiro)
         </div>
@@ -152,13 +219,61 @@ export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
         </div>
       </div>
 
+      {/* ── BARRA MODULAR DINÂMICA DE ATALHOS / MÓDULOS (ENTRE O CARD PRINCIPAL E O PONTO DE EQUILÍBRIO) ── */}
+      {botoesModulos.length > 0 && (
+        <div 
+          style={{ 
+            display: 'grid',
+            gridTemplateColumns: botoesModulos.length === 1 
+              ? '1fr' 
+              : `repeat(${botoesModulos.length}, 1fr)`,
+            gap: botoesModulos.length >= 4 ? 6 : 8,
+            marginBottom: 12,
+            marginTop: -2,
+            width: '100%',
+            boxSizing: 'border-box'
+          }}
+        >
+          {botoesModulos.map(btn => {
+            const Icon = btn.icon;
+            return (
+              <button
+                key={btn.id}
+                onClick={btn.onClick}
+                style={{
+                  height: 32,
+                  padding: '0 8px',
+                  borderRadius: 9,
+                  background: btn.bg,
+                  border: btn.border,
+                  color: btn.color,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 5,
+                  fontSize: botoesModulos.length >= 4 ? 11 : 12,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Icon size={botoesModulos.length >= 4 ? 12 : 13} />
+                <span>{btn.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── CARD DO PONTO DE EQUILÍBRIO: ABAIXO DO CARD PRINCIPAL (APENAS DONO) ── */}
       {ehDono && (
         <div style={{ 
           background: '#fff', 
           border: `1px solid ${
             !peCalculo.temCustos 
-              ? '#E5E0D5' 
+              ? '#D8D4C8' 
               : !peCalculo.mcPositiva 
               ? '#FDE68A' 
               : (peCalculo.atingiu ? '#CFEAD9' : '#FCA5A5')
@@ -166,30 +281,42 @@ export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
           borderRadius: 14, 
           marginBottom: 14, 
           overflow: 'hidden', 
-          boxShadow: '0 2px 6px rgba(0,0,0,0.02)' 
+          boxShadow: '0 2px 8px rgba(15, 43, 39, 0.06)' 
         }}>
         {/* Cabeçalho Clicável */}
         <div 
           onClick={() => setPeExpandido(e => !e)}
           style={{ 
-            padding: '11px 14px', 
+            padding: '12px 14px', 
             cursor: 'pointer', 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
             background: !peCalculo.temCustos 
-              ? '#FAF8F3' 
+              ? '#FFFFFF' 
               : !peCalculo.mcPositiva 
               ? '#FFFDF5' 
-              : (peCalculo.atingiu ? '#F5FAF7' : '#FEF2F2') 
+              : (peCalculo.atingiu ? '#F5FAF7' : '#FEF2F2'),
+            transition: 'background 0.15s ease'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Target size={16} color={!peCalculo.temCustos ? '#7A7868' : !peCalculo.mcPositiva ? '#D97706' : (peCalculo.atingiu ? '#1F5C52' : '#DC2626')} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: !peCalculo.temCustos ? '#F0ECE1' : !peCalculo.mcPositiva ? '#FEF3C7' : (peCalculo.atingiu ? '#E6F4EA' : '#FEE2E2'),
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>
+              <Target size={15} color={!peCalculo.temCustos ? '#1F5C52' : !peCalculo.mcPositiva ? '#D97706' : (peCalculo.atingiu ? '#1F5C52' : '#DC2626')} />
+            </div>
             <div>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1C2421' }}>Ponto de Equilíbrio</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>Ponto de Equilíbrio</span>
               {peCalculo.temCustos && (
-                <span style={{ fontSize: 11, color: '#7A7868', marginLeft: 6 }}>
+                <span style={{ fontSize: 11, color: '#5C5A4F', marginLeft: 6 }}>
                   {peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0
                     ? `(${peCalculo.pctAtingido}% alcançado)`
                     : `(Custos Fixos: ${formatBRL(peCalculo.custosFixos)})`
@@ -201,7 +328,7 @@ export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {!peCalculo.temCustos ? (
-              <span style={{ fontSize: 11, color: '#9C9A8F' }}>Sem custos fixos</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: '#5C5A4F', background: '#F5F3ED', padding: '3px 9px', borderRadius: 6, border: '1px solid #E5E0D5' }}>Sem custos fixos</span>
             ) : !peCalculo.mcPositiva ? (
               <span style={{ fontSize: 10.5, fontWeight: 700, color: '#92400E', background: '#FEF3C7', border: '1px solid #FDE68A', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <AlertTriangle size={12} /> Margem Negativa
@@ -215,7 +342,7 @@ export function Dashboard({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
                 <AlertTriangle size={12} /> Faltam {formatBRL(peCalculo.falta)}
               </span>
             )}
-            <ChevronDown size={16} color="#7A7868" style={{ transform: peExpandido ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            <ChevronDown size={16} color="#5C5A4F" style={{ transform: peExpandido ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
           </div>
         </div>
 

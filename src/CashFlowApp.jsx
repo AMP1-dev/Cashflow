@@ -893,11 +893,6 @@ export default function CashFlowApp() {
         onLogout={sair}
         mesAtual={mesAtual}
         setMesAtual={setMesAtual}
-        onAbrirEquipe={() => setShowEquipeModal(true)}
-        onAbrirAgendamento={moduloAgendamentoAtivo ? () => setTela('agendamento') : null}
-        onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
-        onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { sessionStorage.removeItem('amp_admin_modo_empresa'); sessionStorage.removeItem('amp_admin_empresa_cache'); setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
-        ehDono={ehDono}
       />
 
       <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
@@ -917,6 +912,11 @@ export default function CashFlowApp() {
               onIrGestaoAVista={() => setTela('gestaoavista')}
               onAbrirImportacao={() => setShowImportarModal(true)}
               onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
+              onAbrirAgendamento={moduloAgendamentoAtivo ? () => setTela('agendamento') : null}
+              onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { sessionStorage.removeItem('amp_admin_modo_empresa'); sessionStorage.removeItem('amp_admin_empresa_cache'); setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
+              onAbrirEquipe={() => setShowEquipeModal(true)}
+              ehDono={ehDono}
+              ehAdmin={ehAdmin}
             />
           )}
           {tela === 'fluxo' && (
