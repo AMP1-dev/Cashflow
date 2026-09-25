@@ -3,7 +3,7 @@ import {
   Calendar, Clock, User, Plus, CheckCircle2, AlertCircle, 
   MessageCircle, DollarSign, FileText, ArrowLeft, ChevronLeft, ChevronRight, 
   Trash2, Edit3, X, Sparkles, Filter, ShoppingBag,
-  Share2, Copy, Check, ExternalLink, Globe
+  Share2, Copy, Check, ExternalLink, Globe, RefreshCw
 } from 'lucide-react';
 import { formatBRL, formatCompacto, daysInMonth, somenteDigitos } from '../utils/formatters';
 import { MESES } from '../utils/constants';
@@ -42,14 +42,31 @@ export function AgendamentoScreen({
   // Auto-Agendamento Online Público
   const [copiadoLink, setCopiadoLink] = useState(false);
   const [modalPreviewOnline, setModalPreviewOnline] = useState(false);
+  const [atualizando, setAtualizando] = useState(false);
 
-  // Sincroniza agendamentos em tempo real do Supabase
-  useEffect(() => {
-    if (empresa?.id) {
-      agendamentoService.getAgendamentosAsync(empresa.id).then(res => {
-        if (res && res.length > 0) setLista(res);
-      });
+  async function handleRecarregarAgenda() {
+    if (!empresa?.id) return;
+    setAtualizando(true);
+    try {
+      const res = await agendamentoService.getAgendamentosAsync(empresa.id);
+      if (res) setLista(res);
+    } catch (e) {} finally {
+      setTimeout(() => setAtualizando(false), 500);
     }
+  }
+
+  // Sincroniza agendamentos em tempo real do Supabase (ao montar e a cada 15s)
+  useEffect(() => {
+    if (!empresa?.id) return;
+    handleRecarregarAgenda();
+
+    const interval = setInterval(() => {
+      agendamentoService.getAgendamentosAsync(empresa.id).then(res => {
+        if (res) setLista(res);
+      });
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, [empresa?.id]);
 
   const linkAgendamentoPublico = useMemo(() => {
@@ -660,25 +677,49 @@ export function AgendamentoScreen({
             </div>
           </div>
 
-          <button
-            onClick={abrirNovoAgendamento}
-            style={{
-              padding: '9px 14px',
-              borderRadius: 9,
-              border: 'none',
-              background: '#15803D',
-              color: '#fff',
-              fontSize: 12.5,
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 5,
-              boxShadow: '0 2px 6px rgba(21,128,61,0.25)'
-            }}
-          >
-            <Plus size={16} /> Novo Agendamento
-          </button>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              onClick={handleRecarregarAgenda}
+              disabled={atualizando}
+              title="Sincronizar com o banco de dados agora"
+              style={{
+                padding: '8px 12px',
+                borderRadius: 9,
+                border: '1px solid #D1D5DB',
+                background: '#FAF8F3',
+                color: '#1F5C52',
+                fontSize: 12,
+                fontWeight: 700,
+                cursor: atualizando ? 'wait' : 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5
+              }}
+            >
+              <RefreshCw size={13} style={{ animation: atualizando ? 'spin 1s linear infinite' : 'none' }} />
+              <span>{atualizando ? 'Atualizando...' : 'Atualizar'}</span>
+            </button>
+
+            <button
+              onClick={abrirNovoAgendamento}
+              style={{
+                padding: '9px 14px',
+                borderRadius: 9,
+                border: 'none',
+                background: '#15803D',
+                color: '#fff',
+                fontSize: 12.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5,
+                boxShadow: '0 2px 6px rgba(21,128,61,0.25)'
+              }}
+            >
+              <Plus size={16} /> Novo Agendamento
+            </button>
+          </div>
         </div>
 
         {/* Filtros rápidos da timeline */}
