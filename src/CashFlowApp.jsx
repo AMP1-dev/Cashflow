@@ -104,6 +104,10 @@ export default function CashFlowApp() {
   // Admin state
   const [assinantesAdmin, setAssinantesAdmin] = useState([]);
 
+  // Controle de Vencimento de Contrato
+  const [bypassBloqueioAdmin, setBypassBloqueioAdmin] = useState(false);
+  const [showAvisoVencimentoModal, setShowAvisoVencimentoModal] = useState(false);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session && !window.location.hash.includes('type=recovery')) {
@@ -113,7 +117,7 @@ export default function CashFlowApp() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (_event === 'PASSWORD_RECOVERY') {
-        setSessao(null); // For├ºa a ficar na tela de auth
+        setSessao(null); // Força a ficar na tela de auth
         setTelaAuth('redefinir');
       } else if (session && !window.location.hash.includes('type=recovery')) {
         carregarDadosIniciais(session.user.id);
@@ -130,6 +134,35 @@ export default function CashFlowApp() {
       carregarLancamentos(empresaAtualObj.id);
     }
   }, [sessao, empresaAtualObj, mesAtual, anoAtual]);
+
+  // Alerta periódico a cada 3 dias quando faltar 30 dias ou menos para o vencimento
+  useEffect(() => {
+    if (!empresaAtualObj?.id || sessao?.ehAdmin || empresaAtualObj?.ehAdmin) return;
+    const dataVenc = empresaAtualObj?.data_vencimento || empresaAtualObj?.vencimento;
+    if (!dataVenc || typeof dataVenc !== 'string') return;
+    try {
+      const clean = dataVenc.split('T')[0];
+      const partes = clean.split('-');
+      if (partes.length === 3) {
+        const anoV = parseInt(partes[0], 10);
+        const mesV = parseInt(partes[1], 10) - 1;
+        const diaV = parseInt(partes[2], 10);
+        const dataVencObj = new Date(anoV, mesV, diaV);
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const diffMs = dataVencObj.getTime() - hoje.getTime();
+        const dias = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        if (dias >= 0 && dias <= 30) {
+          const chaveTs = `amp_aviso_vencimento_ts_${empresaAtualObj.id}`;
+          const ultimoTs = localStorage.getItem(chaveTs);
+          const tresDiasMs = 3 * 24 * 60 * 60 * 1000;
+          if (!ultimoTs || (Date.now() - parseInt(ultimoTs, 10)) >= tresDiasMs) {
+            setShowAvisoVencimentoModal(true);
+          }
+        }
+      }
+    } catch (e) {}
+  }, [empresaAtualObj?.id, empresaAtualObj?.data_vencimento, empresaAtualObj?.vencimento, sessao?.ehAdmin, empresaAtualObj?.ehAdmin]);
 
   async function carregarDadosIniciais(userId) {
     try {
@@ -889,9 +922,6 @@ export default function CashFlowApp() {
   const ehAdmin = !!(empresaAtualObj?.ehAdmin || sessao?.ehAdmin);
 
   // ─── Controle de Vencimento de Contrato & Bloqueio Automático ───
-  const [bypassBloqueioAdmin, setBypassBloqueioAdmin] = useState(false);
-  const [showAvisoVencimentoModal, setShowAvisoVencimentoModal] = useState(false);
-
   const dataVencimentoEmpresa = empresaAtualObj?.data_vencimento || empresaAtualObj?.vencimento;
   let diasAteVencimento = null;
   let dataVencimentoFormatada = '';
@@ -918,19 +948,6 @@ export default function CashFlowApp() {
   const contratoVencido = diasAteVencimento !== null && diasAteVencimento < 0;
   const statusSuspenso = empresaAtualObj?.status === 'suspenso' || empresaAtualObj?.status === 'cancelado';
   const deveBloquearAcesso = (contratoVencido || statusSuspenso) && !ehAdmin && !bypassBloqueioAdmin;
-
-  // Alerta periódico a cada 3 dias quando faltar 30 dias ou menos para o vencimento
-  useEffect(() => {
-    if (!empresaAtualObj?.id || ehAdmin || deveBloquearAcesso) return;
-    if (diasAteVencimento !== null && diasAteVencimento >= 0 && diasAteVencimento <= 30) {
-      const chaveTs = `amp_aviso_vencimento_ts_${empresaAtualObj.id}`;
-      const ultimoTs = localStorage.getItem(chaveTs);
-      const tresDiasMs = 3 * 24 * 60 * 60 * 1000;
-      if (!ultimoTs || (Date.now() - parseInt(ultimoTs, 10)) >= tresDiasMs) {
-        setShowAvisoVencimentoModal(true);
-      }
-    }
-  }, [empresaAtualObj?.id, diasAteVencimento, ehAdmin, deveBloquearAcesso]);
 
   function handleFecharAvisoLembrar3Dias() {
     if (empresaAtualObj?.id) {
