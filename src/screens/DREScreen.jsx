@@ -68,32 +68,34 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
   const baseLancamentos = useMemo(() => {
     if (regime === 'competencia') {
       // Pega todos os lançamentos do ano onde o mês de competência bate com mesAtual
-      const fonte = lancamentosAno || lancamentos;
-      return fonte.filter(l => {
+      const fonte = lancamentosAno || lancamentos || [];
+      return (fonte || []).filter(l => {
+        if (!l) return false;
         const mesComp = l.mesCompetencia !== undefined ? l.mesCompetencia : l.mes;
         return mesComp === mesAtual;
       });
     }
-    return lancamentos;
+    return lancamentos || [];
   }, [regime, lancamentos, lancamentosAno, mesAtual]);
 
   // ─── Cálculo DRE ─────────────────────────────────────────────────────────
   const calc = useMemo(() => {
-    const receitas    = baseLancamentos.filter(l => l.tipo === 'receita');
-    const despesasCmv = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'cmv');
-    const despesasVar = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel');
-    const despesasFix = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa');
-    const despesasFin = baseLancamentos.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira');
+    const list = baseLancamentos || [];
+    const receitas    = list.filter(l => l && l.tipo === 'receita');
+    const despesasCmv = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'cmv');
+    const despesasVar = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'variavel');
+    const despesasFix = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'fixa');
+    const despesasFin = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'financeira');
     // fornecedor não entra no DRE — aparece só no Fluxo de Caixa
 
-    const faturamento = receitas.reduce((s, l) => s + l.valor, 0);
-    const cmvCompras  = despesasCmv.reduce((s, l) => s + l.valor, 0);
+    const faturamento = receitas.reduce((s, l) => s + (Number(l.valor) || 0), 0);
+    const cmvCompras  = despesasCmv.reduce((s, l) => s + (Number(l.valor) || 0), 0);
 
     // Estoque (Modo 1)
-    const lInicial = baseLancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'inicial');
-    const lFinal   = baseLancamentos.find(l => l.tipo === 'estoque' && l.categoria === 'final');
-    const estoqueInicial = lInicial ? lInicial.valor : null;
-    const estoqueFinal   = lFinal   ? lFinal.valor   : null;
+    const lInicial = list.find(l => l && l.tipo === 'estoque' && l.categoria === 'inicial');
+    const lFinal   = list.find(l => l && l.tipo === 'estoque' && l.categoria === 'final');
+    const estoqueInicial = lInicial ? (Number(lInicial.valor) || null) : null;
+    const estoqueFinal   = lFinal   ? (Number(lFinal.valor) || null)   : null;
     const temEstoque     = estoqueInicial !== null || estoqueFinal !== null;
 
     // Hierarquia CMV
@@ -112,16 +114,16 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
       modoCmv = 'zero';
     }
 
-    const variaveis = despesasVar.reduce((s, l) => s + l.valor, 0);
-    const fixas     = despesasFix.reduce((s, l) => s + l.valor, 0);
-    const financeiras = despesasFin.reduce((s, l) => s + l.valor, 0);
+    const variaveis = despesasVar.reduce((s, l) => s + (Number(l.valor) || 0), 0);
+    const fixas     = despesasFix.reduce((s, l) => s + (Number(l.valor) || 0), 0);
+    const financeiras = despesasFin.reduce((s, l) => s + (Number(l.valor) || 0), 0);
 
     // Mão de Obra Extra (Diárias / Freelancers) e Mão de Obra Fixa
-    const despesasMaoDeObraExtra = despesasVar.filter(l => (l.subcategoria && (l.subcategoria.toLowerCase().includes('mão de obra') || l.subcategoria.toLowerCase().includes('diária') || l.subcategoria.toLowerCase().includes('diaria') || l.subcategoria.toLowerCase().includes('freelancer'))) || (l.descricao && (l.descricao.toLowerCase().includes('diária') || l.descricao.toLowerCase().includes('diaria') || l.descricao.toLowerCase().includes('freelancer'))));
-    const maoDeObraExtraTotal = despesasMaoDeObraExtra.reduce((s, l) => s + l.valor, 0);
+    const despesasMaoDeObraExtra = despesasVar.filter(l => (l.subcategoria && (String(l.subcategoria).toLowerCase().includes('mão de obra') || String(l.subcategoria).toLowerCase().includes('diária') || String(l.subcategoria).toLowerCase().includes('diaria') || String(l.subcategoria).toLowerCase().includes('freelancer'))) || (l.descricao && (String(l.descricao).toLowerCase().includes('diária') || String(l.descricao).toLowerCase().includes('diaria') || String(l.descricao).toLowerCase().includes('freelancer'))));
+    const maoDeObraExtraTotal = despesasMaoDeObraExtra.reduce((s, l) => s + (Number(l.valor) || 0), 0);
 
-    const despesasMaoDeObraFixa = despesasFix.filter(l => (l.subcategoria && (l.subcategoria.toLowerCase().includes('salário') || l.subcategoria.toLowerCase().includes('salario') || l.subcategoria.toLowerCase().includes('folha') || l.subcategoria.toLowerCase().includes('pró-labore') || l.subcategoria.toLowerCase().includes('pro-labore'))) || (l.descricao && (l.descricao.toLowerCase().includes('salário') || l.descricao.toLowerCase().includes('salario') || l.descricao.toLowerCase().includes('pró-labore') || l.descricao.toLowerCase().includes('pro-labore'))));
-    const maoDeObraFixaTotal = despesasMaoDeObraFixa.reduce((s, l) => s + l.valor, 0);
+    const despesasMaoDeObraFixa = despesasFix.filter(l => (l.subcategoria && (String(l.subcategoria).toLowerCase().includes('salário') || String(l.subcategoria).toLowerCase().includes('salario') || String(l.subcategoria).toLowerCase().includes('folha') || String(l.subcategoria).toLowerCase().includes('pró-labore') || String(l.subcategoria).toLowerCase().includes('pro-labore'))) || (l.descricao && (String(l.descricao).toLowerCase().includes('salário') || String(l.descricao).toLowerCase().includes('salario') || String(l.descricao).toLowerCase().includes('pró-labore') || String(l.descricao).toLowerCase().includes('pro-labore'))));
+    const maoDeObraFixaTotal = despesasMaoDeObraFixa.reduce((s, l) => s + (Number(l.valor) || 0), 0);
     const maoDeObraTotal = maoDeObraExtraTotal + maoDeObraFixaTotal;
     const custoPrimario = cmv + maoDeObraTotal;
 

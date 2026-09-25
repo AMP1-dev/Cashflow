@@ -101,7 +101,7 @@ export const timeBasedSchedule = [
     title: "Tomorrowland One World Radio LIVE",
     slogan: "The Sound of Tomorrowland 24/7",
     streamUrl: "https://22733.live.streamtheworld.com/OWR_INTERNATIONAL.mp3",
-    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB12_AAC.aac",
+    backupUrl: "https://stream.zeno.fm/f3wvbbqmdg8uv",
     genre: "Tomorrowland • Melodic Techno • Future Rave • EDM",
     currentTrack: "Tomorrowland One World Radio Global Broadcast (192 kbps HD)",
     artist: "Tomorrowland Mainstage • David Guetta • Armin van Buuren • Tiësto",
@@ -306,8 +306,8 @@ export const initialChannels = [
     badge: "SLAM! • DECADE 10's",
     genre: "Dance Pop • EDM • Club Hits 2010s",
     cover: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=800&q=80",
-    streamUrl: "https://stream.slam.nl/web14_mp3",
-    backupUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB14_AAC.aac",
+    streamUrl: "https://playerservices.streamtheworld.com/api/livestream-redirect/WEB14_MP3.mp3",
+    backupUrl: "https://stream.slam.nl/web14_mp3",
     color: "from-violet-600 to-indigo-950"
   },
   {
@@ -340,6 +340,39 @@ export const initialChannels = [
     cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80",
     streamUrl: "https://ice1.somafm.com/groovesalad-128-mp3",
     color: "from-rose-500 to-amber-900"
+  },
+  {
+    id: "ch-gregorian",
+    title: "Cantos Gregorianos • Contemplação",
+    desc: "Canal liso de altíssima qualidade e 100% sem propaganda. A pureza atemporal do Canto Gregoriano e Música Sacra medieval.",
+    badge: "GREGORIANO • SEM ANÚNCIOS",
+    genre: "Canto Gregoriano • Sacro & Meditação",
+    cover: "/gregorian.jpg",
+    streamUrl: "https://esperance.streamakaci.com/gregorien.mp3",
+    backupUrl: "http://streams.greenhost.nl:8080/gregoriaans",
+    color: "from-amber-700 to-stone-950"
+  },
+  {
+    id: "ch-classical",
+    title: "Radio Swiss Classic • Som Audiófilo",
+    desc: "Referência mundial na Suíça (SRG SSR). Transmissão contínua das maiores obras-primas da música clássica sem comerciais.",
+    badge: "CLÁSSICA • 100% SEM COMERCIAIS",
+    genre: "Música Clássica • Orquestral & Barroco",
+    cover: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128",
+    backupUrl: "https://stream.wqxr.org/wqxr",
+    color: "from-blue-800 to-slate-950"
+  },
+  {
+    id: "ch-liveshows",
+    title: "Arena Shows • Concertos Ao Vivo 24h",
+    desc: "Apenas áudio de shows e festivais ao vivo. Gravações históricas dos maiores palcos do mundo sem interrupções.",
+    badge: "SHOWS AO VIVO • LIVE ARENA",
+    genre: "Live Concerts • Rock & Pop Históricos",
+    cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80",
+    streamUrl: "https://stream.laut.fm/alive",
+    backupUrl: "https://strm112.1.fm/rockclassics_mobile_mp3",
+    color: "from-red-600 to-zinc-950"
   }
 ];
 

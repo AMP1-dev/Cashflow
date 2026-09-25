@@ -97,6 +97,132 @@ import CashFlowApp from './CashFlowApp';
 import DrywallApp from './drywall/DrywallApp';
 import PalmeirenseApp from './palmeirense/PalmeirenseApp';
 
+class GlobalErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('GlobalErrorBoundary caught error:', error, errorInfo);
+  }
+
+  handleLimparCache = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+    window.location.href = '/';
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          background: '#0F2B27',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: 420,
+            background: '#16352F',
+            borderRadius: 16,
+            border: '1px solid #234A42',
+            padding: 28,
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{
+              width: 56,
+              height: 56,
+              borderRadius: 16,
+              background: '#E8A33D',
+              color: '#0F2B27',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 26,
+              fontWeight: 700,
+              margin: '0 auto 16px',
+              fontFamily: 'Georgia, serif'
+            }}>
+              R$
+            </div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#FAF8F3', marginBottom: 8 }}>
+              Recuperação do Sistema
+            </div>
+            <p style={{ fontSize: 13, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 20 }}>
+              Ocorreu uma pequena instabilidade ao carregar a interface. Clique abaixo para restabelecer o aplicativo.
+            </p>
+            {this.state.error?.message && (
+              <div style={{
+                background: '#0B1E1B',
+                borderRadius: 8,
+                padding: '10px 12px',
+                fontSize: 11.5,
+                color: '#E8A33D',
+                fontFamily: 'monospace',
+                marginBottom: 20,
+                textAlign: 'left',
+                overflowX: 'auto',
+                maxHeight: 100
+              }}>
+                {this.state.error.message}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => window.location.reload()}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  borderRadius: 10,
+                  background: '#E8A33D',
+                  color: '#0F2B27',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'pointer'
+                }}
+              >
+                Recarregar Página
+              </button>
+              <button
+                type="button"
+                onClick={this.handleLimparCache}
+                style={{
+                  width: '100%',
+                  padding: '11px',
+                  borderRadius: 10,
+                  background: 'transparent',
+                  color: '#9FBDB5',
+                  border: '1px solid #2C5048',
+                  fontWeight: 600,
+                  fontSize: 13,
+                  cursor: 'pointer'
+                }}
+              >
+                Limpar Cache e Entrar Novamente
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function App() {
   const [activeMode, setActiveMode] = useState(() => {
     if (typeof window === 'undefined') return 'cashflow';
@@ -166,25 +292,17 @@ export default function App() {
     }
   }, [activeMode]);
 
-  if (activeMode === 'palmeirense') {
-    return <PalmeirenseApp />;
-  }
-
-  if (activeMode === 'drywall') {
-    return <DrywallApp />;
-  }
-
-  if (activeMode === 'radio') {
-    return <RadioApp />;
-  }
-
-  if (activeMode === 'portal') {
-    return (
-      <AmpProvider>
-        <MainPortal />
-      </AmpProvider>
-    );
-  }
-
-  return <CashFlowApp />;
+  return (
+    <GlobalErrorBoundary>
+      {activeMode === 'palmeirense' && <PalmeirenseApp />}
+      {activeMode === 'drywall' && <DrywallApp />}
+      {activeMode === 'radio' && <RadioApp />}
+      {activeMode === 'portal' && (
+        <AmpProvider>
+          <MainPortal />
+        </AmpProvider>
+      )}
+      {activeMode === 'cashflow' && <CashFlowApp />}
+    </GlobalErrorBoundary>
+  );
 }

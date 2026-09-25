@@ -130,50 +130,83 @@ export default function CashFlowApp() {
   }, [sessao, empresaAtualObj, mesAtual, anoAtual]);
 
   async function carregarDadosIniciais(userId) {
-    // Para ganhar tempo, fazemos as duas buscas (perfil e empresas) ao mesmo tempo!
-    const [reqProfile, reqVinculadas] = await Promise.all([
-      supabase.from('profiles').select('eh_admin, nome, cpf').eq('id', userId).single(),
-      supabase.from('empresa_usuarios').select('papel, empresa_id, empresas (*)').eq('usuario_id', userId)
-    ]);
+    try {
+      const [reqProfile, reqVinculadas] = await Promise.all([
+        supabase.from('profiles').select('eh_admin, nome, cpf').eq('id', userId).single(),
+        supabase.from('empresa_usuarios').select('papel, empresa_id, empresas (*)').eq('usuario_id', userId)
+      ]);
 
-    const profile = reqProfile.data;
-    const vinculadas = reqVinculadas.data;
+      const profile = reqProfile.data;
+      const vinculadas = reqVinculadas.data;
 
-    if (vinculadas && vinculadas.length > 0) {
-      const vinculo = vinculadas[0];
-      const empresa = vinculo.empresas;
-      const modulos = extrairModulosEmpresa(empresa);
-      const papel = vinculo.papel || 'dono';
-      setSessao({ tipo: 'cliente', empresaId: empresa.id, papel, ehAdmin: !!profile?.eh_admin });
-      // Injetamos o nome do profile e papel na empresa pra TopBar e BottomNav usarem
-      setEmpresaAtualObj({ ...empresa, ...modulos, nome: profile?.nome, papel, ehAdmin: !!profile?.eh_admin });
+      // 1. Tenta carregar empresa vinculada direta
+      let empresa = null;
+      let papel = 'dono';
 
-      if (!localStorage.getItem('avisoRegimeCaixaVisto')) {
-        setShowAvisoModal(true);
-      }
-
-      if (isNovoCadastroRef.current) {
-        isNovoCadastroRef.current = false;
-        setTela('diagnostico');
-      }
-    } else if (profile?.eh_admin) {
-      // Se o administrador estava navegando na visão de uma empresa específica, respeita o modo empresa
-      const empresaModoAdminId = sessionStorage.getItem('amp_admin_modo_empresa');
-      if (empresaModoAdminId) {
-        const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaModoAdminId).single();
-        if (emp) {
-          const modulos = extrairModulosEmpresa(emp);
-          setEmpresaAtualObj({ ...emp, ...modulos, ehAdmin: true, papel: 'dono', nome: profile?.nome || 'Administrador' });
-          setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
-          carregarLancamentos(emp.id);
-          return;
+      if (vinculadas && vinculadas.length > 0) {
+        const vinculo = vinculadas[0];
+        papel = vinculo.papel || 'dono';
+        if (vinculo.empresas) {
+          empresa = vinculo.empresas;
+        } else if (vinculo.empresa_id) {
+          const { data: empDireta } = await supabase.from('empresas').select('*').eq('id', vinculo.empresa_id).single();
+          empresa = empDireta;
         }
       }
-      setSessao({ tipo: 'admin' });
-      carregarPainelAdmin();
-      return;
-    } else {
-      // Usuário autenticado que ainda não tem empresa vinculada:
+
+      if (empresa && empresa.id) {
+        const modulos = extrairModulosEmpresa(empresa);
+        setSessao({ tipo: 'cliente', empresaId: empresa.id, papel, ehAdmin: !!profile?.eh_admin });
+        setEmpresaAtualObj({ ...empresa, ...modulos, nome: profile?.nome || '', papel, ehAdmin: !!profile?.eh_admin });
+
+        if (!localStorage.getItem('avisoRegimeCaixaVisto')) {
+          setShowAvisoModal(true);
+        }
+
+        if (isNovoCadastroRef.current) {
+          isNovoCadastroRef.current = false;
+          setTela('diagnostico');
+        }
+        return;
+      }
+
+      // 2. Se não tem empresa válida mas é admin
+      if (profile?.eh_admin) {
+        const empresaModoAdminId = sessionStorage.getItem('amp_admin_modo_empresa');
+        if (empresaModoAdminId) {
+          try {
+            const { data: emp } = await supabase.from('empresas').select('*').eq('id', empresaModoAdminId).maybeSingle();
+            if (emp) {
+              const modulos = extrairModulosEmpresa(emp);
+              const obj = { ...emp, ...modulos, ehAdmin: true, papel: 'dono', nome: profile?.nome || 'Administrador' };
+              setEmpresaAtualObj(obj);
+              setSessao({ tipo: 'cliente', empresaId: emp.id, papel: 'dono', ehAdmin: true });
+              carregarLancamentos(emp.id);
+              return;
+            } else {
+              const cacheStr = sessionStorage.getItem('amp_admin_empresa_cache');
+              if (cacheStr) {
+                try {
+                  const cachedObj = JSON.parse(cacheStr);
+                  if (cachedObj && cachedObj.id === empresaModoAdminId) {
+                    setEmpresaAtualObj(cachedObj);
+                    setSessao({ tipo: 'cliente', empresaId: cachedObj.id, papel: 'dono', ehAdmin: true });
+                    carregarLancamentos(cachedObj.id);
+                    return;
+                  }
+                } catch (eCache) {}
+              }
+            }
+          } catch (e) {
+            console.warn('Erro ao restaurar modo empresa do admin:', e);
+          }
+        }
+        setSessao({ tipo: 'admin' });
+        carregarPainelAdmin();
+        return;
+      }
+
+      // 3. Usuário autenticado que ainda não tem empresa vinculada
       try {
         const novaEmpresaId = (typeof crypto !== 'undefined' && crypto.randomUUID)
           ? crypto.randomUUID()
@@ -196,12 +229,15 @@ export default function CashFlowApp() {
           });
 
           setSessao({ tipo: 'cliente', empresaId: novaEmpresa.id, papel: 'dono' });
-          setEmpresaAtualObj({ ...novaEmpresa, nome: profile?.nome, papel: 'dono' });
+          setEmpresaAtualObj({ ...novaEmpresa, nome: profile?.nome || '', papel: 'dono' });
           setTela('diagnostico');
         }
       } catch (e) {
         console.error('Erro ao auto-criar empresa inicial:', e);
       }
+    } catch (errGlobal) {
+      console.error('Erro global em carregarDadosIniciais:', errGlobal);
+      setSessao(null);
     }
   }
 
@@ -255,30 +291,34 @@ export default function CashFlowApp() {
   }
 
   async function carregarPainelAdmin() {
-    const { data } = await supabase.from('empresas').select('*').order('criado_em', { ascending: false });
-    if (data) {
-      setAssinantesAdmin(data.map(e => {
-        const modulos = extrairModulosEmpresa(e);
-        return {
-          id: e.id,
-          empresa: e.razao_social,
-          fantasia: e.nome_fantasia,
-          cpf: e.cpf_titular,
-          nome: modulos.nome_responsavel || e.nome_responsavel || '',
-          email: e.email_contato,
-          telefone: e.telefone_contato,
-          status: e.status,
-          criadoEm: new Date(e.criado_em).toLocaleDateString('pt-BR'),
-          vencimento: e.vencimento,
-          valor_assinatura: e.valor_assinatura,
-          plano: e.plano,
-          modulo_nfse: modulos.modulo_nfse,
-          modulo_tradutor: modulos.modulo_tradutor,
-          modulo_agendamento: modulos.modulo_agendamento,
-          categoria_agendamento: modulos.categoria_agendamento,
-          nfse_ultimo_numero: modulos.nfse_ultimo_numero,
-        };
-      }));
+    try {
+      const { data } = await supabase.from('empresas').select('*').order('criado_em', { ascending: false });
+      if (data) {
+        setAssinantesAdmin(data.map(e => {
+          const modulos = extrairModulosEmpresa(e);
+          return {
+            id: e.id,
+            empresa: e.razao_social || 'Sem Razão Social',
+            fantasia: e.nome_fantasia || e.razao_social || '',
+            cpf: e.cpf_titular || '',
+            nome: modulos.nome_responsavel || e.nome_responsavel || '',
+            email: e.email_contato || '',
+            telefone: e.telefone_contato || '',
+            status: e.status || 'ativo',
+            criadoEm: e.criado_em ? new Date(e.criado_em).toLocaleDateString('pt-BR') : '—',
+            vencimento: e.vencimento || '',
+            valor_assinatura: e.valor_assinatura,
+            plano: e.plano,
+            modulo_nfse: modulos.modulo_nfse,
+            modulo_tradutor: modulos.modulo_tradutor,
+            modulo_agendamento: modulos.modulo_agendamento,
+            categoria_agendamento: modulos.categoria_agendamento,
+            nfse_ultimo_numero: modulos.nfse_ultimo_numero,
+          };
+        }));
+      }
+    } catch (e) {
+      console.error('Erro em carregarPainelAdmin:', e);
     }
   }
 
@@ -730,6 +770,7 @@ export default function CashFlowApp() {
       nome: assinanteLocal?.nome || assinanteLocal?.fantasia || empresaFinal.nome_fantasia || 'Administrador',
     };
 
+    sessionStorage.setItem('amp_admin_empresa_cache', JSON.stringify(objFinal));
     setEmpresaAtualObj(objFinal);
     setSessao({ tipo: 'cliente', empresaId, papel: 'dono', ehAdmin: true });
     carregarLancamentos(empresaId);
@@ -738,6 +779,7 @@ export default function CashFlowApp() {
   async function acessarMinhaEmpresaAdmin() {
     if (empresaAtualObj) {
       sessionStorage.setItem('amp_admin_modo_empresa', empresaAtualObj.id);
+      sessionStorage.setItem('amp_admin_empresa_cache', JSON.stringify(empresaAtualObj));
       setSessao({ tipo: 'cliente', empresaId: empresaAtualObj.id, papel: empresaAtualObj.papel || 'dono', ehAdmin: true });
       carregarLancamentos(empresaAtualObj.id);
       return;
@@ -766,6 +808,7 @@ export default function CashFlowApp() {
 
   async function sair() {
     sessionStorage.removeItem('amp_admin_modo_empresa');
+    sessionStorage.removeItem('amp_admin_empresa_cache');
     await supabase.auth.signOut();
     setSessao(null);
     setTelaAuth('login');
@@ -822,6 +865,7 @@ export default function CashFlowApp() {
             <button
               onClick={() => {
                 sessionStorage.removeItem('amp_admin_modo_empresa');
+                sessionStorage.removeItem('amp_admin_empresa_cache');
                 setSessao({ tipo: 'admin' });
                 carregarPainelAdmin();
               }}
@@ -852,7 +896,7 @@ export default function CashFlowApp() {
         onAbrirEquipe={() => setShowEquipeModal(true)}
         onAbrirAgendamento={moduloAgendamentoAtivo ? () => setTela('agendamento') : null}
         onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}
-        onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { sessionStorage.removeItem('amp_admin_modo_empresa'); setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
+        onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { sessionStorage.removeItem('amp_admin_modo_empresa'); sessionStorage.removeItem('amp_admin_empresa_cache'); setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
         ehDono={ehDono}
       />
 

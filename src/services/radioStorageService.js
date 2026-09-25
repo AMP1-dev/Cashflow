@@ -1,14 +1,14 @@
 import { initialRadioConfig, initialChannels, initialShows, initialSchedule, initialArticles, initialSongLibrary, timeBasedSchedule, initialB2BClients } from '../data/radioData';
 
 const CONFIG_KEY = 'amp_radio_config_v11';
-const CHANNELS_KEY = 'amp_radio_channels_v11';
+const CHANNELS_KEY = 'amp_radio_channels_v20_live_arena';
 const SHOWS_KEY = 'amp_radio_shows_v6';
 const SCHEDULE_KEY = 'amp_radio_schedule_v11';
 const ARTICLES_KEY = 'amp_radio_articles_v6';
 const REQUESTS_KEY = 'amp_radio_requests_v6';
 const AUTH_KEY = 'amp_radio_admin_auth_v6';
 const PASS_KEY = 'amp_radio_admin_pass_v6';
-const TIME_SCHEDULE_KEY = 'amp_radio_time_schedule_v11';
+const TIME_SCHEDULE_KEY = 'amp_radio_time_schedule_v21_sync';
 const B2B_CLIENTS_KEY = 'amp_radio_b2b_clients_v6';
 
 export const radioStorage = {
@@ -29,8 +29,26 @@ export const radioStorage = {
   },
   getTimeSchedule: () => {
     try {
+      // Clear older schedule caches
+      ['amp_radio_time_schedule_v1', 'amp_radio_time_schedule_v2', 'amp_radio_time_schedule_v11'].forEach(k => {
+        try { localStorage.removeItem(k); } catch {}
+      });
       const data = localStorage.getItem(TIME_SCHEDULE_KEY);
-      return data ? JSON.parse(data) : timeBasedSchedule;
+      if (!data) return timeBasedSchedule;
+      const stored = JSON.parse(data);
+      if (!Array.isArray(stored)) return timeBasedSchedule;
+      const defaultMap = new Map(timeBasedSchedule.map(s => [s.id, s]));
+      return stored.map(slot => {
+        const def = defaultMap.get(slot.id);
+        if (def) {
+          return {
+            ...slot,
+            streamUrl: def.streamUrl,
+            backupUrl: def.backupUrl
+          };
+        }
+        return slot;
+      });
     } catch {
       return timeBasedSchedule;
     }
@@ -44,8 +62,39 @@ export const radioStorage = {
   },
   getChannels: () => {
     try {
+      // Clear older stale channel caches
+      ['amp_radio_channels_v1', 'amp_radio_channels_v2', 'amp_radio_channels_v3', 'amp_radio_channels_v4', 'amp_radio_channels_v5', 'amp_radio_channels_v6', 'amp_radio_channels_v7', 'amp_radio_channels_v8', 'amp_radio_channels_v9', 'amp_radio_channels_v10', 'amp_radio_channels_v11', 'amp_radio_channels_v12', 'amp_radio_channels_v13', 'amp_radio_channels_v14', 'amp_radio_channels_v15'].forEach(k => {
+        try { localStorage.removeItem(k); } catch {}
+      });
+
       const data = localStorage.getItem(CHANNELS_KEY);
-      return data ? JSON.parse(data) : initialChannels;
+      if (!data) return initialChannels;
+      const stored = JSON.parse(data);
+      if (!Array.isArray(stored)) return initialChannels;
+      // Map stored channels and merge with initialChannels to always ensure correct official stream URLs & covers
+      const initialMap = new Map(initialChannels.map(c => [c.id, c]));
+      const merged = stored.map(ch => {
+        const init = initialMap.get(ch.id);
+        if (init) {
+          return {
+            ...ch,
+            streamUrl: init.streamUrl,
+            backupUrl: init.backupUrl,
+            cover: init.cover || ch.cover,
+            badge: init.badge || ch.badge,
+            title: init.title || ch.title,
+            genre: init.genre || ch.genre,
+            desc: init.desc || ch.desc
+          };
+        }
+        return ch;
+      });
+      for (const init of initialChannels) {
+        if (!merged.find(c => c.id === init.id)) {
+          merged.push(init);
+        }
+      }
+      return merged;
     } catch {
       return initialChannels;
     }

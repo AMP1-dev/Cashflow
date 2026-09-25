@@ -77,8 +77,21 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
   const [mostrarCancelados, setMostrarCancelados] = useState(false);
 
   const filtrados = useMemo(() => {
-    return assinantes.filter(a => {
-      const bate = !busca.trim() || a.empresa.toLowerCase().includes(busca.toLowerCase()) || a.cpf.includes(busca) || (a.email || '').toLowerCase().includes(busca.toLowerCase());
+    const termo = (busca || '').trim().toLowerCase();
+    return (assinantes || []).filter(a => {
+      const nomeEmpresa = (a.empresa || '').toLowerCase();
+      const nomeFantasia = (a.fantasia || '').toLowerCase();
+      const nomeResp = (a.nome || '').toLowerCase();
+      const docCpf = String(a.cpf || '');
+      const email = (a.email || '').toLowerCase();
+
+      const bate = !termo || 
+        nomeEmpresa.includes(termo) || 
+        nomeFantasia.includes(termo) || 
+        nomeResp.includes(termo) || 
+        docCpf.includes(termo) || 
+        email.includes(termo);
+
       let bateStatus = false;
       if (filtroStatus === 'todos') {
         bateStatus = a.status !== 'cancelado';
@@ -104,19 +117,34 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
 
   const cancelados = useMemo(() => {
     if (filtroStatus !== 'todos') return [];
-    return assinantes.filter(a => {
-      const bate = !busca.trim() || a.empresa.toLowerCase().includes(busca.toLowerCase()) || a.cpf.includes(busca) || (a.email || '').toLowerCase().includes(busca.toLowerCase());
+    const termo = (busca || '').trim().toLowerCase();
+    return (assinantes || []).filter(a => {
+      const nomeEmpresa = (a.empresa || '').toLowerCase();
+      const nomeFantasia = (a.fantasia || '').toLowerCase();
+      const docCpf = String(a.cpf || '');
+      const email = (a.email || '').toLowerCase();
+
+      const bate = !termo || 
+        nomeEmpresa.includes(termo) || 
+        nomeFantasia.includes(termo) || 
+        docCpf.includes(termo) || 
+        email.includes(termo);
+
       return bate && a.status === 'cancelado';
     });
   }, [assinantes, busca, filtroStatus]);
 
   const contagem = useMemo(() => {
     const c = { ativo: 0, teste: 0, suspenso: 0, cancelado: 0 };
-    assinantes.forEach(a => { c[a.status] = (c[a.status] || 0) + 1; });
+    (assinantes || []).forEach(a => { 
+      const st = a?.status || 'ativo';
+      if (c[st] !== undefined) c[st] = c[st] + 1;
+      else c.ativo = (c.ativo || 0) + 1;
+    });
     return c;
   }, [assinantes]);
 
-  const assinanteSelecionado = selecionado ? assinantes.find(a => a.id === selecionado) : null;
+  const assinanteSelecionado = selecionado ? (assinantes || []).find(a => a.id === selecionado) : null;
 
   return (
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#F3F4F6', minHeight: '100vh', color: '#1C2421' }}>
@@ -175,7 +203,7 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
 
         {filtroStatus !== 'todos' && (
           <div style={{ marginBottom: 10, fontSize: 12, color: '#6B7280' }}>
-            Filtrando por: <strong style={{ color: STATUS_ASSINATURA[filtroStatus].color }}>{STATUS_ASSINATURA[filtroStatus].label}</strong>
+            Filtrando por: <strong style={{ color: STATUS_ASSINATURA[filtroStatus]?.color || '#111827' }}>{STATUS_ASSINATURA[filtroStatus]?.label || filtroStatus}</strong>
             {' · '}<button onClick={() => setFiltroStatus('todos')} style={{ background: 'none', border: 'none', color: '#5B8AA6', cursor: 'pointer', textDecoration: 'underline', fontSize: 12, padding: 0 }}>limpar</button>
           </div>
         )}
@@ -186,7 +214,7 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
           <>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {assinantesPaginados.map(a => {
-                const st = STATUS_ASSINATURA[a.status];
+                const st = STATUS_ASSINATURA[a.status] || STATUS_ASSINATURA.ativo;
                 return (
                   <button
                     key={a.id}
@@ -213,7 +241,7 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
                         )}
                       </div>
                       <div style={{ fontSize: 11.5, color: '#4B5563', marginTop: 3 }}>
-                        {a.nome ? <strong>{a.nome} · </strong> : ''}{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}
+                        {a.nome ? <strong>{a.nome} · </strong> : ''}{a.cpf || 'Sem documento'} · {a.email || 'sem email'} · desde {a.criadoEm || '—'}
                       </div>
                       {a.vencimento && <div style={{ fontSize: 11, color: '#D97706', marginTop: 2, fontWeight: 500 }}>Vencimento: {new Date(a.vencimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'})}</div>}
                     </div>
@@ -284,7 +312,7 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
             {mostrarCancelados && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
                 {cancelados.map(a => {
-                  const st = STATUS_ASSINATURA[a.status];
+                  const st = STATUS_ASSINATURA[a.status] || STATUS_ASSINATURA.cancelado;
                   return (
                     <button
                       key={a.id}
@@ -293,7 +321,7 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
                     >
                       <div>
                         <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.fantasia || a.empresa}</div>
-                        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf} · {a.email || 'sem email'} · desde {a.criadoEm}</div>
+                        <div style={{ fontSize: 11.5, color: '#6B7280', marginTop: 2 }}>{a.cpf || 'Sem doc'} · {a.email || 'sem email'} · desde {a.criadoEm || '—'}</div>
                       </div>
                       <span style={{ fontSize: 10.5, fontWeight: 600, color: st.color, background: st.bg, padding: '3px 9px', borderRadius: 7, flexShrink: 0, marginLeft: 10 }}>
                         {st.label}
@@ -321,6 +349,8 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
 }
 
 export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, onRecuperarSenha, onAcessarEmpresa }) {
+  if (!assinante) return null;
+
   const [formEmpresa, setFormEmpresa] = useState(assinante.empresa || '');
   const [formFantasia, setFormFantasia] = useState(assinante.fantasia || '');
   const [formCpf, setFormCpf] = useState(assinante.cpf || '');
@@ -328,7 +358,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [formEmail, setFormEmail] = useState(assinante.email || '');
   const [formTelefone, setFormTelefone] = useState(assinante.telefone || '');
 
-  const [status, setStatus] = useState(assinante.status);
+  const [status, setStatus] = useState(assinante.status || 'ativo');
   const [vencimento, setVencimento] = useState(assinante.vencimento || '');
   const [valor, setValor] = useState(assinante.valor_assinatura || '');
   const [moduloNfse, setModuloNfse] = useState(assinante.modulo_nfse ?? false);

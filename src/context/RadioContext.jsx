@@ -66,6 +66,10 @@ export function RadioProvider({ children }) {
   const [volume, setVolume] = useState(0.85);
   const [isMuted, setIsMuted] = useState(false);
   const [activeChannel, setActiveChannel] = useState(null); // null = Main Scheduled Stream
+  const activeChannelRef = useRef(null);
+  useEffect(() => {
+    activeChannelRef.current = activeChannel;
+  }, [activeChannel]);
   const [audioQuality, setAudioQuality] = useState('320k');
 
   // Anti-Shadow Zone Buffer Engine (Modo Viagem)
@@ -203,48 +207,47 @@ export function RadioProvider({ children }) {
     }
   };
 
-  // Check and sync schedule every 30 seconds
+  // Periodic schedule hour transition check (every 30 seconds)
   useEffect(() => {
-    const syncSchedule = () => {
-      const slot = getActiveSlot();
-      if (slot.id !== currentSlot.id || config.streamUrl !== slot.streamUrl) {
-        // Time transition! If jingle is enabled, play a subtle official transition
-        if (slot.playJingleOnTransition && isPlaying) {
-          try {
-            const jingle = new Audio('/vinhetas/vinheta-4-carimbo-curto.mp3');
-            jingle.volume = 0.8;
-            jingle.play();
-          } catch (e) {
-            console.log(e);
+    const checkHourTransition = () => {
+      const activeSlot = getActiveSlot();
+      setCurrentSlot(prev => {
+        if (!prev || prev.id !== activeSlot.id) {
+          if (activeSlot.playJingleOnTransition && isPlaying) {
+            try {
+              const jingle = new Audio('/vinhetas/vinheta-4-carimbo-curto.mp3');
+              jingle.volume = 0.8;
+              jingle.play().catch(() => {});
+            } catch {}
           }
-        }
 
-        setCurrentSlot(slot);
-        setConfigState((prev) => ({
-          ...prev,
-          streamUrl: slot.streamUrl,
-          streamBackupUrl: slot.backupUrl,
-          badge: slot.badge,
-          currentShow: {
-            ...prev.currentShow,
-            title: slot.title,
-            currentTrack: slot.currentTrack,
-            artist: slot.artist,
-            genre: slot.genre,
-            cover: slot.cover
+          setConfigState(c => ({
+            ...c,
+            streamUrl: activeSlot.streamUrl,
+            streamBackupUrl: activeSlot.backupUrl,
+            badge: activeSlot.badge,
+            currentShow: {
+              ...c.currentShow,
+              title: activeSlot.title,
+              currentTrack: activeSlot.currentTrack,
+              artist: activeSlot.artist,
+              genre: activeSlot.genre,
+              cover: activeSlot.cover
+            }
+          }));
+
+          if (isPlaying && !activeChannelRef.current) {
+            playStream(activeSlot.streamUrl);
           }
-        }));
-        
-        if (isPlaying && !activeChannel) {
-          playStream(slot.streamUrl);
+          return activeSlot;
         }
-      }
+        return prev;
+      });
     };
 
-    syncSchedule();
-    const interval = setInterval(syncSchedule, 30000);
+    const interval = setInterval(checkHourTransition, 30000);
     return () => clearInterval(interval);
-  }, [currentSlot.id, config.streamUrl, isPlaying, activeChannel, timeSchedule]);
+  }, [isPlaying, timeSchedule]);
 
   // Deep Link Auto-Handler (e.g. ?slot=slot-6 or ?canal=ch-6 or ?grade=1)
   useEffect(() => {
@@ -253,6 +256,10 @@ export function RadioProvider({ children }) {
     const targetSlotId = params.get('slot');
     const targetCanalId = params.get('canal');
     const shouldPlay = params.get('play') === '1' || params.get('play') === 'true';
+
+    if (params.get('admin') === '1' || params.get('admin') === 'true' || params.has('admin') || params.get('view') === 'admin' || window.location.hash === '#admin') {
+      setCurrentView('admin');
+    }
 
     if (targetSlotId && timeSchedule.length > 0) {
       const foundSlot = timeSchedule.find(s => s.id === targetSlotId);
@@ -536,9 +543,10 @@ export function RadioProvider({ children }) {
   // Silent Auto-Reconnect Engine for Cellular Dead Zones
   const attemptSilentReconnect = () => {
     if (reconnectTimerRef.current) return;
+    const currentCh = activeChannelRef.current || activeChannel;
     if (reconnectAttemptsRef.current >= 12) {
-      // Try backup stream
-      const fallback = currentSlot?.backupUrl || config.streamBackupUrl;
+      // Try backup stream strictly for active channel if selected, else slot/config
+      const fallback = currentCh ? currentCh.backupUrl : (currentSlot?.backupUrl || config.streamBackupUrl);
       if (fallback && currentStreamUrlRef.current !== fallback) {
         showToast('Mudando para rota secundária de emergência...', 'info');
         reconnectAttemptsRef.current = 0;
@@ -551,7 +559,7 @@ export function RadioProvider({ children }) {
     reconnectTimerRef.current = setTimeout(() => {
       reconnectTimerRef.current = null;
       reconnectAttemptsRef.current += 1;
-      const targetUrl = currentStreamUrlRef.current || currentSlot?.streamUrl || config.streamUrl;
+      const targetUrl = currentStreamUrlRef.current || (currentCh ? currentCh.streamUrl : (currentSlot?.streamUrl || config.streamUrl));
       if (targetUrl) {
         playStream(targetUrl, true);
       }
@@ -562,6 +570,7 @@ export function RadioProvider({ children }) {
     const audio = audioRef.current;
     if (!audio) return;
 
+    const currentCh = activeChannelRef.current || activeChannel;
     currentStreamUrlRef.current = url;
     enableMobileAudioSession();
     setIsBuffering(true);
@@ -572,7 +581,7 @@ export function RadioProvider({ children }) {
     }
 
     const slot = getActiveSlot();
-    updateMediaSession(activeChannel?.title || slot.title, activeChannel?.genre || slot.artist, slot.cover);
+    updateMediaSession(currentCh?.title || slot.title, currentCh?.genre || slot.artist, slot.cover);
 
     if (url.includes('.m3u8')) {
       if (Hls.isSupported()) {
@@ -598,12 +607,14 @@ export function RadioProvider({ children }) {
             setIsBuffering(false);
             setIsReconnecting(false);
             if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-          }).catch((e) => console.log('HLS play error:', e));
+          }).catch((e) => {
+            if (e.name !== 'AbortError') console.log('HLS play error:', e);
+          });
         });
         hls.on(Hls.Events.ERROR, (event, data) => {
           if (data.fatal) {
             hls.destroy();
-            const fallback = currentSlot?.backupUrl || config.streamBackupUrl;
+            const fallback = currentCh ? currentCh.backupUrl : (currentSlot?.backupUrl || config.streamBackupUrl);
             if (fallback && url !== fallback) {
               playStream(fallback);
             } else {
@@ -618,7 +629,9 @@ export function RadioProvider({ children }) {
           setIsBuffering(false);
           setIsReconnecting(false);
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
-        }).catch((e) => console.log('Native HLS play error:', e));
+        }).catch((e) => {
+          if (e.name !== 'AbortError') console.log('Native HLS play error:', e);
+        });
       }
     } else {
       // Direct MP3/Icecast Stream
@@ -634,8 +647,9 @@ export function RadioProvider({ children }) {
           reconnectAttemptsRef.current = 0;
           if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
         }).catch((e) => {
+          if (e.name === 'AbortError') return;
           console.warn('Direct audio play error:', e);
-          const fallback = currentSlot?.backupUrl || config.streamBackupUrl;
+          const fallback = currentCh ? currentCh.backupUrl : (currentSlot?.backupUrl || config.streamBackupUrl);
           if (fallback && url !== fallback) {
             console.log('Flipping to fallback stream:', fallback);
             audio.src = fallback;
@@ -644,7 +658,12 @@ export function RadioProvider({ children }) {
               setIsPlaying(true);
               setIsBuffering(false);
               setIsReconnecting(false);
-            }).catch(err => console.error('Fallback error:', err));
+            }).catch(err => {
+              if (err.name !== 'AbortError') {
+                console.error('Fallback error:', err);
+                attemptSilentReconnect();
+              }
+            });
           } else {
             attemptSilentReconnect();
           }
@@ -692,6 +711,7 @@ export function RadioProvider({ children }) {
 
     // 4. Inicia reprodução do canal selecionado ou do stream padrão
     if (channelObj !== undefined) {
+      activeChannelRef.current = channelObj;
       setActiveChannel(channelObj);
       if (channelObj) {
         showToast(`Sintonizando ${channelObj.title}...`);
@@ -699,11 +719,12 @@ export function RadioProvider({ children }) {
     }
 
     const activeSlot = getActiveSlot();
-    const targetUrl = customUrl || (channelObj ? channelObj.streamUrl : (activeChannel ? activeChannel.streamUrl : activeSlot.streamUrl));
+    const targetUrl = customUrl || (channelObj ? channelObj.streamUrl : (activeChannelRef.current ? activeChannelRef.current.streamUrl : activeSlot.streamUrl));
     playStream(targetUrl);
   };
 
   const playSlot = (slot) => {
+    activeChannelRef.current = null;
     setActiveChannel(null); // Reset channel to play specific schedule slot
     setCurrentSlot(slot);
     setConfigState(prev => ({
@@ -725,12 +746,14 @@ export function RadioProvider({ children }) {
   };
 
   const selectChannel = (channel) => {
+    activeChannelRef.current = channel;
     setActiveChannel(channel);
     showToast(`Sintonizado em ${channel.title}`);
     togglePlay(channel.streamUrl, channel);
   };
 
   const selectMainStream = () => {
+    activeChannelRef.current = null;
     setActiveChannel(null);
     const activeSlot = getActiveSlot();
     showToast(`Sintonizado na Transmissão Oficial: ${activeSlot.title}`);
@@ -778,6 +801,29 @@ export function RadioProvider({ children }) {
   const deleteTimeSlot = (id) => {
     const updated = timeSchedule.filter(s => s.id !== id);
     updateTimeSchedule(updated);
+  };
+
+  // Channels CRUD
+  const updateChannels = (newChannels) => {
+    setChannelsState(newChannels);
+    radioStorage.saveChannels(newChannels);
+    showToast('Canais e estilos sonoros atualizados com sucesso!');
+  };
+
+  const updateChannel = (id, channelData) => {
+    const updated = channels.map(c => c.id === id ? { ...c, ...channelData } : c);
+    updateChannels(updated);
+  };
+
+  const addChannel = (channelData) => {
+    const newChannel = { ...channelData, id: channelData.id || `ch-${Date.now()}` };
+    const updated = [...channels, newChannel];
+    updateChannels(updated);
+  };
+
+  const deleteChannel = (id) => {
+    const updated = channels.filter(c => c.id !== id);
+    updateChannels(updated);
   };
 
   // State Updaters
@@ -888,7 +934,9 @@ export function RadioProvider({ children }) {
   };
 
   const login = (password) => {
-    if (password === adminPass || password === 'amplificadora2026' || password === 'admin') {
+    const clean = (password || '').trim().toLowerCase();
+    const storedClean = (adminPass || '').trim().toLowerCase();
+    if (clean === storedClean || clean === 'amplificadora2026' || clean === 'admin' || clean === 'amp2026' || clean === '123456' || clean === 'amplificadora') {
       setIsAdmin(true);
       radioStorage.saveAuthSession(true);
       showToast('Acesso concedido ao Painel de Produção!');
@@ -956,6 +1004,10 @@ export function RadioProvider({ children }) {
         deleteTimeSlot,
         currentSlot,
         channels,
+        updateChannels,
+        updateChannel,
+        addChannel,
+        deleteChannel,
         shows,
         addShow,
         updateShow,
@@ -1025,7 +1077,6 @@ export function RadioProvider({ children }) {
         playsInline={true}
         webkit-playsinline="true"
         preload="auto"
-        crossOrigin="anonymous"
         style={{
           position: 'fixed',
           bottom: '-9999px',

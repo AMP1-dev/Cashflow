@@ -12,7 +12,14 @@ export function RadioAdminPanel() {
     addTimeSlot,
     deleteTimeSlot,
     currentSlot,
+    channels,
+    updateChannels,
+    updateChannel,
+    addChannel,
+    deleteChannel,
     togglePlay,
+    isPlaying,
+    activeChannel,
     azuraStats,
     travelMode,
     toggleTravelMode,
@@ -67,6 +74,33 @@ export function RadioAdminPanel() {
     cover: '',
     playJingleOnTransition: true
   });
+
+  // Editing Channel / Bloco Fixo State
+  const [editingChannelId, setEditingChannelId] = useState(null);
+  const [isCreatingChannel, setIsCreatingChannel] = useState(false);
+  const [channelForm, setChannelForm] = useState({
+    title: '',
+    desc: '',
+    badge: '',
+    genre: '',
+    cover: '',
+    streamUrl: '',
+    backupUrl: '',
+    color: 'from-pink-600 to-purple-950'
+  });
+
+  const handleSaveChannel = (e) => {
+    e.preventDefault();
+    if (isCreatingChannel) {
+      addChannel(channelForm);
+      setIsCreatingChannel(false);
+      showToast('Novo canal criado com sucesso!');
+    } else if (editingChannelId) {
+      updateChannel(editingChannelId, channelForm);
+      setEditingChannelId(null);
+      showToast('Canal atualizado com sucesso!');
+    }
+  };
 
   // Show Form
   const [editingShowId, setEditingShowId] = useState(null);
@@ -268,6 +302,7 @@ export function RadioAdminPanel() {
           <div className="flex items-center gap-1 overflow-x-auto py-2.5 scrollbar-none">
             {[
               { id: 'schedule24', label: '⏰ Grade 24h & Links', icon: Clock },
+              { id: 'channels', label: '📻 Canais & Novos Blocos', icon: Disc, badge: channels?.length },
               { id: 'analytics', label: '📊 Audiência & Analytics (AzuraCast)', icon: BarChart3 },
               { id: 'shows', label: '🎬 Shows & Vídeos 4K', icon: Tv },
               { id: 'indoor', label: '🏢 Rádio Indoor (B2B)', icon: Building2 },
@@ -350,14 +385,14 @@ export function RadioAdminPanel() {
                   </div>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-white flex items-baseline gap-2">
-                  <span>{azuraStats.listenersTotal || config.currentShow?.listenersCount || 18}</span>
+                  <span>{azuraStats.listenersTotal ?? 0}</span>
                   <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    No Ar
+                    No Ar (Real)
                   </span>
                 </div>
                 <p className="text-[11px] text-slate-400 mt-2">
-                  Conexões HTTP/Stream ativas simultâneas
+                  Conexões HTTP/Stream ativas simultâneas (Auditado no Icecast)
                 </p>
               </div>
 
@@ -371,10 +406,10 @@ export function RadioAdminPanel() {
                   </div>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-white">
-                  {azuraStats.listenersUnique || 14}
+                  {azuraStats.listenersUnique ?? 0}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-2">
-                  Dispositivos e IPs distintos no ciclo atual
+                  Dispositivos e IPs distintos no ciclo atual (Auditado)
                 </p>
               </div>
 
@@ -388,10 +423,10 @@ export function RadioAdminPanel() {
                   </div>
                 </div>
                 <div className="text-3xl sm:text-4xl font-black text-white">
-                  {azuraStats.listenerPeak || 68}
+                  {azuraStats.listenerPeak ?? 0}
                 </div>
                 <p className="text-[11px] text-slate-400 mt-2">
-                  Maior audiência simultânea atingida
+                  Maior audiência simultânea atingida no servidor
                 </p>
               </div>
 
@@ -567,6 +602,92 @@ export function RadioAdminPanel() {
                 <Plus className="w-4 h-4" />
                 <span>Adicionar Novo Bloco</span>
               </button>
+            </div>
+
+            {/* Quick 1-Click Preset Bar to insert requested blocks */}
+            <div className="p-4 rounded-2xl bg-[#131120] border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-pink-400 shrink-0" />
+                <span className="text-xs font-bold text-white">Inserir Novos Blocos na Grade 24h:</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSlotForm({
+                      startHour: 4,
+                      endHour: 6,
+                      title: "Cantos Gregorianos • Contemplação",
+                      slogan: "A pureza atemporal da música sacra medieval",
+                      streamUrl: "https://esperance.streamakaci.com/gregorien.mp3",
+                      backupUrl: "http://streams.greenhost.nl:8080/gregoriaans",
+                      genre: "Canto Gregoriano • Sacro & Meditação",
+                      artist: "Música Sacra • Monges Beneditinos • Sem Anúncios",
+                      badge: "04:00 - 06:00 • GREGORIANO",
+                      cover: "/gregorian.jpg",
+                      playJingleOnTransition: false
+                    });
+                    setEditingSlotId('new');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  + Bloco Cantos Gregorianos (04h às 06h)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSlotForm({
+                      startHour: 20,
+                      endHour: 22,
+                      title: "Arena Shows • Concertos Ao Vivo 24h",
+                      slogan: "Gravações históricas dos maiores palcos do mundo",
+                      streamUrl: "https://stream.laut.fm/alive",
+                      backupUrl: "https://strm112.1.fm/rockclassics_mobile_mp3",
+                      genre: "Live Concerts • Rock & Pop Históricos",
+                      artist: "Queen, Coldplay, U2, Pink Floyd, The Rolling Stones",
+                      badge: "20:00 - 22:00 • ARENA SHOWS",
+                      cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80",
+                      playJingleOnTransition: true
+                    });
+                    setEditingSlotId('new');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 text-xs font-bold border border-red-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  + Bloco Arena Shows (20h às 22h)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSlotForm({
+                      startHour: 6,
+                      endHour: 8,
+                      title: "Radio Swiss Classic • Som Audiófilo",
+                      slogan: "As maiores obras-primas da música clássica sem comerciais",
+                      streamUrl: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128",
+                      backupUrl: "https://stream.wqxr.org/wqxr",
+                      genre: "Música Clássica • Orquestral & Barroco",
+                      artist: "Mozart, Beethoven, Bach, Vivaldi, Chopin",
+                      badge: "06:00 - 08:00 • SUÍÇA CLÁSSICA",
+                      cover: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80",
+                      playJingleOnTransition: false
+                    });
+                    setEditingSlotId('new');
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 text-xs font-bold border border-blue-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  + Bloco Suíça Clássica (06h às 08h)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('channels')}
+                  className="px-3 py-1.5 rounded-xl bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 text-xs font-bold border border-pink-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span>Ver Todos os Canais Fixos →</span>
+                </button>
+              </div>
             </div>
 
             {/* Time Slot Edit / Create Modal/Form */}
@@ -866,6 +987,382 @@ export function RadioAdminPanel() {
               })}
             </div>
 
+          </div>
+        )}
+
+        {/* Tab Channels: Gestão Completa de Canais & Novos Blocos Sonoros */}
+        {activeTab === 'channels' && (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-2.5">
+                  <Disc className="w-7 h-7 text-pink-500" />
+                  <span>Canais & Estilos Sonoros (Novos Blocos)</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-pink-500/20 text-pink-400 border border-pink-500/30">
+                    {channels?.length || 0} Canais Ativos
+                  </span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-1 max-w-2xl">
+                  Gerencie todos os canais temáticos (Cantos Gregorianos, Arena Shows, Rádio Suíça Clássica, SLAM! '10s, Amnesia, etc.). Teste áudio em 1 clique, copie links diretos e configure streams sem tocar em código!
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  setChannelForm({
+                    title: 'Novo Canal Temático',
+                    desc: 'Transmissão temática exclusiva com alta qualidade de áudio.',
+                    badge: 'CANAL EXCLUSIVO',
+                    genre: 'Estilo Musical',
+                    cover: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80',
+                    streamUrl: '',
+                    backupUrl: '',
+                    color: 'from-pink-600 to-purple-950'
+                  });
+                  setIsCreatingChannel(true);
+                  setEditingChannelId(null);
+                }}
+                className="px-5 py-3 rounded-2xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-xs font-black uppercase tracking-wider shadow-xl shadow-pink-600/30 transition-all flex items-center gap-2 self-start sm:self-auto cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Adicionar Novo Canal</span>
+              </button>
+            </div>
+
+            {/* Quick Presets for the 3 requested channels */}
+            <div className="p-4 rounded-2xl bg-[#131120] border border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-pink-400 shrink-0" />
+                <span className="text-xs font-bold text-white">Novos Blocos & Estilos Solicitados:</span>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const exists = channels.find(c => c.id === 'ch-gregorian');
+                    if (exists) {
+                      showToast('O canal Cantos Gregorianos já está ativo na lista abaixo!');
+                      return;
+                    }
+                    addChannel({
+                      id: "ch-gregorian",
+                      title: "Cantos Gregorianos • Contemplação",
+                      desc: "Canal liso de altíssima qualidade e 100% sem propaganda. A pureza atemporal do Canto Gregoriano e Música Sacra medieval.",
+                      badge: "GREGORIANO • SEM ANÚNCIOS",
+                      genre: "Canto Gregoriano • Sacro & Meditação",
+                      cover: "/gregorian.jpg",
+                      streamUrl: "https://esperance.streamakaci.com/gregorien.mp3",
+                      backupUrl: "http://streams.greenhost.nl:8080/gregoriaans",
+                      color: "from-amber-700 to-stone-950"
+                    });
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 text-xs font-bold border border-amber-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  + Cantos Gregorianos (Sem propaganda)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const exists = channels.find(c => c.id === 'ch-liveshows');
+                    if (exists) {
+                      showToast('O canal Arena Shows já está ativo na lista abaixo!');
+                      return;
+                    }
+                    addChannel({
+                      id: "ch-liveshows",
+                      title: "Arena Shows • Concertos Ao Vivo 24h",
+                      desc: "Apenas áudio de shows e festivais ao vivo. Gravações históricas dos maiores palcos do mundo sem interrupções.",
+                      badge: "SHOWS AO VIVO • LIVE ARENA",
+                      genre: "Live Concerts • Rock & Pop Históricos",
+                      cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=800&q=80",
+                      streamUrl: "https://stream.laut.fm/alive",
+                      backupUrl: "https://strm112.1.fm/rockclassics_mobile_mp3",
+                      color: "from-red-600 to-zinc-950"
+                    });
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-red-500/15 hover:bg-red-500/25 text-red-300 text-xs font-bold border border-red-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  + Arena Shows (Áudio Ao Vivo)
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const exists = channels.find(c => c.id === 'ch-classical');
+                    if (exists) {
+                      showToast('O canal Rádio Suíça Clássica já está ativo na lista abaixo!');
+                      return;
+                    }
+                    addChannel({
+                      id: "ch-classical",
+                      title: "Radio Swiss Classic • Som Audiófilo",
+                      desc: "Referência mundial na Suíça (SRG SSR). Transmissão contínua das maiores obras-primas da música clássica sem comerciais.",
+                      badge: "CLÁSSICA • 100% SEM COMERCIAIS",
+                      genre: "Música Clássica • Orquestral & Barroco",
+                      cover: "https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&w=800&q=80",
+                      streamUrl: "https://stream.srg-ssr.ch/m/rsc_de/mp3_128",
+                      backupUrl: "https://stream.wqxr.org/wqxr",
+                      color: "from-blue-800 to-slate-950"
+                    });
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 text-xs font-bold border border-blue-500/30 flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  + Rádio Suíça Clássica (Som Audiófilo)
+                </button>
+              </div>
+            </div>
+
+            {/* Channel Edit / Create Form */}
+            {(isCreatingChannel || editingChannelId) && (
+              <form onSubmit={handleSaveChannel} className="bg-[#131120] border-2 border-pink-500/40 rounded-3xl p-6 sm:p-8 space-y-5 animate-fadeIn shadow-2xl">
+                <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                  <h3 className="text-lg font-black text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-pink-400" />
+                    <span>{isCreatingChannel ? 'Adicionar Novo Canal / Estilo Sonoro' : 'Editar Canal'}</span>
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingChannel(false);
+                      setEditingChannelId(null);
+                    }}
+                    className="p-1 rounded-full text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Título do Canal / Bloco</label>
+                    <input
+                      type="text"
+                      required
+                      value={channelForm.title}
+                      onChange={(e) => setChannelForm({ ...channelForm, title: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      placeholder="Ex: Cantos Gregorianos • Contemplação"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Badge / Tag (ex: GREGORIANO • SEM ANÚNCIOS)</label>
+                    <input
+                      type="text"
+                      required
+                      value={channelForm.badge}
+                      onChange={(e) => setChannelForm({ ...channelForm, badge: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      placeholder="Ex: SHOWS AO VIVO • LIVE ARENA"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Gênero Musical</label>
+                    <input
+                      type="text"
+                      required
+                      value={channelForm.genre}
+                      onChange={(e) => setChannelForm({ ...channelForm, genre: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      placeholder="Ex: Canto Gregoriano • Sacro & Meditação"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Descrição Breve</label>
+                    <input
+                      type="text"
+                      value={channelForm.desc}
+                      onChange={(e) => setChannelForm({ ...channelForm, desc: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      placeholder="Ex: Canal liso de altíssima qualidade e 100% sem propaganda."
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">URL Principal do Stream (MP3/AAC/M3U8)</label>
+                    <input
+                      type="url"
+                      required
+                      value={channelForm.streamUrl}
+                      onChange={(e) => setChannelForm({ ...channelForm, streamUrl: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white font-mono text-[11px]"
+                      placeholder="https://..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">URL Secundária de Emergência (Backup)</label>
+                    <input
+                      type="url"
+                      value={channelForm.backupUrl}
+                      onChange={(e) => setChannelForm({ ...channelForm, backupUrl: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white font-mono text-[11px]"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">URL da Imagem de Capa</label>
+                  <input
+                    type="text"
+                    required
+                    value={channelForm.cover}
+                    onChange={(e) => setChannelForm({ ...channelForm, cover: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                    placeholder="/gregorian.jpg ou https://..."
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-3 border-t border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCreatingChannel(false);
+                      setEditingChannelId(null);
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-slate-800 text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-8 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 text-xs font-bold text-white shadow-lg cursor-pointer"
+                  >
+                    Salvar Canal
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* Channels Visual Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(channels || []).map((ch) => {
+                const isThisActive = activeChannel?.id === ch.id && isPlaying;
+
+                return (
+                  <div
+                    key={ch.id}
+                    className={`p-5 rounded-3xl border transition-all duration-300 flex flex-col justify-between gap-4 ${
+                      isThisActive
+                        ? 'bg-[#18132A] border-pink-500/60 shadow-[0_0_40px_rgba(236,72,153,0.25)]'
+                        : 'bg-[#131120] border-white/10 hover:border-white/20'
+                    }`}
+                  >
+                    <div className="flex items-start gap-4 min-w-0">
+                      <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-purple-950/60 shrink-0 border border-white/15 shadow-md">
+                        <img src={ch.cover} alt={ch.title} className="w-full h-full object-cover" />
+                        {isThisActive && (
+                          <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black uppercase tracking-wider animate-pulse">
+                            NO AR
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            isThisActive ? 'bg-pink-600 text-white' : 'bg-white/10 text-pink-300'
+                          }`}>
+                            ● {ch.badge || ch.genre}
+                          </span>
+                          <span className="text-xs text-slate-400 font-mono hidden sm:inline">
+                            {ch.genre}
+                          </span>
+                        </div>
+
+                        <h3 className="text-base sm:text-lg font-black text-white truncate">
+                          {ch.title}
+                        </h3>
+
+                        <p className="text-xs text-slate-300 line-clamp-2 font-light">
+                          {ch.desc}
+                        </p>
+
+                        <p className="text-[11px] text-pink-400 font-mono truncate max-w-sm pt-1">
+                          🔗 {ch.streamUrl}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 justify-end pt-3 border-t border-white/5 flex-wrap">
+                      <button
+                        onClick={() => togglePlay(ch.streamUrl, ch)}
+                        className={`px-4 py-2.5 rounded-xl text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                          isThisActive ? 'bg-pink-600 hover:bg-pink-500' : 'bg-purple-900/60 hover:bg-purple-800'
+                        }`}
+                        title="Ouvir este canal agora"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-white" />
+                        <span>{isThisActive ? 'Pausar' : 'Testar Áudio'}</span>
+                      </button>
+
+                      {/* Direct WhatsApp Share */}
+                      <a
+                        href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Ouça ${ch.title} na Rádio Amplificadora: https://amplificadora.com.br/?canal=${ch.id}&play=1`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-2.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 transition-all cursor-pointer flex items-center justify-center"
+                        title="Enviar link no WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                      </a>
+
+                      {/* Direct Copy Link */}
+                      <button
+                        onClick={async () => {
+                          const url = `https://amplificadora.com.br/?canal=${ch.id}&play=1`;
+                          if (navigator.clipboard) {
+                            try {
+                              await navigator.clipboard.writeText(url);
+                              showToast(`Link copiado com sucesso! (com play direto)`);
+                            } catch (e) {
+                              showToast(`Link: ${url}`);
+                            }
+                          }
+                        }}
+                        className="px-3.5 py-2.5 rounded-xl bg-pink-600/20 hover:bg-pink-600/30 text-pink-300 border border-pink-500/30 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                        title="Copiar link direto para ouvir este canal"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copiar Link</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setChannelForm(ch);
+                          setEditingChannelId(ch.id);
+                          setIsCreatingChannel(false);
+                        }}
+                        className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
+                        title="Editar Canal"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+
+                      {channels.length > 1 && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Excluir o canal ${ch.title}?`)) deleteChannel(ch.id);
+                          }}
+                          className="p-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 transition-colors cursor-pointer"
+                          title="Excluir Canal"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
