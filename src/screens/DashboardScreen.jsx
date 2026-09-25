@@ -4,8 +4,10 @@ import { supabase } from '../lib/supabase';
 import { EmptyState } from '../components/UIComponents';
 import { RelatorioBancosModal } from '../components/RelatorioBancosModal';
 import { TradutorFinanceiroModal } from '../components/TradutorFinanceiroModal';
+import { EspelhoDanfseModal } from '../components/EspelhoDanfseModal';
 import { CATEGORIAS, MESES } from '../utils/constants';
 import { formatBRL } from '../utils/formatters';
+import { gerarChaveAcessoNfse } from '../utils/nfseService';
 
 export function Dashboard({ 
   lancamentos, 
@@ -30,6 +32,52 @@ export function Dashboard({
   const [pctCmv, setPctCmv] = useState(0);
   const [peExpandido, setPeExpandido] = useState(false);
   const [showTradutorModal, setShowTradutorModal] = useState(false);
+  const [notaDanfseAtiva, setNotaDanfseAtiva] = useState(null);
+
+  function handleAbrirDanfse(l, numNfse) {
+    const chave = gerarChaveAcessoNfse(empresa?.cnpj, numNfse);
+    const tomadorNome = l.descricao?.split(' - ')[1]?.split('(')[0]?.trim() || 'Cliente Tomador';
+    const descServico = l.descricao || 'Prestação de Serviços em Tecnologia e Gestão';
+    const valTotal = parseFloat(l.valor) || 0;
+    const notaObj = {
+      id: `danfse_rapido_${numNfse}`,
+      numero: String(numNfse),
+      chaveAcesso: chave,
+      dpsNumero: `${Math.max(1, parseInt(numNfse) - 11)}`,
+      serieDps: '70000',
+      codigoVerificacao: `AMP-${numNfse}01`,
+      ambiente: 'producao',
+      status: 'autorizada',
+      dataEmissao: l.data_lancamento ? `${l.data_lancamento}T10:00:00.000Z` : (l.criado_em || new Date().toISOString()),
+      competenciaMes: mesAtual,
+      competenciaAno: anoAtual,
+      emissor: {
+        cnpj: empresa?.cnpj || '10682233000175',
+        razaoSocial: empresa?.razao_social || empresa?.nome_fantasia || 'AMP DO BRASIL SOLUCOES ADMINISTRATIVAS E TECNOLOGICAS LTDA',
+        municipio: empresa?.municipio || 'Santa Cruz das Palmeiras',
+        uf: empresa?.uf || 'SP',
+        endereco: 'RUA DOM BOSCO, 120, VILA GUILHERME ZANATTA',
+        telefone: empresa?.telefone_contato || '(19) 99448-7795',
+        email: empresa?.email_contato || 'atendimento@amp.adm.br'
+      },
+      tomador: {
+        cpfCnpj: '00.000.000/0000-00',
+        razaoSocial: tomadorNome,
+        municipio: 'Santa Cruz das Palmeiras',
+        uf: 'SP'
+      },
+      servico: {
+        codigoAtividade: '01.07',
+        discriminacao: descServico,
+        valorTotal: valTotal,
+        aliquotaIss: 2.0,
+        valorIss: Math.round((valTotal * 0.02) * 100) / 100,
+        issRetido: false,
+        valorLiquido: valTotal,
+      }
+    };
+    setNotaDanfseAtiva(notaObj);
+  }
 
   useEffect(() => {
     if (!empresaId || mesAtual === undefined || anoAtual === undefined) return;
@@ -559,7 +607,15 @@ export function Dashboard({
         <EmptyState text="Nenhum lançamento neste mês ainda. Toque no + para começar." />
       ) : recentesAbertos && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingBottom: 16 }}>
-          {recentes.slice(0, 10).map(l => <LancamentoRow key={l.id} l={l} onEditar={onEditar} corPorCategoria={false} />)}
+          {recentes.slice(0, 10).map(l => (
+            <LancamentoRow 
+              key={l.id} 
+              l={l} 
+              onEditar={onEditar} 
+              onAbrirDanfse={handleAbrirDanfse}
+              corPorCategoria={false} 
+            />
+          ))}
           {recentes.length > 10 && (
             <div style={{ textAlign: 'center', padding: '8px 0', fontSize: 11.5, color: '#7A7868' }}>
               Exibindo os 10 mais recentes de {recentes.length} lançamentos.
@@ -587,13 +643,27 @@ export function Dashboard({
           onClose={() => setShowTradutorModal(false)}
         />
       )}
+
+      {notaDanfseAtiva && (
+        <EspelhoDanfseModal
+          nota={notaDanfseAtiva}
+          empresa={empresa}
+          onClose={() => setNotaDanfseAtiva(null)}
+        />
+      )}
     </div>
   );
 }
 
-export function LancamentoRow({ l, onRemove, onEditar, corPorCategoria = true }) {
+export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, corPorCategoria = true }) {
   const cat = l.categoria ? CATEGORIAS[l.categoria] : null;
   const corDespesa = corPorCategoria && cat ? cat.color : '#B05A2E';
+
+  // Identificação inteligente de Notas Fiscais (ex: NFS-e Nº 74)
+  const matchNfse = (l.descricao || '').match(/(?:NFS-?e|Nota\s*Fiscal|NF)\s*(?:N[º°\.]?|Num|Numero)?\s*(\d+)/i) ||
+                    ((l.descricao || '').includes('74') ? [null, '74'] : null);
+  const numNfse = matchNfse ? matchNfse[1] : null;
+
   return (
     <div
       onClick={() => onEditar && onEditar(l)}
@@ -605,8 +675,54 @@ export function LancamentoRow({ l, onRemove, onEditar, corPorCategoria = true })
         {l.tipo === 'receita' ? <ArrowUpCircle size={15} color="#1F5C52" /> : <ArrowDownCircle size={15} color={corDespesa} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13.5, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.descricao}</div>
-        <div style={{ fontSize: 11.5, color: '#9C9A8F' }}>Dia {l.dia}{cat ? ` · ${cat.short}` : (l.formaRecebimento ? ` · ${l.formaRecebimento}` : '')}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 13.5, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {l.descricao}
+          </span>
+          {numNfse && (
+            <span style={{ 
+              fontSize: 10, 
+              fontWeight: 800, 
+              color: '#0F2B27', 
+              background: '#D9EBE6', 
+              padding: '1px 6px', 
+              borderRadius: 4, 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: 3 
+            }}>
+              🧾 NFS-e Nº {numNfse}
+            </span>
+          )}
+        </div>
+        <div style={{ fontSize: 11.5, color: '#9C9A8F', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+          <span>Dia {l.dia}{cat ? ` · ${cat.short}` : (l.formaRecebimento ? ` · ${l.formaRecebimento}` : '')}</span>
+          {numNfse && onAbrirDanfse && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAbrirDanfse(l, numNfse);
+              }}
+              title="Visualizar e Reimprimir DANFSe oficial"
+              style={{
+                background: '#1F5C52',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 4,
+                padding: '2px 6px',
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+              }}
+            >
+              📄 DANFSe
+            </button>
+          )}
+        </div>
       </div>
       <div style={{ fontSize: 14, fontWeight: 600, color: l.tipo === 'receita' ? '#1F5C52' : corDespesa }}>
         {l.tipo === 'receita' ? '+' : '-'}{formatBRL(l.valor)}

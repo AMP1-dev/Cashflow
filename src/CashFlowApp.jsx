@@ -9,6 +9,8 @@ import { AvisoRegimeCaixaModal } from './components/AvisoRegimeCaixaModal';
 import { ImportarExtratoModal } from './components/ImportarExtratoModal';
 import { GestaoEquipeModal } from './components/GestaoEquipeModal';
 import { EmitirNfseModal } from './components/EmitirNfseModal';
+import { AvisoVencimentoModal } from './components/AvisoVencimentoModal';
+import { TelaBloqueioContrato } from './components/TelaBloqueioContrato';
 import { ErrorBoundary } from './components/UIComponents';
 
 import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
@@ -35,10 +37,10 @@ function extrairModulosEmpresa(empresa) {
   if (empresa?.plano && typeof empresa.plano === 'string' && empresa.plano.startsWith('{')) {
     try {
       const parsed = JSON.parse(empresa.plano);
-      if (parsed.modulo_nfse !== undefined && modNfse === undefined) modNfse = parsed.modulo_nfse;
-      if (parsed.modulo_tradutor !== undefined && modTradutor === undefined) modTradutor = parsed.modulo_tradutor;
-      if (parsed.modulo_agendamento !== undefined && modAgendamento === undefined) modAgendamento = parsed.modulo_agendamento;
-      if (parsed.categoria_agendamento !== undefined && catAgendamento === undefined) catAgendamento = parsed.categoria_agendamento;
+      if (parsed.modulo_nfse !== undefined && (modNfse === undefined || modNfse === null || parsed.modulo_nfse === true)) modNfse = parsed.modulo_nfse;
+      if (parsed.modulo_tradutor !== undefined && (modTradutor === undefined || modTradutor === null || parsed.modulo_tradutor === true)) modTradutor = parsed.modulo_tradutor;
+      if (parsed.modulo_agendamento !== undefined && (modAgendamento === undefined || modAgendamento === null || parsed.modulo_agendamento === true)) modAgendamento = parsed.modulo_agendamento;
+      if (parsed.categoria_agendamento !== undefined && !catAgendamento) catAgendamento = parsed.categoria_agendamento;
       if (parsed.nfse_ultimo_numero !== undefined && !ultimoNum) ultimoNum = parsed.nfse_ultimo_numero;
       if (parsed.nome_responsavel !== undefined && !nomeResp) nomeResp = parsed.nome_responsavel;
     } catch (e) {}
@@ -306,7 +308,7 @@ export default function CashFlowApp() {
             telefone: e.telefone_contato || '',
             status: e.status || 'ativo',
             criadoEm: e.criado_em ? new Date(e.criado_em).toLocaleDateString('pt-BR') : '—',
-            vencimento: e.vencimento || '',
+            vencimento: e.data_vencimento || e.vencimento || '',
             valor_assinatura: e.valor_assinatura,
             plano: e.plano,
             modulo_nfse: modulos.modulo_nfse,
@@ -660,6 +662,10 @@ export default function CashFlowApp() {
 
   async function atualizarDadosAssinante(id, dados) {
     let payload = { ...dados };
+    if (dados.vencimento !== undefined) {
+      payload.data_vencimento = dados.vencimento || null;
+      payload.vencimento = dados.vencimento || null;
+    }
 
     // Monta dados serializados em 'plano' para garantir persistência nativa e permanente no Supabase
     let planoBase = {};
@@ -881,7 +887,81 @@ export default function CashFlowApp() {
 
   const ehDono = empresaAtualObj?.papel !== 'funcionario';
   const ehAdmin = !!(empresaAtualObj?.ehAdmin || sessao?.ehAdmin);
-  const moduloNfseAtivo = !!(empresaAtualObj?.modulo_nfse || localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true');
+
+  // ─── Controle de Vencimento de Contrato & Bloqueio Automático ───
+  const [bypassBloqueioAdmin, setBypassBloqueioAdmin] = useState(false);
+  const [showAvisoVencimentoModal, setShowAvisoVencimentoModal] = useState(false);
+
+  const dataVencimentoEmpresa = empresaAtualObj?.data_vencimento || empresaAtualObj?.vencimento;
+  let diasAteVencimento = null;
+  let dataVencimentoFormatada = '';
+
+  if (dataVencimentoEmpresa && typeof dataVencimentoEmpresa === 'string') {
+    try {
+      const clean = dataVencimentoEmpresa.split('T')[0];
+      const partes = clean.split('-');
+      if (partes.length === 3) {
+        const anoV = parseInt(partes[0], 10);
+        const mesV = parseInt(partes[1], 10) - 1;
+        const diaV = parseInt(partes[2], 10);
+        const dataVenc = new Date(anoV, mesV, diaV);
+        dataVencimentoFormatada = `${String(diaV).padStart(2, '0')}/${String(mesV + 1).padStart(2, '0')}/${anoV}`;
+
+        const hoje = new Date();
+        hoje.setHours(0, 0, 0, 0);
+        const diffMs = dataVenc.getTime() - hoje.getTime();
+        diasAteVencimento = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+      }
+    } catch (e) {}
+  }
+
+  const contratoVencido = diasAteVencimento !== null && diasAteVencimento < 0;
+  const statusSuspenso = empresaAtualObj?.status === 'suspenso' || empresaAtualObj?.status === 'cancelado';
+  const deveBloquearAcesso = (contratoVencido || statusSuspenso) && !ehAdmin && !bypassBloqueioAdmin;
+
+  // Alerta periódico a cada 3 dias quando faltar 30 dias ou menos para o vencimento
+  useEffect(() => {
+    if (!empresaAtualObj?.id || ehAdmin || deveBloquearAcesso) return;
+    if (diasAteVencimento !== null && diasAteVencimento >= 0 && diasAteVencimento <= 30) {
+      const chaveTs = `amp_aviso_vencimento_ts_${empresaAtualObj.id}`;
+      const ultimoTs = localStorage.getItem(chaveTs);
+      const tresDiasMs = 3 * 24 * 60 * 60 * 1000;
+      if (!ultimoTs || (Date.now() - parseInt(ultimoTs, 10)) >= tresDiasMs) {
+        setShowAvisoVencimentoModal(true);
+      }
+    }
+  }, [empresaAtualObj?.id, diasAteVencimento, ehAdmin, deveBloquearAcesso]);
+
+  function handleFecharAvisoLembrar3Dias() {
+    if (empresaAtualObj?.id) {
+      localStorage.setItem(`amp_aviso_vencimento_ts_${empresaAtualObj.id}`, Date.now().toString());
+    }
+    setShowAvisoVencimentoModal(false);
+  }
+
+  // Se o contrato estiver vencido e a empresa não renovou: bloqueia o acesso
+  if (deveBloquearAcesso) {
+    return (
+      <TelaBloqueioContrato
+        empresa={empresaAtualObj}
+        dataVencimentoFormatada={dataVencimentoFormatada}
+        onLogout={sair}
+        onBypassAdmin={ehAdmin ? () => setBypassBloqueioAdmin(true) : null}
+      />
+    );
+  }
+
+  // Garante que se houver notas fiscais emitidas ou lançamentos com NFS-e, o módulo NFS-e fica ativo
+  const temNotasLancadas = lancamentosEmpresa.some(l => 
+    (l.descricao || '').toLowerCase().includes('nfs-e') || 
+    (l.descricao || '').toLowerCase().includes('nota fiscal') ||
+    (l.descricao || '').includes('74')
+  );
+  const moduloNfseAtivo = !!(
+    empresaAtualObj?.modulo_nfse || 
+    localStorage.getItem(`amp_modulo_nfse_${empresaAtualObj?.id}`) === 'true' ||
+    temNotasLancadas
+  );
   const moduloTradutorAtivo = !!(empresaAtualObj?.modulo_tradutor || localStorage.getItem(`amp_modulo_tradutor_${empresaAtualObj?.id}`) === 'true');
   const moduloAgendamentoAtivo = !!(empresaAtualObj?.modulo_agendamento || localStorage.getItem(`amp_modulo_agendamento_${empresaAtualObj?.id}`) === 'true');
 
@@ -894,6 +974,37 @@ export default function CashFlowApp() {
         mesAtual={mesAtual}
         setMesAtual={setMesAtual}
       />
+
+      {/* Faixa Fixa de Aviso de Vencimento quando faltar 30 dias ou menos */}
+      {diasAteVencimento !== null && diasAteVencimento >= 0 && diasAteVencimento <= 30 && (
+        <div style={{
+          background: 'linear-gradient(90deg, #B45309 0%, #D97706 100%)',
+          color: '#FFFDF5',
+          padding: '6px 16px',
+          fontSize: 12,
+          fontWeight: 700,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          zIndex: 10
+        }}>
+          <span>⏳ Contrato vence em {diasAteVencimento} dia(s) ({dataVencimentoFormatada})</span>
+          <a
+            href={`https://wa.me/5519994487795?text=${encodeURIComponent(`Olá, sou da empresa ${empresaAtualObj.nome_fantasia || empresaAtualObj.razao_social} e gostaria de regularizar a renovação do nosso plano do AMP Flow.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#FEF3C7',
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              marginLeft: 10
+            }}
+          >
+            Renovar agora via WhatsApp →
+          </a>
+        </div>
+      )}
 
       <div style={{ flex: 1, paddingBottom: 88, overflowY: 'auto' }}>
         <ErrorBoundary onReset={() => setTela('dashboard')}>
@@ -949,6 +1060,7 @@ export default function CashFlowApp() {
               empresa={empresaAtualObj}
               mesAtual={mesAtual}
               anoAtual={anoAtual}
+              lancamentos={lancamentosEmpresa}
               onAdicionarReceitaAoCaixa={(rec) => addLancamento(rec)}
               onVoltar={() => setTela('dashboard')}
             />
@@ -1072,6 +1184,15 @@ export default function CashFlowApp() {
       )}
 
       {showAvisoModal && <AvisoRegimeCaixaModal onClose={fecharAvisoModal} />}
+
+      {showAvisoVencimentoModal && (
+        <AvisoVencimentoModal
+          empresa={empresaAtualObj}
+          diasRestantes={diasAteVencimento}
+          dataVencimentoFormatada={dataVencimentoFormatada}
+          onFecharLembrar3Dias={handleFecharAvisoLembrar3Dias}
+        />
+      )}
     </div>
   );
 }
