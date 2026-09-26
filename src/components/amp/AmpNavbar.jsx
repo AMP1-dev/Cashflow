@@ -184,6 +184,18 @@ export function AmpNavbar() {
               Console / Login
             </button>
 
+            {/* Direct Link to AMP Flow */}
+            <a
+              href="https://dre.amp.ia.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs tracking-wide shadow-sm shadow-emerald-900/10 transition-all flex items-center gap-1"
+              title="Acessar AMP Flow (Fluxo de Caixa, DRE & Agendamento)"
+            >
+              <span>AMP Flow</span>
+              <span className="text-[10px] bg-emerald-800/60 px-1.5 py-0.5 rounded text-emerald-100 font-bold">DRE</span>
+            </a>
+
             {/* Primary Action Button: Azul Petróleo (Matching Alibaba Cloud Free Trial button) */}
             <button
               onClick={() => setIsDiagnosticModalOpen(true)}
@@ -196,6 +208,15 @@ export function AmpNavbar() {
 
           {/* Mobile Actions */}
           <div className="flex items-center gap-2 lg:hidden">
+            <a
+              href="https://dre.amp.ia.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-medium text-[11px] flex items-center gap-1"
+            >
+              <span>AMP Flow</span>
+            </a>
+
             <button
               onClick={toggleThemeMode}
               className={`p-1.5 rounded-lg border ${

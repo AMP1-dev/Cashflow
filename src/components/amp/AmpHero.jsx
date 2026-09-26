@@ -13,26 +13,26 @@ export function AmpHero() {
   // 4 Seamless Hairline Features
   const quickFeatures = [
     {
-      title: "Migração Segura & Cloud",
-      subtitle: "Performance superior em nuvem dedicada com até 40% de redução em custos de infraestrutura.",
-      linkText: "Conhecer migração",
-      url: "https://remoto.amp.ia.br"
+      title: "AMP Flow (DRE & Agendamento)",
+      subtitle: "SaaS financeiro com DRE em tempo real, emissão de NFS-e (IBS/CBS) e auto-agendamento online para clientes.",
+      linkText: "Acessar AMP Flow",
+      url: "https://dre.amp.ia.br"
     },
     {
       title: "MeshCentral NOC 24/7",
-      subtitle: "Monitoramento contínuo de servidores e endpoints com atendimento crítico em < 12 minutos.",
+      subtitle: "Monitoramento contínuo de 15.000+ servidores e endpoints com atendimento crítico em < 12 minutos.",
       linkText: "Acessar NOC",
       url: "https://remoto.amp.ia.br"
     },
     {
-      title: "Aliança Empresarial (Case)",
-      subtitle: "Gestão completa de TI corporativa, cibersegurança ativa e hospedagem de alta performance.",
-      linkText: "Conhecer case de TI",
+      title: "Aliança Empresarial & BPO",
+      subtitle: "BPO financeiro integral, planejamento tributário preventivo e gestão contábil consultiva.",
+      linkText: "Conhecer Aliança",
       url: "https://aliancaempresarial.net.br"
     },
     {
       title: "Backup Imutável WORM",
-      subtitle: "Armazenamento blindado à prova de ataques de Ransomware e recuperação instantânea.",
+      subtitle: "Armazenamento blindado anti-ransomware com restauração instantânea e conformidade LGPD.",
       linkText: "Ver proteção",
       url: "https://remoto.amp.ia.br"
     }
@@ -186,13 +186,23 @@ export function AmpHero() {
           <p className={`text-base sm:text-lg font-light leading-relaxed max-w-2xl ${
             isDark ? 'text-slate-300' : 'text-slate-600'
           }`}>
-            Para Líderes e Empresas escalando suas operações com alta disponibilidade, suporte gerenciado 24/7 via MeshCentral, defesa imutável contra ransomware e solidez tributária Aliança.
+            Para Líderes e Empresas escalando suas operações: suporte gerenciado 24/7 via MeshCentral, gestão financeira inteligente com DRE e auto-agendamento no AMP Flow, defesa contra ransomware e solidez tributária Aliança.
           </p>
         </div>
 
         {/* Action Buttons & Checkmarks */}
         <div className="mt-8 space-y-6">
           <div className="flex flex-wrap items-center gap-3.5">
+            <a
+              href="https://dre.amp.ia.br"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-normal text-sm tracking-wide shadow-md shadow-emerald-900/15 transition-all flex items-center gap-2 group"
+            >
+              <span>Acessar AMP Flow (DRE &amp; Agenda)</span>
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </a>
+
             <button
               onClick={() => setIsDiagnosticModalOpen(true)}
               className="px-6 py-3.5 rounded-xl bg-[#0052D9] hover:bg-[#003B99] text-white font-normal text-sm tracking-wide shadow-md shadow-blue-900/15 transition-all flex items-center gap-2 group"

@@ -5,21 +5,25 @@ import {
   initialSuccessCases,
   initialClientPortalLinks,
   initialBlogArticles,
-  initialTestimonials
+  initialTestimonials,
+  initialCategoryProducts,
+  initialEcosystemItems
 } from '../data/universoAmpData';
 
 const AMP_STORAGE_KEYS = {
-  SITE_CONFIG: 'amp_corporate_config_v1',
-  ASSETS: 'amp_corporate_assets_v1',
-  SERVICES: 'amp_corporate_services_v1',
-  CASES: 'amp_corporate_cases_v1',
-  PORTAL_LINKS: 'amp_corporate_portal_links_v1',
-  ARTICLES: 'amp_corporate_articles_v1',
-  TESTIMONIALS: 'amp_corporate_testimonials_v1',
-  LEADS: 'amp_corporate_leads_v1',
-  DIAGNOSTICS: 'amp_corporate_diagnostics_v1',
-  ADMIN_PASS: 'amp_corporate_admin_pass_v1',
-  AUTH_SESSION: 'amp_corporate_auth_session_v1',
+  SITE_CONFIG: 'amp_corporate_config_v3',
+  ASSETS: 'amp_corporate_assets_v3',
+  SERVICES: 'amp_corporate_services_v3',
+  CASES: 'amp_corporate_cases_v3',
+  PORTAL_LINKS: 'amp_corporate_portal_links_v3',
+  CATEGORY_PRODUCTS: 'amp_corporate_category_products_v3',
+  ECOSYSTEM_ITEMS: 'amp_corporate_ecosystem_items_v3',
+  ARTICLES: 'amp_corporate_articles_v3',
+  TESTIMONIALS: 'amp_corporate_testimonials_v3',
+  LEADS: 'amp_corporate_leads_v3',
+  DIAGNOSTICS: 'amp_corporate_diagnostics_v3',
+  ADMIN_PASS: 'amp_corporate_admin_pass_v3',
+  AUTH_SESSION: 'amp_corporate_auth_session_v3',
 };
 
 const DEFAULT_ADMIN_PASS = 'amp2026';
@@ -57,6 +61,12 @@ export const ampStorageService = {
 
   getPortalLinks: () => load(AMP_STORAGE_KEYS.PORTAL_LINKS, initialClientPortalLinks),
   savePortalLinks: (links) => save(AMP_STORAGE_KEYS.PORTAL_LINKS, links),
+
+  getCategoryProducts: () => load(AMP_STORAGE_KEYS.CATEGORY_PRODUCTS, initialCategoryProducts),
+  saveCategoryProducts: (products) => save(AMP_STORAGE_KEYS.CATEGORY_PRODUCTS, products),
+
+  getEcosystemItems: () => load(AMP_STORAGE_KEYS.ECOSYSTEM_ITEMS, initialEcosystemItems),
+  saveEcosystemItems: (items) => save(AMP_STORAGE_KEYS.ECOSYSTEM_ITEMS, items),
 
   getArticles: () => load(AMP_STORAGE_KEYS.ARTICLES, initialBlogArticles),
   saveArticles: (articles) => save(AMP_STORAGE_KEYS.ARTICLES, articles),
@@ -100,55 +110,17 @@ export const ampStorageService = {
     }
   },
 
-  exportFullBackup: () => {
-    const backup = {
-      version: '1.0-universo-amp',
-      timestamp: new Date().toISOString(),
-      siteConfig: ampStorageService.getConfig(),
-      assets: ampStorageService.getAssets(),
-      services: ampStorageService.getServices(),
-      cases: ampStorageService.getCases(),
-      portalLinks: ampStorageService.getPortalLinks(),
-      articles: ampStorageService.getArticles(),
-      testimonials: ampStorageService.getTestimonials(),
-      leads: ampStorageService.getLeads(),
-      diagnostics: ampStorageService.getDiagnostics(),
-    };
-    return JSON.stringify(backup, null, 2);
-  },
-
-  importFullBackup: (jsonString) => {
-    try {
-      const data = JSON.parse(jsonString);
-      if (!data.siteConfig || !data.services) {
-        throw new Error('Arquivo de backup inválido.');
-      }
-      if (data.siteConfig) ampStorageService.saveConfig(data.siteConfig);
-      if (data.assets) ampStorageService.saveAssets(data.assets);
-      if (data.services) ampStorageService.saveServices(data.services);
-      if (data.cases) ampStorageService.saveCases(data.cases);
-      if (data.portalLinks) ampStorageService.savePortalLinks(data.portalLinks);
-      if (data.articles) ampStorageService.saveArticles(data.articles);
-      if (data.testimonials) ampStorageService.saveTestimonials(data.testimonials);
-      if (data.leads) ampStorageService.saveLeads(data.leads);
-      if (data.diagnostics) ampStorageService.saveDiagnostics(data.diagnostics);
-      return { success: true };
-    } catch (err) {
-      return { success: false, error: err.message };
-    }
-  },
-
-  resetToDefaults: () => {
+  resetDefaults: () => {
     try {
       localStorage.removeItem(AMP_STORAGE_KEYS.SITE_CONFIG);
       localStorage.removeItem(AMP_STORAGE_KEYS.ASSETS);
       localStorage.removeItem(AMP_STORAGE_KEYS.SERVICES);
       localStorage.removeItem(AMP_STORAGE_KEYS.CASES);
       localStorage.removeItem(AMP_STORAGE_KEYS.PORTAL_LINKS);
+      localStorage.removeItem(AMP_STORAGE_KEYS.CATEGORY_PRODUCTS);
+      localStorage.removeItem(AMP_STORAGE_KEYS.ECOSYSTEM_ITEMS);
       localStorage.removeItem(AMP_STORAGE_KEYS.ARTICLES);
       localStorage.removeItem(AMP_STORAGE_KEYS.TESTIMONIALS);
-      localStorage.removeItem(AMP_STORAGE_KEYS.LEADS);
-      localStorage.removeItem(AMP_STORAGE_KEYS.DIAGNOSTICS);
     } catch (err) {
       console.error('Erro ao resetar storage AMP:', err);
     }

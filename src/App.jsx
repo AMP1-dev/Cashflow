@@ -238,7 +238,7 @@ export default function App() {
     if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
       return 'radio';
     }
-    if (params.get('app') === 'portal') {
+    if (params.get('app') === 'portal' || hostname === 'amp.adm.br' || hostname === 'www.amp.adm.br' || hostname === 'amp.ia.br' || hostname === 'www.amp.ia.br') {
       return 'portal';
     }
     // Default for dre.amp.ia.br, amp-flow.vercel.app, and general usage:
@@ -261,7 +261,7 @@ export default function App() {
         setActiveMode('drywall');
       } else if (hostname.includes('amplificadora') || params.get('app') === 'radio') {
         setActiveMode('radio');
-      } else if (params.get('app') === 'portal') {
+      } else if (params.get('app') === 'portal' || hostname === 'amp.adm.br' || hostname === 'www.amp.adm.br' || hostname === 'amp.ia.br' || hostname === 'www.amp.ia.br') {
         setActiveMode('portal');
       } else {
         setActiveMode('cashflow');

@@ -1,11 +1,11 @@
 export const initialAmpSiteConfig = {
   name: "Grupo AMP",
   subname: "Universo AMP",
-  tagline: "40+ Anos de Excelência em TI Corporativa, Governança & Consultoria Estratégica",
-  slogan: "Convergência tecnológica de alta performance e solidez econômico-fiscal para potencializar empresas em todo o Brasil.",
-  shortDescription: "Com mais de quatro décadas de experiência e inovação ininterrupta, o Grupo AMP integra infraestrutura de TI avançada, segurança da informação, suporte remoto 24/7, contabilidade estratégica e inteligência financeira.",
-  heroTitle: "40+ Anos de Inovação em TI Corporativa & Inteligência Estratégica",
-  heroSubtitle: "Unimos gestão avançada de infraestrutura de TI, suporte remoto em tempo real, governança em nuvem e assessoria financeira de alta precisão em um ecossistema corporativo único.",
+  tagline: "40+ Anos de Excelência em TI Corporativa, Cibersegurança NOC 24/7, SaaS Financeiro & Inteligência Tributária",
+  slogan: "Convergência tecnológica de alta performance, gestão financeira com DRE e solidez econômico-fiscal para potencializar empresas em todo o Brasil.",
+  shortDescription: "Com mais de quatro décadas de experiência e inovação ininterrupta, o Grupo AMP integra infraestrutura de TI avançada, segurança da informação, suporte remoto 24/7, contabilidade estratégica, BPO financeiro e plataformas SaaS como o AMP Flow (DRE, NFS-e e Auto-Agendamento).",
+  heroTitle: "40+ Anos de Inovação em TI Corporativa, Finanças & Inteligência Estratégica",
+  heroSubtitle: "Unimos gestão avançada de infraestrutura de TI, monitoramento NOC 24/7, plataformas SaaS de gestão financeira com DRE em tempo real, emissão de NFS-e e governança tributária em um ecossistema corporativo único.",
   aboutTitle: "Solidez, Vanguarda Tecnológica e Resultados Mensuráveis",
   aboutDescription: "O Grupo AMP nasceu e se consolidou como uma referência nacional em soluções corporativas integradas. Ao longo de 40 anos de trajetória, construímos um ecossistema completo de ativos que atende desde as demandas mais complexas de cibersegurança e suporte gerenciado até o planejamento tributário e financeiro de empresas líderes de mercado.",
   stats: {
@@ -39,6 +39,34 @@ export const initialAmpSiteConfig = {
 };
 
 export const initialEcosystemAssets = [
+  {
+    id: "asset-amp-flow",
+    name: "AMP Flow Financeiro & DRE",
+    shortName: "AMP Flow",
+    url: "https://dre.amp.ia.br",
+    category: "SaaS Financeiro • DRE, Caixa & Agendamento",
+    pillar: "Gestão Financeira & SaaS",
+    iconName: "TrendingUp",
+    color: "from-emerald-600 to-teal-900",
+    accentColor: "text-emerald-400",
+    borderColor: "border-emerald-500/30",
+    badge: "SaaS Financeiro • No Ar",
+    tagline: "Fluxo de Caixa, DRE em Tempo Real, NFS-e e Auto-Agendamento 24h",
+    description: "Plataforma completa de gestão financeira desenvolvida pelo Grupo AMP para pequenos, médios e grandes negócios. Apuração automática de DRE em tempo real por regime de caixa e competência, cálculo do ponto de equilíbrio operacional, emissão de NFS-e Nacional (SPED/ADN) com regras da Reforma Tributária (IBS/CBS) e página pública de auto-agendamento online com calendário e WhatsApp para clientes.",
+    highlights: [
+      "DRE Gerencial e Fluxo de Caixa Diário em Tempo Real",
+      "Página Pública de Auto-Agendamento com Calendário e WhatsApp",
+      "Emissão Simplificada de NFS-e Nacional com Cálculo de IBS e CBS",
+      "Ponto de Equilíbrio Operacional, Margem de Contribuição e Fichas Técnicas"
+    ],
+    kpis: [
+      { label: "Visão DRE", value: "Tempo Real" },
+      { label: "NFS-e Integrada", value: "ADN / SPED" },
+      { label: "Agendamento", value: "24/7 Online" }
+    ],
+    ctaText: "Acessar Plataforma AMP Flow",
+    featured: true
+  },
   {
     id: "asset-alianca",
     name: "Aliança Empresarial",
@@ -293,6 +321,25 @@ export const initialCorporateServices = [
       "Estruturação societária para fusões, cisões e acordos de acionistas"
     ],
     targetAudience: "Empresários, famílias detentoras de patrimônio imobiliário e sócios que desejam segurança jurídica e perpetuidade dos bens."
+  },
+
+  // Operations & Consulting Division
+  {
+    id: "srv-demandas-contratos",
+    division: "ti",
+    divisionLabel: "Consultoria & Gestão Operacional",
+    title: "AMP Demandas & Contratos",
+    category: "Demandas & Contratos",
+    iconName: "FileCheck",
+    shortDesc: "Gestão Inteligente de Demandas e Ordens de Serviço de Consultoria com captura em PDF, fluxo em Kanban e relatórios em 1 clique.",
+    fullDesc: "Automatize do início ao fim o ciclo de atendimento das suas consultorias credenciadas: Captura Inteligente com leitura automática de chamados e OS em PDF sem digitação manual, fluxo visual em Kanban do agendamento à conclusão, relatórios oficiais padronizados com diagnóstico e recomendações, além de integração completa com assinatura digital e faturamento.",
+    highlights: [
+      "Captura Inteligente: Leitura automática de chamados, e-mails e Ordens de Serviço em PDF sem digitação manual.",
+      "Fluxo em Kanban: Acompanhamento visual desde o primeiro contato, agendamento até a conclusão.",
+      "Relatórios Oficiais em 1 Clique: Emissão padronizada de relatórios técnicos de prestação de serviços com diagnósticos e recomendações.",
+      "Assinatura Digital & Faturamento: Integração com aceite eletrônico e controle de notas fiscais."
+    ],
+    targetAudience: "Consultorias credenciadas, prestadores de serviços técnicos, auditorias e escritórios que exigem SLA, relatórios padronizados e controle rigoroso de contratos."
   }
 ];
 
@@ -351,6 +398,16 @@ export const initialSuccessCases = [
 ];
 
 export const initialClientPortalLinks = [
+  {
+    id: "portal-amp-flow",
+    title: "AMP Flow (DRE & Agendamento)",
+    subtitle: "Acesse seu fluxo de caixa, DRE gerencial, emissão de NFS-e e agenda de atendimentos",
+    url: "https://dre.amp.ia.br",
+    iconName: "TrendingUp",
+    badge: "Financeiro & DRE",
+    color: "from-emerald-600 to-teal-800",
+    buttonText: "Acessar AMP Flow"
+  },
   {
     id: "portal-mesh",
     title: "MeshCentral Suporte Remoto",
@@ -632,3 +689,284 @@ export const diagnosticWizardQuestions = [
     ]
   }
 ];
+
+export const initialCategoryProducts = {
+  selected: [
+    {
+      id: "prod-demandas",
+      name: "AMP Demandas & Contratos",
+      tag: "Consultorias & OS",
+      desc: "Gestão inteligente de demandas com leitura em PDF, fluxo em Kanban, relatórios em 1 clique e faturamento integrado.",
+      icon: "FileCheck",
+      highlights: [
+        "Captura Inteligente: Leitura automática de chamados, e-mails e OS em PDF sem digitação manual",
+        "Fluxo em Kanban visual desde o primeiro contato até a conclusão",
+        "Relatórios Oficiais em 1 Clique com diagnóstico e recomendações padronizadas",
+        "Assinatura Digital & Faturamento integrado com controle de notas fiscais"
+      ],
+      url: "#contato"
+    },
+    {
+      id: "prod-mesh",
+      name: "MeshCentral Remote NOC",
+      tag: "Infraestrutura",
+      desc: "Suporte remoto 24/7 com telemetria e resposta em < 12 minutos.",
+      icon: "ShieldCheck",
+      url: "https://remoto.amp.ia.br"
+    },
+    {
+      id: "prod-backup",
+      name: "Backup Imutável WORM",
+      tag: "Cibersegurança",
+      desc: "Defesa anti-ransomware com armazenamento blindado e restauração imediata.",
+      icon: "Lock",
+      url: "https://remoto.amp.ia.br"
+    },
+    {
+      id: "prod-alianca",
+      name: "Gestão de TI & Segurança Contábil",
+      tag: "Case Aliança",
+      desc: "Gerenciamento completo de TI, servidores, cibersegurança e presença digital de alta disponibilidade.",
+      icon: "ShieldCheck",
+      url: "https://aliancaempresarial.net.br"
+    },
+    {
+      id: "prod-erp",
+      name: "AMP Enterprise ERP",
+      tag: "Gestão Fiscal",
+      desc: "Emissão de NF-e, NFS-e, MDF-e, estoque e financeiro integrados.",
+      icon: "Calculator",
+      url: "#contato"
+    },
+    {
+      id: "prod-flow",
+      name: "AMP Flow Financeiro & DRE",
+      tag: "SaaS Financeiro",
+      desc: "Gestão financeira inteligente: fluxo de caixa diário, DRE em tempo real, emissão de NFS-e (IBS/CBS) e auto-agendamento online com calendário e WhatsApp.",
+      icon: "TrendingUp",
+      highlights: [
+        "DRE Gerencial em tempo real (Visão de Caixa e Competência)",
+        "Auto-Agendamento Online Público com Calendário 24/7 e WhatsApp Integrado",
+        "Emissão Simplificada de NFS-e Nacional com cálculo automático de IBS e CBS",
+        "Ponto de Equilíbrio Operacional, Fichas Técnicas e Formação de Preços"
+      ],
+      url: "https://dre.amp.ia.br"
+    },
+    {
+      id: "prod-peso",
+      name: "App Pesagem & Balança",
+      tag: "Logística",
+      desc: "Controle de tickets de pesagem rodoviária e conciliação de fretes de frotas.",
+      icon: "Scale",
+      url: "#contato"
+    }
+  ],
+  demandas: [
+    {
+      id: "prod-demandas-full",
+      name: "AMP Demandas & Contratos",
+      tag: "Gestão de OS",
+      desc: "Automatize do início ao fim o ciclo de atendimento das suas consultorias credenciadas.",
+      icon: "FileCheck",
+      highlights: [
+        "Captura Inteligente: Leitura automática de chamados, e-mails e OS em PDF sem digitação manual",
+        "Fluxo em Kanban visual desde o primeiro contato até a conclusão",
+        "Relatórios Oficiais em 1 Clique com diagnóstico e recomendações padronizadas",
+        "Assinatura Digital & Faturamento integrado com controle de notas fiscais"
+      ],
+      url: "#contato"
+    },
+    {
+      id: "prod-sla",
+      name: "Painel de SLA & Auditoria",
+      tag: "Compliance",
+      desc: "Controle de tempo de atendimento, satisfação do cliente e prestação de contas com histórico auditável.",
+      icon: "CheckCircle2",
+      url: "#contato"
+    }
+  ],
+  ti_cloud: [
+    {
+      id: "prod-mesh-sup",
+      name: "MeshCentral Suporte Gerenciado",
+      tag: "Helpdesk",
+      desc: "Centralização de tickets e atendimento de incidentes críticos em tempo real.",
+      icon: "ShieldCheck",
+      url: "https://remoto.amp.ia.br"
+    },
+    {
+      id: "prod-cloud-srv",
+      name: "Servidores Híbridos Dedicados",
+      tag: "Cloud",
+      desc: "Hospedagem segura em nuvem privada com alta disponibilidade e failover.",
+      icon: "Server",
+      url: "#contato"
+    },
+    {
+      id: "prod-worm-edr",
+      name: "Defesa EDR & Backup WORM",
+      tag: "Segurança",
+      desc: "Blindagem de dados e conformidade total com a LGPD e ISO 27001.",
+      icon: "Lock",
+      url: "#contato"
+    }
+  ],
+  finance: [
+    {
+      id: "prod-plan-trib",
+      name: "Planejamento Tributário Elisão",
+      tag: "Fiscal",
+      desc: "Redução lícita da carga tributária sobre faturamento e serviços.",
+      icon: "Calculator",
+      url: "#contato"
+    },
+    {
+      id: "prod-bpo-int",
+      name: "BPO Financeiro Integral",
+      tag: "Tesouraria",
+      desc: "Terceirização de contas a pagar, receber, conciliação e fluxo de caixa.",
+      icon: "TrendingUp",
+      url: "#contato"
+    },
+    {
+      id: "prod-holding",
+      name: "Holding Patrimonial & Sucessão",
+      tag: "Societário",
+      desc: "Estruturação societária para proteção de patrimônio familiar e empresarial.",
+      icon: "Building2",
+      url: "#contato"
+    },
+    {
+      id: "prod-cheques",
+      name: "Módulo Banco & Controle de Cheques",
+      tag: "Custódia",
+      desc: "Gestão de carteiras de cheques pré-datados, depósitos e liquidação.",
+      icon: "Calculator",
+      url: "#contato"
+    }
+  ],
+  logistics: [
+    {
+      id: "prod-pesagem-bal",
+      name: "Aplicativo de Pesagem & Balança",
+      tag: "Operacional",
+      desc: "Emissão de tickets de pesagem e conferência de peso bruto, tara e líquido.",
+      icon: "Scale",
+      url: "#contato"
+    },
+    {
+      id: "prod-concil-carga",
+      name: "Conciliação de Documentos de Carga",
+      tag: "Fiscal",
+      desc: "Parametrização automática de CT-e, MDF-e e manifestos eletrônicos.",
+      icon: "CheckCircle2",
+      url: "#contato"
+    }
+  ],
+  loyalty: [
+    {
+      id: "prod-loyalty-pts",
+      name: "AMP Loyalty & Fidelidade",
+      tag: "Fidelização",
+      desc: "Programa de pontos, cashback e campanhas automatizadas via WhatsApp.",
+      icon: "Gift",
+      url: "#contato"
+    },
+    {
+      id: "prod-roleta",
+      name: "Roleta Premiada Gamificada",
+      tag: "Engajamento",
+      desc: "Mecanismos de premiação instantânea para aumentar o ciclo de recompra.",
+      icon: "Sparkles",
+      url: "#contato"
+    }
+  ]
+};
+
+export const initialEcosystemItems = [
+  {
+    id: "asset-amp-flow",
+    name: "AMP Flow Financeiro & DRE",
+    badge: "SaaS Financeiro & Agenda",
+    tagline: "DRE-Caixa-NFS-e-Agenda",
+    desc: "Fluxo de caixa inteligente, DRE gerencial em tempo real, emissão de NFS-e adaptada à Reforma Tributária e auto-agendamento online 24h com calendário e WhatsApp.",
+    icon: "TrendingUp",
+    url: "https://dre.amp.ia.br",
+    highlights: [
+      "DRE Gerencial em tempo real e Ponto de Equilíbrio Operacional",
+      "Página pública de agendamento online com calendário e WhatsApp",
+      "Emissão simplificada de NFS-e Nacional com IBS e CBS",
+      "Formação de preço de venda e controle de insumos (CMV)"
+    ]
+  },
+  {
+    id: "asset-demandas",
+    name: "AMP Demandas & Contratos",
+    badge: "Consultorias & OS",
+    tagline: "Demandas-Kanban-OS",
+    desc: "Gestão inteligente de demandas e ordens de serviço: captura em PDF, fluxo Kanban, relatórios em 1 clique e faturamento.",
+    icon: "FileCheck",
+    url: "#contato",
+    highlights: [
+      "Captura Inteligente de chamados e OS em PDF sem digitação",
+      "Fluxo em Kanban visual do agendamento à entrega",
+      "Emissão padronizada de relatórios técnicos em 1 clique",
+      "Assinatura digital e integração de notas fiscais"
+    ]
+  },
+  {
+    id: "asset-mesh",
+    name: "MeshCentral Remote NOC",
+    badge: "Suporte 24/7 & NOC",
+    tagline: "Wan3.0-video",
+    desc: "Central de monitoramento e controle de infraestrutura em tempo real. Acesso remoto seguro criptografado AES-256 e SLA < 15 min.",
+    icon: "ShieldCheck",
+    url: "https://remoto.amp.ia.br"
+  },
+  {
+    id: "asset-alianca",
+    name: "Aliança Empresarial (Case)",
+    badge: "Site & Gestão de TI",
+    tagline: "Case-Sucesso-TI",
+    desc: "Gestão completa de TI corporativa, segurança da informação, suporte de infraestrutura e hospedagem de alta performance para o setor contábil.",
+    icon: "ShieldCheck",
+    url: "https://aliancaempresarial.net.br"
+  },
+  {
+    id: "asset-backup",
+    name: "Painel de Backup Imutável",
+    badge: "Cibersegurança WORM",
+    tagline: "Anti-Ransomware-3.0",
+    desc: "Armazenamento imutável WORM à prova de hackers e sequestro de dados, com restauração bare-metal imediata.",
+    icon: "Lock",
+    url: "https://remoto.amp.ia.br"
+  },
+  {
+    id: "asset-erp",
+    name: "AMP Enterprise ERP",
+    badge: "ERP & Gestão Fiscal",
+    tagline: "Qwen3.8-Fiscal",
+    desc: "Gestão integrada de vendas, estoque, compras, financeiro e emissão de notas fiscais com integração contábil nativa.",
+    icon: "TrendingUp",
+    url: "#contato"
+  },
+  {
+    id: "asset-loyalty",
+    name: "Aplicativo de Fidelidade",
+    badge: "Marketing & Retenção",
+    tagline: "AMP-Loyalty-Omni",
+    desc: "Motor de fidelidade com pontos, cashback, roleta premiada interativa e campanhas automáticas de retenção via WhatsApp.",
+    icon: "Gift",
+    url: "#contato"
+  },
+  {
+    id: "asset-peso",
+    name: "App Pesagem & Balança",
+    badge: "Operações & Logística",
+    tagline: "Scale-Flow-Balança",
+    desc: "Emissão de tíquetes de pesagem, controle de peso bruto, tara, líquido e conciliação de fretes de frotas pesadas.",
+    icon: "Scale",
+    url: "#contato"
+  }
+];
+
