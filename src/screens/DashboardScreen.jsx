@@ -224,11 +224,14 @@ export function Dashboard({
       {/* ── CARD PRINCIPAL: SALDO DO CAIXA (COMPACTO & ELEGANTE) ── */}
       <div style={{ background: '#0F2B27', borderRadius: 16, padding: '18px 16px 16px', color: '#FAF8F3', marginBottom: botoesModulos.length > 0 ? 10 : 14, boxShadow: '0 4px 14px rgba(15,43,39,0.15)', textAlign: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 }}>
-          Saldo em Caixa (Financeiro)
+          Resultado Financeiro do Mês (Sobra de Caixa)
         </div>
         
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: saldoCaixa >= 0 ? '#9FE0C8' : '#EF4444', margin: '2px 0 6px' }}>
+        <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: saldoCaixa >= 0 ? '#9FE0C8' : '#EF4444', margin: '2px 0 2px' }}>
           {formatBRL(saldoCaixa)}
+        </div>
+        <div style={{ fontSize: 11, color: '#7EA299', marginBottom: 8 }}>
+          Entradas Pagas (−) Saídas Pagas no Mês
         </div>
 
         {/* Pílula Centralizada da DRE Econômica (apenas dono/gestor) */}
