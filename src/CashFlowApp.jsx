@@ -435,6 +435,17 @@ export default function CashFlowApp() {
       error = res.error;
     }
 
+    if (error && error.message && (error.message.includes('investimento') || error.message.includes('categoria_despesa'))) {
+      const fallbackPayloads = payloads.map(p => {
+        if (p.categoria === 'investimento') {
+          return { ...p, categoria: 'fixa', subcategoria: p.subcategoria ? `Investimento - ${p.subcategoria}` : 'Investimento & CAPEX' };
+        }
+        return p;
+      });
+      const resFallback = await supabase.from('lancamentos').insert(fallbackPayloads);
+      error = resFallback.error;
+    }
+
     if (!error) {
       carregarLancamentos(empresaAtualObj.id);
     } else {
@@ -496,6 +507,15 @@ export default function CashFlowApp() {
       error = res.error;
     }
 
+    if (error && error.message && (error.message.includes('investimento') || error.message.includes('categoria_despesa'))) {
+      if (payload.categoria === 'investimento') {
+        payload.categoria = 'fixa';
+        payload.subcategoria = payload.subcategoria ? `Investimento - ${payload.subcategoria}` : 'Investimento & CAPEX';
+        const resFallback = await supabase.from('lancamentos').update(payload).eq('id', id);
+        error = resFallback.error;
+      }
+    }
+
     if (!error) {
       carregarLancamentos(empresaAtualObj.id);
     }
@@ -551,6 +571,21 @@ export default function CashFlowApp() {
       });
       const res = await supabase.from('lancamentos').insert(semComp);
       error = res.error;
+    }
+
+    if (error && error.message && (error.message.includes('investimento') || error.message.includes('categoria_despesa'))) {
+      const fallbackPayloads = payloads.map(p => {
+        if (p.categoria === 'investimento') {
+          return {
+            ...p,
+            categoria: 'fixa',
+            subcategoria: p.subcategoria ? `Investimento - ${p.subcategoria}` : 'Investimento & CAPEX'
+          };
+        }
+        return p;
+      });
+      const resFallback = await supabase.from('lancamentos').insert(fallbackPayloads);
+      error = resFallback.error;
     }
 
     if (!error) {

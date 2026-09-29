@@ -7,6 +7,9 @@
 --   2. Cole este script e clique em RUN
 -- ============================================================================
 
+-- 0. Garantir valor 'investimento' no enum categoria_despesa
+ALTER TYPE public.categoria_despesa ADD VALUE IF NOT EXISTS 'investimento';
+
 -- 1. Permissões Explícitas Data API (PostgREST)
 GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
 
