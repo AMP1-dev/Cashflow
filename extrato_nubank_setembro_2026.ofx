@@ -1,0 +1,97 @@
+OFXHEADER:100
+DATA:OFXSGML
+VERSION:102
+SECURITY:NONE
+ENCODING:USASCII
+CHARSET:1252
+COMPRESSION:NONE
+OLDFILENAME:NONE
+NEWFILENAME:NONE
+
+<OFX>
+  <SIGNONMSGSRSV1>
+    <SONRS>
+      <STATUS>
+        <CODE>0</CODE>
+        <SEVERITY>INFO</SEVERITY>
+      </STATUS>
+      <DTSERVER>20260928230100[-03:EST]</DTSERVER>
+      <LANGUAGE>POR</LANGUAGE>
+      <FI>
+        <ORG>Nubank</ORG>
+        <FID>260</FID>
+      </FI>
+    </SONRS>
+  </SIGNONMSGSRSV1>
+  <BANKMSGSRSV1>
+    <STMTTRNRS>
+      <TRNUID>2001</TRNUID>
+      <STATUS>
+        <CODE>0</CODE>
+        <SEVERITY>INFO</SEVERITY>
+      </STATUS>
+      <STMTRS>
+        <CURDEF>BRL</CURDEF>
+        <BANKACCTFROM>
+          <BANKID>260</BANKID>
+          <BRANCHID>0001</BRANCHID>
+          <ACCTID>15542100-1</ACCTID>
+          <ACCTTYPE>CHECKING</ACCTTYPE>
+        </BANKACCTFROM>
+        <BANKTRANLIST>
+          <DTSTART>20260901000000[-03:EST]</DTSTART>
+          <DTEND>20260928235959[-03:EST]</DTEND>
+
+          <STMTTRN>
+            <TRNTYPE>CREDIT</TRNTYPE>
+            <DTPOSTED>20260910120000[-03:EST]</DTPOSTED>
+            <TRNAMT>12170.55</TRNAMT>
+            <FITID>20260910001</FITID>
+            <CHECKNUM>RDB</CHECKNUM>
+            <MEMO>Resgate RDB</MEMO>
+          </STMTTRN>
+
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260910120000[-03:EST]</DTPOSTED>
+            <TRNAMT>-12000.00</TRNAMT>
+            <FITID>20260910002</FITID>
+            <CHECKNUM>Pix</CHECKNUM>
+            <MEMO>Transferência enviada pelo Pix - AMP ASSESSORIA MARCO PAVANI (CC CREDIGUACU Ag 3194 Cta 9747187-9)</MEMO>
+          </STMTTRN>
+
+          <STMTTRN>
+            <TRNTYPE>CREDIT</TRNTYPE>
+            <DTPOSTED>20260916120000[-03:EST]</DTPOSTED>
+            <TRNAMT>2395.00</TRNAMT>
+            <FITID>20260916001</FITID>
+            <CHECKNUM>Pix</CHECKNUM>
+            <MEMO>Transferência recebida pelo Pix - MARCO ANTONIO PAVANI (BANCO BTG PACTUAL Ag 50 Cta 558474-9)</MEMO>
+          </STMTTRN>
+
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260916120000[-03:EST]</DTPOSTED>
+            <TRNAMT>-2393.05</TRNAMT>
+            <FITID>20260916002</FITID>
+            <CHECKNUM>FATURA</CHECKNUM>
+            <MEMO>Pagamento de fatura</MEMO>
+          </STMTTRN>
+
+          <STMTTRN>
+            <TRNTYPE>DEBIT</TRNTYPE>
+            <DTPOSTED>20260916120000[-03:EST]</DTPOSTED>
+            <TRNAMT>-170.00</TRNAMT>
+            <FITID>20260916003</FITID>
+            <CHECKNUM>Pix</CHECKNUM>
+            <MEMO>Transferência enviada pelo Pix - Marco Antonio Pavani (NU PAGAMENTOS Ag 1 Cta 27336856-8)</MEMO>
+          </STMTTRN>
+        </BANKTRANLIST>
+        <LEDGERBAL>
+          <BALAMT>3.05</BALAMT>
+          <DTASOF>20260928230100[-03:EST]</DTASOF>
+        </LEDGERBAL>
+      </STMTRS>
+    </STMTTRNRS>
+  </BANKMSGSRSV1>
+</OFX>
