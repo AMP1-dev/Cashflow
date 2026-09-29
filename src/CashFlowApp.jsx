@@ -396,20 +396,31 @@ export default function CashFlowApp() {
         ? formatDataISO(anoItem, (novo.mesCompetencia + i) % 12, 1)
         : dataStr;
 
-      payloads.push({
+      const tipo = novo.tipo === 'receita' ? 'receita' : 'despesa';
+      const itemPayload = {
         empresa_id: empresaAtualObj.id,
-        tipo: novo.tipo,
+        tipo,
         descricao: repeticoes > 1 ? `${novo.descricao} (${i + 1}/${repeticoes})` : novo.descricao,
-        valor: novo.valor,
+        valor: Math.abs(parseFloat(novo.valor) || 0),
         data_lancamento: dataStr,
         data_competencia: dataCompStr,
-        categoria: novo.categoria || null,
-        subcategoria: novo.subcategoria || null,
-        forma_recebimento: novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-        qtd_vendas: novo.qtdVendas || null,
         banco: novo.banco || null,
         meio_pagamento: novo.meio_pagamento || null,
-      });
+      };
+
+      if (tipo === 'receita') {
+        itemPayload.categoria = null;
+        itemPayload.subcategoria = null;
+        itemPayload.forma_recebimento = novo.formaRecebimento ? (novo.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : 'avista';
+        itemPayload.qtd_vendas = novo.qtdVendas || null;
+      } else {
+        itemPayload.categoria = novo.categoria || 'fixa';
+        itemPayload.subcategoria = novo.subcategoria || null;
+        itemPayload.forma_recebimento = null;
+        itemPayload.qtd_vendas = null;
+      }
+
+      payloads.push(itemPayload);
     }
 
     let { data, error } = await supabase.from('lancamentos').insert(payloads);
@@ -427,7 +438,11 @@ export default function CashFlowApp() {
     if (!error) {
       carregarLancamentos(empresaAtualObj.id);
     } else {
-      alert('Erro ao registrar lançamento: ' + (error?.message || 'Falha desconhecida.'));
+      if (error?.message && error.message.includes('row-level security policy')) {
+        alert('Permissão de banco de dados (RLS): É necessário executar a migração "05_fix_lancamentos_rls.sql" no SQL Editor do Supabase para autorizar o cadastro de lançamentos.');
+      } else {
+        alert('Erro ao registrar lançamento: ' + (error?.message || 'Falha desconhecida.'));
+      }
     }
   }
 
@@ -444,20 +459,34 @@ export default function CashFlowApp() {
     const dataCompStr = dados.dataCompetencia || (dados.mesCompetencia !== undefined 
       ? formatDataISO(dados.anoCompetencia || anoAtual, dados.mesCompetencia, 1) 
       : dataStr);
+    const tipo = dados.tipo === 'receita' ? 'receita' : (dados.tipo === 'estoque' ? 'estoque' : 'despesa');
 
     const payload = {
-      tipo: dados.tipo,
+      tipo,
       descricao: dados.descricao,
-      valor: dados.valor,
+      valor: Math.abs(parseFloat(dados.valor) || 0),
       data_lancamento: dataStr,
       data_competencia: dataCompStr,
-      categoria: dados.categoria || null,
-      subcategoria: dados.subcategoria || null,
-      forma_recebimento: dados.formaRecebimento ? (dados.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-      qtd_vendas: dados.qtdVendas || null,
       banco: dados.banco || null,
       meio_pagamento: dados.meio_pagamento || null,
     };
+
+    if (tipo === 'receita') {
+      payload.categoria = null;
+      payload.subcategoria = null;
+      payload.forma_recebimento = dados.formaRecebimento ? (dados.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : 'avista';
+      payload.qtd_vendas = dados.qtdVendas || null;
+    } else if (tipo === 'despesa') {
+      payload.categoria = dados.categoria || 'fixa';
+      payload.subcategoria = dados.subcategoria || null;
+      payload.forma_recebimento = null;
+      payload.qtd_vendas = null;
+    } else {
+      payload.categoria = dados.categoria || 'inicial';
+      payload.subcategoria = null;
+      payload.forma_recebimento = null;
+      payload.qtd_vendas = null;
+    }
 
     let { error } = await supabase.from('lancamentos').update(payload).eq('id', id);
 
@@ -474,24 +503,42 @@ export default function CashFlowApp() {
 
   async function importarLoteLancamentos(lista) {
     if (!lista || lista.length === 0) return;
+    if (!empresaAtualObj?.id) {
+      alert('Selecione uma empresa válida antes de importar.');
+      return;
+    }
     
     const payloads = lista.map(item => {
       const mesAlvo = item.mes !== undefined ? item.mes : mesAtual;
       const dataStr = formatDataISO(item.ano || anoAtual, mesAlvo, item.dia);
-      return {
+      const tipo = item.tipo === 'receita' ? 'receita' : 'despesa';
+
+      const obj = {
         empresa_id: empresaAtualObj.id,
-        tipo: item.tipo,
-        descricao: item.descricao,
-        valor: item.valor,
+        tipo,
+        descricao: (item.descricao || '').trim() || (tipo === 'receita' ? 'Receita Bancária' : 'Despesa Bancária'),
+        valor: Math.abs(parseFloat(item.valor) || 0),
         data_lancamento: dataStr,
         data_competencia: dataStr,
-        categoria: item.categoria || null,
-        subcategoria: item.subcategoria || null,
-        forma_recebimento: item.formaRecebimento ? (item.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') : null,
-        qtd_vendas: item.qtdVendas || null,
         banco: item.banco || null,
-        meio_pagamento: item.meio_pagamento || null,
+        meio_pagamento: item.meio_pagamento || 'Extrato Bancário',
       };
+
+      if (tipo === 'receita') {
+        obj.categoria = null;
+        obj.subcategoria = null;
+        obj.forma_recebimento = item.formaRecebimento 
+          ? (item.formaRecebimento.includes('vista') ? 'avista' : 'aprazo') 
+          : 'avista';
+        obj.qtd_vendas = item.qtdVendas || null;
+      } else {
+        obj.categoria = item.categoria || 'fixa';
+        obj.subcategoria = item.subcategoria || null;
+        obj.forma_recebimento = null;
+        obj.qtd_vendas = null;
+      }
+
+      return obj;
     });
 
     let { error } = await supabase.from('lancamentos').insert(payloads);
@@ -509,7 +556,11 @@ export default function CashFlowApp() {
     if (!error) {
       carregarLancamentos(empresaAtualObj.id);
     } else {
-      alert('Erro ao importar lote: ' + (error?.message || 'Falha desconhecida.'));
+      if (error?.message && error.message.includes('row-level security policy')) {
+        alert('Permissão de banco de dados (RLS): É necessário executar a migração "05_fix_lancamentos_rls.sql" no SQL Editor do Supabase para autorizar o cadastro de lançamentos.');
+      } else {
+        alert('Erro ao importar lote: ' + (error?.message || 'Falha desconhecida.'));
+      }
     }
   }
 
