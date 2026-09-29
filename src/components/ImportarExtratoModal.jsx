@@ -329,37 +329,64 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
       'cobertura de saldo',
       'cobertura saldo',
       'transf saldo',
-      'saldo crediario'
+      'saldo crediario',
+      'resgate rdb',
+      'resgate rdc',
+      'resgate cdb',
+      'resgate lci',
+      'resgate lca',
+      'resgate fundo',
+      'resgate de aplic',
+      'resgate aplicacao',
+      'resgate aplicação',
+      'resgate',
+      'aplicacao rdb',
+      'aplicação rdb',
+      'deb.emprestimo',
+      'deb emprestimo',
+      'debito emprestimo',
+      'débito empréstimo',
+      'amortizacao emprestimo',
+      'amortização emprestimo',
+      'liquidacao emprestimo',
+      'liquidação empréstimo',
+      'transf enviada pix',
+      'transf recebida pix',
+      'transf. enviada pix',
+      'transf. recebida pix',
+      'transf enviada',
+      'transf recebida',
     ];
 
     for (const termo of termosTransferencia) {
       if (desc.includes(termo)) {
         return {
           ehTransferencia: true,
-          motivo: `Padrão de transferência identificado: "${termo}"`
+          motivo: `Movimentação financeira/transferência: "${termo}"`
         };
       }
     }
 
-    // 2. Se temos dados da empresa (razão social, nome fantasia, cnpj)
-    if (empresaObj) {
-      const nomes = [
-        empresaObj.razao_social,
-        empresaObj.nome_fantasia,
-        empresaObj.fantasia,
-        empresaObj.nome
-      ].filter(Boolean).map(n => n.toLowerCase().trim());
+    // 2. Se temos dados da empresa ou titular (razão social, nome fantasia, sócios)
+    const nomesProprios = [
+      empresaObj?.razao_social,
+      empresaObj?.nome_fantasia,
+      empresaObj?.fantasia,
+      empresaObj?.nome,
+      empresaObj?.nome_responsavel,
+      'amp do brasil',
+      'marco pavani',
+      'marco antonio pavani',
+      'amp assessoria'
+    ].filter(Boolean).map(n => n.toLowerCase().trim());
 
-      const ehOperacaoTransf = desc.includes('pix') || desc.includes('ted') || desc.includes('tef') || desc.includes('transf') || desc.includes('transferencia');
-      if (ehOperacaoTransf) {
-        for (const nome of nomes) {
-          if (nome.length >= 4 && desc.includes(nome)) {
-            return {
-              ehTransferencia: true,
-              motivo: `Transferência identificada para a própria empresa (${nome})`
-            };
-          }
-        }
+    const ehOperacaoTransf = desc.includes('pix') || desc.includes('ted') || desc.includes('tef') || desc.includes('transf') || desc.includes('transferencia');
+    for (const nome of nomesProprios) {
+      if (nome.length >= 4 && desc.includes(nome)) {
+        return {
+          ehTransferencia: true,
+          motivo: `Transferência identificada para conta própria / sócio (${nome})`
+        };
       }
     }
 

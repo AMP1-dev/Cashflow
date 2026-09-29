@@ -464,6 +464,16 @@ export default function CashFlowApp() {
     }
   }
 
+  async function removerLancamentosEmLote(ids) {
+    if (!ids || ids.length === 0) return;
+    const { error } = await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).in('id', ids);
+    if (!error) {
+      setLancamentosGeral(prev => prev.filter(l => !ids.includes(l.id)));
+    } else {
+      alert('Erro ao arquivar lançamentos: ' + (error?.message || 'Falha'));
+    }
+  }
+
   async function updateLancamento(id, dados) {
     const mesAlvo = dados.mes !== undefined ? dados.mes : mesAtual;
     const dataStr = formatDataISO(anoAtual, mesAlvo, dados.dia);
@@ -1155,6 +1165,7 @@ export default function CashFlowApp() {
               podeVerTradutor={moduloTradutorAtivo}
               onNovo={(tipo) => { setTipoNovoLancamento(tipo); setShowLancamentoModal(true); }}
               onEditar={abrirEdicao}
+              onOcultarTransferencias={removerLancamentosEmLote}
               onIrGestaoAVista={() => setTela('gestaoavista')}
               onAbrirImportacao={() => setShowImportarModal(true)}
               onAbrirNfse={moduloNfseAtivo ? () => setTela('nfse') : null}

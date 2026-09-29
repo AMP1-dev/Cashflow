@@ -20,6 +20,7 @@ export function Dashboard({
   podeVerTradutor = false, 
   onNovo, 
   onEditar, 
+  onOcultarTransferencias,
   onIrGestaoAVista, 
   onAbrirImportacao, 
   onAbrirNfse,
@@ -101,6 +102,17 @@ export function Dashboard({
     const acc = { cmv: 0, variavel: 0, fixa: 0, financeira: 0 };
     lancamentos.filter(l => l.tipo === 'despesa').forEach(l => { acc[l.categoria] = (acc[l.categoria] || 0) + l.valor; });
     return acc;
+  }, [lancamentos]);
+
+  const transferenciasDetectadas = useMemo(() => {
+    return lancamentos.filter(l => {
+      const d = (l.descricao || '').toUpperCase();
+      return d.includes('RESGATE RDB') ||
+             d.includes('AMP DO BRASIL') ||
+             d.includes('AMP ASSESSORIA') ||
+             d.includes('DEB.EMPRESTIMO') ||
+             d.includes('TRANSF ENVIADA PIX');
+    });
   }, [lancamentos]);
 
   // ── Cálculo Sincronizado do Ponto de Equilíbrio & DRE ─────────────────────
@@ -269,6 +281,52 @@ export function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* ── BANNER DE LIMPEZA DE TRANSFERÊNCIAS / NÃO-OPERACIONAIS ── */}
+      {transferenciasDetectadas.length > 0 && onOcultarTransferencias && (
+        <div style={{
+          background: 'linear-gradient(135deg, #1C332D 0%, #152622 100%)',
+          border: '1px solid #E8A33D',
+          borderRadius: 14,
+          padding: '12px 14px',
+          marginBottom: 14,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}>
+          <div>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#FCD34D', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <span>⚡ {transferenciasDetectadas.length} Movimentações Internas Detectadas</span>
+            </div>
+            <div style={{ fontSize: 11, color: '#C8DBD5' }}>
+              Resgates RDB, empréstimos e transferências que inflavam a DRE deste mês.
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (window.confirm(`Deseja arquivar essas ${transferenciasDetectadas.length} transferências internas para que sua DRE e Ponto de Equilíbrio reflitam apenas as receitas e despesas operacionais reais?`)) {
+                onOcultarTransferencias(transferenciasDetectadas.map(t => t.id));
+              }
+            }}
+            style={{
+              padding: '7px 12px',
+              background: '#E8A33D',
+              color: '#0F2B27',
+              fontWeight: 700,
+              fontSize: 11.5,
+              borderRadius: 8,
+              border: 'none',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(232,163,61,0.3)'
+            }}
+          >
+            Limpar da DRE
+          </button>
+        </div>
+      )}
 
       {/* ── BARRA MODULAR DINÂMICA DE ATALHOS / MÓDULOS (ENTRE O CARD PRINCIPAL E O PONTO DE EQUILÍBRIO) ── */}
       {botoesModulos.length > 0 && (
