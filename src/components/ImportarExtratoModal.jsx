@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { UploadCloud, CheckCircle2, AlertCircle, FileText, ArrowRight, Trash2, Check, RefreshCw } from 'lucide-react';
+import { UploadCloud, CheckCircle2, AlertCircle, FileText, ArrowRight, Trash2, Check, RefreshCw, Split, Plus, CreditCard, Layers } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { ModalShell } from './UIComponents';
 import { BANCOS } from '../utils/constants';
@@ -199,10 +199,26 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
   const [filtroAba, setFiltroAba] = useState('todas'); // 'todas' | 'receitas' | 'despesas' | 'transferencias' | 'duplicatas'
 
   function autoSugerirCategoria(descricao, tipo) {
-    if (tipo === 'receita') return { categoria: null, subcategoria: null };
+    if (tipo === 'receita') return { categoria: null, subcategoria: null, ehFaturaCartao: false };
 
     const termo = (descricao || '').toLowerCase();
     
+    // 0. Faturas de Cartão de Crédito e Seguradoras (Prioridade alta para evitar falsos positivos de investimento)
+    const ehFaturaCartao = termo.includes('porto seguro') || termo.includes('portoseguro') ||
+      termo.includes('fatura') || termo.includes('itaucard') || termo.includes('bradescard') ||
+      termo.includes('cartao de credito') || termo.includes('cartão de crédito') ||
+      termo.includes('ourocard') || termo.includes('cetelem') || termo.includes('nubank pagamentos') ||
+      termo.includes('pagamento de fatura') || termo.includes('santander cart') || termo.includes('cartao porto') ||
+      termo.includes('credicard') || termo.includes('hipercard') || termo.includes('pagamento fatura');
+
+    if (ehFaturaCartao) {
+      return { 
+        categoria: 'fixa', 
+        subcategoria: 'Fatura de Cartão de Crédito',
+        ehFaturaCartao: true 
+      };
+    }
+
     const similar = historicoExistente.find(h => 
       h.tipo === 'despesa' && h.categoria && (
         termo.includes(h.descricao.toLowerCase()) || 
@@ -211,26 +227,55 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
     );
 
     if (similar) {
-      return { categoria: similar.categoria, subcategoria: similar.subcategoria || '' };
+      return { categoria: similar.categoria, subcategoria: similar.subcategoria || '', ehFaturaCartao: false };
     }
 
-    if (termo.includes('invest') || termo.includes('software') || termo.includes('sistema') || termo.includes('maquina') || termo.includes('computad') || termo.includes('notebook') || termo.includes('reforma') || termo.includes('benfeitoria') || termo.includes('equipamento')) {
-      return { categoria: 'investimento', subcategoria: 'Implantação de Software / Sistemas' };
-    }
-    if (termo.includes('fornec') || termo.includes('compra') || termo.includes('embalag') || termo.includes('mercador') || termo.includes('atacado')) {
-      return { categoria: 'cmv', subcategoria: 'Mercadorias para revenda' };
-    }
-    if (termo.includes('aluguel') || termo.includes('luz') || termo.includes('energia') || termo.includes('agua') || termo.includes('copel') || termo.includes('sabesp') || termo.includes('enel') || termo.includes('internet') || termo.includes('contabil') || termo.includes('salario') || termo.includes('folha') || termo.includes('pro-labore')) {
-      return { categoria: 'fixa', subcategoria: 'Custos Administrativos / Operacionais' };
-    }
-    if (termo.includes('tarifa') || termo.includes('iof') || termo.includes('juros') || termo.includes('banco') || termo.includes('anuidade') || termo.includes('ted') || termo.includes('doc')) {
-      return { categoria: 'financeira', subcategoria: 'Tarifas e encargos bancários' };
-    }
-    if (termo.includes('combust') || termo.includes('posto') || termo.includes('frete') || termo.includes('uber') || termo.includes('manutenc') || termo.includes('diaria')) {
-      return { categoria: 'variavel', subcategoria: 'Operação Variável' };
+    // 1. Investimentos e CAPEX (apenas bens de capital inequívocos, reformas e ativos duráveis)
+    if (termo.includes('investimento') || termo.includes('capex') || termo.includes('maquinario') || 
+        termo.includes('compra de maquina') || termo.includes('reforma predial') || 
+        termo.includes('benfeitoria') || termo.includes('servidor dedicado') || 
+        termo.includes('desenvolvimento de software') || termo.includes('licenca de software') ||
+        termo.includes('aquisicao de equipamento') || termo.includes('aquisição de equipamento')) {
+      return { categoria: 'investimento', subcategoria: 'Implantação de Software / Ativos', ehFaturaCartao: false };
     }
 
-    return { categoria: 'fixa', subcategoria: '' };
+    // 2. CMV (Custos de Mercadorias e Insumos para revenda/produção)
+    if (termo.includes('fornec') || termo.includes('compra mat') || termo.includes('embalag') || 
+        termo.includes('mercador') || termo.includes('atacado') || termo.includes('materia prima') ||
+        termo.includes('matéria prima') || termo.includes('distribuidora')) {
+      return { categoria: 'cmv', subcategoria: 'Mercadorias para revenda', ehFaturaCartao: false };
+    }
+
+    // 3. Despesas Fixas e Administrativas
+    if (termo.includes('aluguel') || termo.includes('luz') || termo.includes('energia') || 
+        termo.includes('agua') || termo.includes('água') || termo.includes('copel') || 
+        termo.includes('sabesp') || termo.includes('enel') || termo.includes('internet') || 
+        termo.includes('contabil') || termo.includes('contábil') || termo.includes('salario') || 
+        termo.includes('salário') || termo.includes('folha') || termo.includes('pro-labore') ||
+        termo.includes('pró-labore') || termo.includes('seguro') || termo.includes('software') || 
+        termo.includes('sistema') || termo.includes('mensalidade')) {
+      return { categoria: 'fixa', subcategoria: 'Custos Administrativos / Operacionais', ehFaturaCartao: false };
+    }
+
+    // 4. Despesas Financeiras e Bancárias
+    if (termo.includes('tarifa') || termo.includes('iof') || termo.includes('juros') || 
+        termo.includes('encargo') || termo.includes('banco') || termo.includes('anuidade') || 
+        termo.includes('ted') || termo.includes('doc') || termo.includes('manutencao de conta') || 
+        termo.includes('manutenção conta')) {
+      return { categoria: 'financeira', subcategoria: 'Tarifas e encargos bancários', ehFaturaCartao: false };
+    }
+
+    // 5. Despesas Variáveis de Operação
+    if (termo.includes('combust') || termo.includes('posto') || termo.includes('gasolina') || 
+        termo.includes('etanol') || termo.includes('diesel') || termo.includes('frete') || 
+        termo.includes('uber') || termo.includes('99app') || termo.includes('pedagio') || 
+        termo.includes('pedágio') || termo.includes('sem parar') || termo.includes('conectcar') || 
+        termo.includes('veloe') || termo.includes('manutenc') || termo.includes('diaria') || 
+        termo.includes('diária')) {
+      return { categoria: 'variavel', subcategoria: 'Operação Variável', ehFaturaCartao: false };
+    }
+
+    return { categoria: 'fixa', subcategoria: '', ehFaturaCartao: false };
   }
 
   function checarDuplicata(t) {
@@ -376,12 +421,15 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
     const processados = parsed.map((t, idx, arr) => {
       const duplicado = checarDuplicata(t);
       const { ehTransferencia, motivo: motivoTransferencia } = detectarTransferencia(t, historicoExistente, arr, empresa);
-      const { categoria, subcategoria } = autoSugerirCategoria(t.descricao, t.tipo);
+      const { categoria, subcategoria, ehFaturaCartao } = autoSugerirCategoria(t.descricao, t.tipo);
       return {
         ...t,
         banco: t.banco || bancoSelecionado || '',
         categoria,
         subcategoria,
+        ehFaturaCartao: !!ehFaturaCartao,
+        desdobrado: false,
+        divisoes: [],
         duplicado,
         ehTransferencia,
         motivoTransferencia,
@@ -438,6 +486,104 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
     setTransacoes(prev => prev.map(t => t.idTemp === idTemp ? { ...t, [campo]: valor } : t));
   }
 
+  function iniciarDesdobramento(idTemp) {
+    setTransacoes(prev => prev.map(t => {
+      if (t.idTemp !== idTemp) return t;
+      const d1 = {
+        id: Math.random().toString(36).substring(2, 9),
+        descricao: t.ehFaturaCartao ? `${t.descricao} - Consumo Geral` : `${t.descricao} (Parte 1)`,
+        valor: t.valor,
+        categoria: t.categoria || 'fixa',
+        subcategoria: t.subcategoria || ''
+      };
+      return {
+        ...t,
+        desdobrado: true,
+        divisoes: [d1]
+      };
+    }));
+  }
+
+  function toggleDesdobramento(idTemp) {
+    setTransacoes(prev => prev.map(t => {
+      if (t.idTemp !== idTemp) return t;
+      if (t.desdobrado) {
+        return { ...t, desdobrado: false };
+      }
+      const d1 = {
+        id: Math.random().toString(36).substring(2, 9),
+        descricao: t.ehFaturaCartao ? `${t.descricao} - Consumo Geral` : `${t.descricao} (Parte 1)`,
+        valor: t.valor,
+        categoria: t.categoria || 'fixa',
+        subcategoria: t.subcategoria || ''
+      };
+      return {
+        ...t,
+        desdobrado: true,
+        divisoes: t.divisoes && t.divisoes.length > 0 ? t.divisoes : [d1]
+      };
+    }));
+  }
+
+  function adicionarDivisao(idTemp, preset = null) {
+    setTransacoes(prev => prev.map(t => {
+      if (t.idTemp !== idTemp) return t;
+      const somaAtual = (t.divisoes || []).reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
+      const restante = Math.max(0, +(t.valor - somaAtual).toFixed(2));
+      
+      const novaDivisao = {
+        id: Math.random().toString(36).substring(2, 9),
+        descricao: preset?.descricao || `${t.descricao} (Parte ${(t.divisoes?.length || 0) + 1})`,
+        valor: restante > 0 ? restante : 0,
+        categoria: preset?.categoria || (t.ehFaturaCartao ? 'variavel' : 'fixa'),
+        subcategoria: preset?.subcategoria || (preset?.categoria === 'variavel' ? 'Pedágios / Combustíveis' : '')
+      };
+
+      return {
+        ...t,
+        desdobrado: true,
+        divisoes: [...(t.divisoes || []), novaDivisao]
+      };
+    }));
+  }
+
+  function removerDivisao(idTemp, divisaoId) {
+    setTransacoes(prev => prev.map(t => {
+      if (t.idTemp !== idTemp) return t;
+      const novas = (t.divisoes || []).filter(d => d.id !== divisaoId);
+      if (novas.length === 0) {
+        return { ...t, desdobrado: false, divisoes: [] };
+      }
+      return { ...t, divisoes: novas };
+    }));
+  }
+
+  function atualizarDivisao(idTemp, divisaoId, campo, valor) {
+    setTransacoes(prev => prev.map(t => {
+      if (t.idTemp !== idTemp) return t;
+      const novas = (t.divisoes || []).map(d => {
+        if (d.id !== divisaoId) return d;
+        if (campo === 'valor') {
+          return { ...d, valor: valor === '' ? '' : parseFloat(valor) };
+        }
+        return { ...d, [campo]: valor };
+      });
+      return { ...t, divisoes: novas };
+    }));
+  }
+
+  function ajustarRestanteDivisao(idTemp, divisaoId) {
+    setTransacoes(prev => prev.map(t => {
+      if (t.idTemp !== idTemp) return t;
+      const outrasSoma = (t.divisoes || [])
+        .filter(d => d.id !== divisaoId)
+        .reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
+      const restante = Math.max(0, +(t.valor - outrasSoma).toFixed(2));
+      const novas = (t.divisoes || []).map(d => d.id === divisaoId ? { ...d, valor: restante } : d);
+      return { ...t, divisoes: novas };
+    }));
+  }
+
   const selecionados = transacoes.filter(t => t.selecionado);
   const totalReceitas = selecionados.filter(t => t.tipo === 'receita').reduce((s, t) => s + t.valor, 0);
   const totalDespesas = selecionados.filter(t => t.tipo === 'despesa').reduce((s, t) => s + t.valor, 0);
@@ -470,21 +616,50 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
       return;
     }
 
+    // Validação de soma dos lançamentos desdobrados
+    for (const t of selecionados) {
+      if (t.desdobrado && t.divisoes && t.divisoes.length > 0) {
+        const soma = t.divisoes.reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
+        const dif = Math.abs(t.valor - soma);
+        if (dif > 0.05) {
+          alert(`O lançamento "${t.descricao}" está desdobrado, mas a soma de suas divisões (R$ ${formatBRL(soma)}) é diferente do valor original do extrato (R$ ${formatBRL(t.valor)}). Ajuste as partes para bater 100% antes de importar.`);
+          return;
+        }
+      }
+    }
+
     setImportando(true);
     try {
-      await onImportarLote(selecionados.map(t => ({
-        tipo: t.tipo,
-        descricao: t.descricao,
-        valor: t.valor,
-        mes: t.mes,
-        dia: t.dia,
-        ano: t.ano,
-        categoria: t.tipo === 'despesa' ? (t.categoria || 'fixa') : null,
-        subcategoria: t.tipo === 'despesa' ? (t.subcategoria || null) : null,
-        formaRecebimento: t.formaRecebimento || (t.tipo === 'receita' ? 'À vista/PIX' : null),
-        banco: t.banco || bancoSelecionado || null,
-        meio_pagamento: t.meio_pagamento || 'Extrato Bancário',
-      })));
+      await onImportarLote(selecionados.flatMap(t => {
+        if (t.desdobrado && t.divisoes && t.divisoes.length > 0) {
+          return t.divisoes.map(d => ({
+            tipo: t.tipo,
+            descricao: d.descricao ? d.descricao : `${t.descricao} (Parte)`,
+            valor: Math.abs(parseFloat(d.valor) || 0),
+            mes: t.mes,
+            dia: t.dia,
+            ano: t.ano,
+            categoria: t.tipo === 'despesa' ? (d.categoria || 'fixa') : null,
+            subcategoria: t.tipo === 'despesa' ? (d.subcategoria || null) : null,
+            formaRecebimento: t.formaRecebimento || (t.tipo === 'receita' ? 'À vista/PIX' : null),
+            banco: t.banco || bancoSelecionado || null,
+            meio_pagamento: t.meio_pagamento || (t.ehFaturaCartao ? 'Cartão de Crédito' : 'Extrato Bancário'),
+          }));
+        }
+        return [{
+          tipo: t.tipo,
+          descricao: t.descricao,
+          valor: t.valor,
+          mes: t.mes,
+          dia: t.dia,
+          ano: t.ano,
+          categoria: t.tipo === 'despesa' ? (t.categoria || 'fixa') : null,
+          subcategoria: t.tipo === 'despesa' ? (t.subcategoria || null) : null,
+          formaRecebimento: t.formaRecebimento || (t.tipo === 'receita' ? 'À vista/PIX' : null),
+          banco: t.banco || bancoSelecionado || null,
+          meio_pagamento: t.meio_pagamento || (t.ehFaturaCartao ? 'Cartão de Crédito' : 'Extrato Bancário'),
+        }];
+      }));
       onClose();
     } catch (err) {
       alert('Erro na importação: ' + err.message);
@@ -724,27 +899,285 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
                   </div>
                 )}
 
-                {/* Seleção de Categoria para Despesas */}
-                {t.tipo === 'despesa' && (
-                  <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-                    <select
-                      value={t.categoria || 'fixa'}
-                      onChange={e => atualizarCampo(t.idTemp, 'categoria', e.target.value)}
-                      style={{ flex: 1, fontSize: 11, padding: '4px 6px', borderRadius: 6, border: '1px solid #D1CFC7', background: '#fff' }}
+                {/* Destaque para Fatura de Cartão Detectada */}
+                {t.ehFaturaCartao && !t.desdobrado && t.tipo === 'despesa' && (
+                  <div style={{
+                    fontSize: 11,
+                    color: '#854D0E',
+                    background: '#FEF9C3',
+                    border: '1px solid #FEF08A',
+                    padding: '6px 10px',
+                    borderRadius: 7,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 8
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <CreditCard size={14} color="#CA8A04" style={{ flexShrink: 0 }} />
+                      <span><strong>Fatura de Cartão detectada:</strong> Contém despesas mistas (pedágio, combustível, consumo).</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => iniciarDesdobramento(t.idTemp)}
+                      style={{
+                        background: '#CA8A04',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '3px 10px',
+                        fontSize: 10.5,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
                     >
-                      <option value="cmv">CMV (Custo Mercadorias)</option>
-                      <option value="variavel">Despesa Variável</option>
-                      <option value="fixa">Despesa Fixa</option>
-                      <option value="financeira">Despesa Financeira / Tarifa</option>
-                      <option value="investimento">Investimentos & CAPEX</option>
-                    </select>
+                      Desdobrar Fatura
+                    </button>
+                  </div>
+                )}
 
-                    <input
-                      value={t.subcategoria || ''}
-                      onChange={e => atualizarCampo(t.idTemp, 'subcategoria', e.target.value)}
-                      placeholder="Subcategoria..."
-                      style={{ flex: 1, fontSize: 11, padding: '4px 6px', borderRadius: 6, border: '1px solid #D1CFC7', background: '#fff' }}
-                    />
+                {/* Seleção de Categoria para Despesas (Modo Único ou Desdobrado) */}
+                {t.tipo === 'despesa' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 2 }}>
+                    {!t.desdobrado ? (
+                      <div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <select
+                            value={t.categoria || 'fixa'}
+                            onChange={e => atualizarCampo(t.idTemp, 'categoria', e.target.value)}
+                            style={{ flex: 1, fontSize: 11, padding: '5px 8px', borderRadius: 6, border: '1px solid #D1CFC7', background: '#fff' }}
+                          >
+                            <option value="cmv">CMV (Custo Mercadorias)</option>
+                            <option value="variavel">Despesa Variável (Pedágio, Combustível, Uber)</option>
+                            <option value="fixa">Despesa Fixa (Administrativo, Salários, Consumo)</option>
+                            <option value="financeira">Despesa Financeira / Tarifa</option>
+                            <option value="investimento">Investimentos & CAPEX</option>
+                          </select>
+
+                          <input
+                            value={t.subcategoria || ''}
+                            onChange={e => atualizarCampo(t.idTemp, 'subcategoria', e.target.value)}
+                            placeholder="Subcategoria..."
+                            style={{ flex: 1, fontSize: 11, padding: '5px 8px', borderRadius: 6, border: '1px solid #D1CFC7', background: '#fff' }}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                          <button
+                            type="button"
+                            onClick={() => iniciarDesdobramento(t.idTemp)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#1F5C52',
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              padding: '2px 0'
+                            }}
+                          >
+                            <Split size={12} color="#1F5C52" />
+                            Desdobrar em várias categorias (Split)
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Painel Completo de Desdobramento Inline */
+                      <div style={{
+                        background: '#FAF8F5',
+                        border: '1px solid #E6E1D6',
+                        borderRadius: 8,
+                        padding: '10px 12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 8
+                      }}>
+                        {/* Barra de Status da Distribuição */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <Split size={14} color="#1F5C52" />
+                            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#1F5C52' }}>
+                              Desdobramento de Fatura / Multi-categorias
+                            </span>
+                          </div>
+
+                          {(() => {
+                            const soma = (t.divisoes || []).reduce((acc, d) => acc + (parseFloat(d.valor) || 0), 0);
+                            const dif = +(t.valor - soma).toFixed(2);
+                            const bateu = Math.abs(dif) <= 0.02;
+
+                            if (bateu) {
+                              return (
+                                <span style={{ fontSize: 11, fontWeight: 700, color: '#0F766E', background: '#CCFBF1', padding: '2px 8px', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  <Check size={12} /> 100% Distribuído ({formatBRL(soma)})
+                                </span>
+                              );
+                            } else if (dif > 0) {
+                              return (
+                                <span style={{ fontSize: 11, fontWeight: 600, color: '#B45309', background: '#FEF3C7', padding: '2px 8px', borderRadius: 6 }}>
+                                  Restam R$ {formatBRL(dif)}
+                                </span>
+                              );
+                            } else {
+                              return (
+                                <span style={{ fontSize: 11, fontWeight: 600, color: '#B91C1C', background: '#FEE2E2', padding: '2px 8px', borderRadius: 6 }}>
+                                  Excedeu R$ {formatBRL(Math.abs(dif))}
+                                </span>
+                              );
+                            }
+                          })()}
+                        </div>
+
+                        {/* Atalhos Rápidos para Faturas de Cartão */}
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                          <span style={{ fontSize: 10, color: '#78716C', fontWeight: 600 }}>Atalhos:</span>
+                          <button
+                            type="button"
+                            onClick={() => adicionarDivisao(t.idTemp, { descricao: 'Pedágio / Sem Parar', categoria: 'variavel', subcategoria: 'Pedágios e Estacionamentos' })}
+                            style={{ background: '#F5F5F4', border: '1px solid #D6D3D1', fontSize: 10, padding: '2px 7px', borderRadius: 5, cursor: 'pointer', color: '#44403C' }}
+                          >
+                            + Pedágio (Variável)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => adicionarDivisao(t.idTemp, { descricao: 'Combustível / Abastecimento', categoria: 'variavel', subcategoria: 'Combustíveis' })}
+                            style={{ background: '#F5F5F4', border: '1px solid #D6D3D1', fontSize: 10, padding: '2px 7px', borderRadius: 5, cursor: 'pointer', color: '#44403C' }}
+                          >
+                            + Combustível (Variável)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => adicionarDivisao(t.idTemp, { descricao: 'Consumo Geral / Administrativo', categoria: 'fixa', subcategoria: 'Custos Administrativos' })}
+                            style={{ background: '#F5F5F4', border: '1px solid #D6D3D1', fontSize: 10, padding: '2px 7px', borderRadius: 5, cursor: 'pointer', color: '#44403C' }}
+                          >
+                            + Consumo Geral (Fixa)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => adicionarDivisao(t.idTemp, { descricao: 'Assinaturas / Ferramentas', categoria: 'fixa', subcategoria: 'Sistemas e Internet' })}
+                            style={{ background: '#F5F5F4', border: '1px solid #D6D3D1', fontSize: 10, padding: '2px 7px', borderRadius: 5, cursor: 'pointer', color: '#44403C' }}
+                          >
+                            + Assinaturas (Fixa)
+                          </button>
+                        </div>
+
+                        {/* Lista das Partes Desdobradas */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {(t.divisoes || []).map((d, dIdx) => (
+                            <div key={d.id || dIdx} style={{
+                              background: '#fff',
+                              border: '1px solid #E2DED5',
+                              borderRadius: 6,
+                              padding: '8px 10px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: 6
+                            }}>
+                              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                                <input
+                                  value={d.descricao}
+                                  onChange={e => atualizarDivisao(t.idTemp, d.id, 'descricao', e.target.value)}
+                                  placeholder="Descrição da parte (ex: Pedágio, Combustível, Almoço)..."
+                                  style={{ flex: 2, fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid #D1CFC7' }}
+                                />
+                                <div style={{ position: 'relative', width: 110 }}>
+                                  <span style={{ position: 'absolute', left: 7, top: 6, fontSize: 11, color: '#78716C' }}>R$</span>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={d.valor}
+                                    onChange={e => atualizarDivisao(t.idTemp, d.id, 'valor', e.target.value)}
+                                    placeholder="0.00"
+                                    style={{ width: '100%', fontSize: 12, fontWeight: 700, padding: '5px 6px 5px 24px', borderRadius: 6, border: '1px solid #D1CFC7', textAlign: 'right' }}
+                                  />
+                                </div>
+                                <button
+                                  type="button"
+                                  title="Ajustar automaticamente com o saldo restante"
+                                  onClick={() => ajustarRestanteDivisao(t.idTemp, d.id)}
+                                  style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 5, padding: '4px 6px', fontSize: 10, fontWeight: 600, cursor: 'pointer', color: '#374151', whiteSpace: 'nowrap' }}
+                                >
+                                  Saldo
+                                </button>
+                                {(t.divisoes || []).length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removerDivisao(t.idTemp, d.id)}
+                                    title="Remover esta parte"
+                                    style={{ background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: 5, padding: '5px', cursor: 'pointer', color: '#DC2626' }}
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                )}
+                              </div>
+
+                              <div style={{ display: 'flex', gap: 6 }}>
+                                <select
+                                  value={d.categoria || 'fixa'}
+                                  onChange={e => atualizarDivisao(t.idTemp, d.id, 'categoria', e.target.value)}
+                                  style={{ flex: 1, fontSize: 11, padding: '5px 6px', borderRadius: 5, border: '1px solid #D1CFC7', background: '#fff' }}
+                                >
+                                  <option value="variavel">Despesa Variável (Pedágio, Combustível, Uber)</option>
+                                  <option value="fixa">Despesa Fixa (Administrativo, Consumo)</option>
+                                  <option value="cmv">CMV (Custo Mercadorias / Insumos)</option>
+                                  <option value="financeira">Despesa Financeira / Tarifas</option>
+                                  <option value="investimento">Investimentos & CAPEX</option>
+                                </select>
+                                <input
+                                  value={d.subcategoria || ''}
+                                  onChange={e => atualizarDivisao(t.idTemp, d.id, 'subcategoria', e.target.value)}
+                                  placeholder="Subcategoria (opcional)..."
+                                  style={{ flex: 1, fontSize: 11, padding: '5px 6px', borderRadius: 5, border: '1px solid #D1CFC7', background: '#fff' }}
+                                />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Botões de Ação do Desdobramento */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
+                          <button
+                            type="button"
+                            onClick={() => adicionarDivisao(t.idTemp)}
+                            style={{
+                              background: '#E6F4F1',
+                              border: '1px dashed #1F5C52',
+                              color: '#1F5C52',
+                              padding: '5px 10px',
+                              borderRadius: 6,
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4
+                            }}
+                          >
+                            <Plus size={13} />
+                            Adicionar outra divisão
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleDesdobramento(t.idTemp)}
+                            style={{
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#6B7280',
+                              fontSize: 11,
+                              cursor: 'pointer',
+                              textDecoration: 'underline'
+                            }}
+                          >
+                            Voltar para lançamento único
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
