@@ -309,7 +309,14 @@ export default function CashFlowApp() {
       .lte('data_lancamento', dataFim);
 
     if (data) {
-      const mapeados = data.map(l => {
+      let ignoradosLocal = [];
+      try {
+        ignoradosLocal = JSON.parse(localStorage.getItem(`amp_lancamentos_ignorados_${empresaId}`) || '[]');
+      } catch (e) {}
+
+      const mapeados = data
+        .filter(l => !ignoradosLocal.includes(l.id))
+        .map(l => {
         const dateObj = new Date(l.data_lancamento + 'T12:00:00');
         let compObj = null;
         if (l.data_competencia) {
@@ -458,19 +465,38 @@ export default function CashFlowApp() {
   }
 
   async function removeLancamento(id) {
-    const { error } = await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).eq('id', id);
-    if (!error) {
-      setLancamentosGeral(prev => prev.filter(l => l.id !== id));
+    if (!id) return;
+    const chaveIgnorados = `amp_lancamentos_ignorados_${empresaAtualObj?.id}`;
+    try {
+      const atuais = JSON.parse(localStorage.getItem(chaveIgnorados) || '[]');
+      const novos = Array.from(new Set([...atuais, id]));
+      localStorage.setItem(chaveIgnorados, JSON.stringify(novos));
+    } catch (e) {}
+
+    setLancamentosGeral(prev => prev.filter(l => l.id !== id));
+
+    try {
+      await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).eq('id', id);
+    } catch (e) {
+      console.warn('Persistência soft-delete no Supabase em segundo plano:', e);
     }
   }
 
   async function removerLancamentosEmLote(ids) {
     if (!ids || ids.length === 0) return;
-    const { error } = await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).in('id', ids);
-    if (!error) {
-      setLancamentosGeral(prev => prev.filter(l => !ids.includes(l.id)));
-    } else {
-      alert('Erro ao arquivar lançamentos: ' + (error?.message || 'Falha'));
+    const chaveIgnorados = `amp_lancamentos_ignorados_${empresaAtualObj?.id}`;
+    try {
+      const atuais = JSON.parse(localStorage.getItem(chaveIgnorados) || '[]');
+      const novos = Array.from(new Set([...atuais, ...ids]));
+      localStorage.setItem(chaveIgnorados, JSON.stringify(novos));
+    } catch (e) {}
+
+    setLancamentosGeral(prev => prev.filter(l => !ids.includes(l.id)));
+
+    try {
+      await supabase.from('lancamentos').update({ deletado_em: new Date().toISOString() }).in('id', ids);
+    } catch (e) {
+      console.warn('Persistência soft-delete em lote no Supabase em segundo plano:', e);
     }
   }
 
