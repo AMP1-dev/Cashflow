@@ -14,6 +14,7 @@ export const CATEGORIAS = {
   variavel: { label: 'Despesa Variável', short: 'Variável', color: '#8A6D1A', bg: '#F3EAC9' },
   fixa: { label: 'Despesa Fixa', short: 'Fixa', color: '#1F5C52', bg: '#D9EBE6' },
   financeira: { label: 'Despesa Financeira', short: 'Financeira', color: '#7A2E3D', bg: '#F2DDE1' },
+  investimento: { label: 'Investimentos & CAPEX', short: 'Investimento', color: '#1D4ED8', bg: '#EFF6FF' },
 };
 
 export const SUBCATEGORIAS_SUGERIDAS = {
@@ -28,6 +29,7 @@ export const SUBCATEGORIAS_SUGERIDAS = {
   variavel: ['Impostos sobre venda', 'Comissão sobre vendas', 'Taxa de cartão', 'Frete de entrega ao cliente', 'Mão de Obra Extra / Diárias de Pico'],
   fixa: ['Aluguel', 'Salários', 'Pró-labore', 'Água', 'Energia elétrica', 'Telefone e internet', 'Contador', 'Combustível (uso geral)', 'Manutenção de veículo', 'Material de escritório'],
   financeira: ['Juros bancários', 'Tarifa bancária', 'Amortização de empréstimo'],
+  investimento: ['Implantação de Software / Sistemas', 'Aquisição de Máquinas e Equipamentos', 'Reformas e Benfeitorias', 'Móveis, Computadores e TI', 'Expansão e Novos Negócios'],
 };
 
 export const PLANO_DE_CONTAS_SUGERIDO = [
@@ -132,6 +134,22 @@ export const PLANO_DE_CONTAS_SUGERIDO = [
       { nome: 'IOF e taxas de antecipação', sub: 'Tarifa bancária' },
     ]
   },
+  {
+    id: 'investimentos_capex',
+    grupo: '🚀 Investimentos & Expansão (CAPEX)',
+    categoria: 'investimento',
+    tipoLabel: 'Investimento / CAPEX',
+    badgeColor: '#1D4ED8',
+    badgeBg: '#EFF6FF',
+    descricao: 'Gastos em infraestrutura, softwares, sistemas, maquinários e reformas que modernizam o negócio',
+    itens: [
+      { nome: 'Implantação de Software e Sistemas', sub: 'Implantação de Software / Sistemas' },
+      { nome: 'Máquinas, Computadores e Equipamentos', sub: 'Aquisição de Máquinas e Equipamentos' },
+      { nome: 'Reformas, Obras e Benfeitorias', sub: 'Reformas e Benfeitorias' },
+      { nome: 'Mobiliário e Estrutura Física', sub: 'Móveis, Computadores e TI' },
+      { nome: 'Expansão de Negócio / Novos Projetos', sub: 'Expansão e Novos Negócios' },
+    ]
+  },
 ];
 
 export const WIZARD = {
@@ -140,7 +158,15 @@ export const WIZARD = {
     ajuda: 'Pense em algo que você paga por ter pego dinheiro emprestado ou por usar serviços bancários — não pelo seu produto em si.',
     opcoes: [
       { texto: 'Sim, é sobre dívida ou banco', proximo: 'fim_financeira' },
-      { texto: 'Não', proximo: 'pergunta_cmv' },
+      { texto: 'Não', proximo: 'pergunta_investimento' },
+    ],
+  },
+  pergunta_investimento: {
+    pergunta: 'Essa despesa é um investimento de modernização, máquina, reforma ou implantação de software (CAPEX)?',
+    ajuda: 'Investimentos geram melhorias duradouras para a empresa (implantação de sistemas, equipamentos, novos computadores, reformas). Eles diferem das despesas normais do dia a dia.',
+    opcoes: [
+      { texto: 'Sim, é investimento / implantação', proximo: 'fim_investimento' },
+      { texto: 'Não, é gasto rotineiro da empresa', proximo: 'pergunta_cmv' },
     ],
   },
   pergunta_cmv: {
@@ -165,6 +191,16 @@ export const WIZARD = {
     opcoes: [
       { texto: 'Acontece todo mês (regular)', proximo: 'fim_fixa_recorrente' },
       { texto: 'Foi pontual ou não se repete com frequência', proximo: 'fim_fixa_eventual' },
+    ],
+  },
+  fim_investimento: {
+    categoria: 'investimento',
+    subcategorias: [
+      'Implantação de Software / Sistemas',
+      'Aquisição de Máquinas e Equipamentos',
+      'Reformas e Benfeitorias',
+      'Móveis, Computadores e TI',
+      'Expansão e Novos Negócios'
     ],
   },
   fim_cmv: { categoria: 'cmv' },

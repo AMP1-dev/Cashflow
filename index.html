@@ -1,58 +1,24 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
-    <meta id="meta-theme-color" name="theme-color" content="#0B0B0E" />
-    <link id="dynamic-favicon" rel="icon" type="image/png" href="/amp-mesh-logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
+    <meta name="theme-color" content="#0052D9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Grupo AMP" />
+    <meta name="description" content="Grupo AMP — 40+ Anos de Excelência em TI Corporativa, Suporte Gerenciado 24/7, Cibersegurança e Inteligência Fiscal." />
+    <title>Grupo AMP — Ampliando sua Tecnologia | TI, Governança &amp; Estratégia</title>
+    
+    <!-- Preconnect Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
-    <title>AMP Flow — Gestão Financeira, DRE & Agendamento</title>
-    <meta name="description" content="AMP Flow: Gestão financeira, fluxo de caixa, DRE em tempo real e auto-agendamento online para empresas." />
-    <!-- Open Graph para visualização no WhatsApp e redes -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Agendamento Online • Escolha seu Horário" />
-    <meta property="og:description" content="Agende seu horário com facilidade pelo celular." />
-    <meta property="og:image" content="/amp-mesh-logo.png" />
-    <script>
-      (function() {
-        try {
-          var host = (window.location.hostname || '').toLowerCase();
-          var params = new URLSearchParams(window.location.search || '');
-          var isPalmeirense = host.includes('palmeirense') || params.get('app') === 'palmeirense' || params.get('app') === 'ecp';
-          var isDrywall = host.includes('drywall') || host.includes('dibrunelli') || params.get('app') === 'drywall';
-          var isRadio = host.includes('amplificadora') || params.get('app') === 'radio';
-          var isAgenda = params.has('agenda') || params.has('agendar') || window.location.pathname.indexOf('/agenda') !== -1;
-          var favEl = document.getElementById('dynamic-favicon');
-          var themeEl = document.getElementById('meta-theme-color');
-
-          if (isAgenda) {
-            document.title = 'Agendamento Online • Escolha seu Horário';
-            if (favEl) favEl.href = '/amp-mesh-logo.png';
-            if (themeEl) themeEl.content = '#0F2B27';
-          } else if (isPalmeirense) {
-            document.title = 'Esporte Clube Palmeirense • Desde 1908 | Sta. C. das Palmeiras';
-            if (favEl) favEl.href = '/logo-ecp.png';
-            if (themeEl) themeEl.content = '#0B0B0E';
-          } else if (isDrywall) {
-            document.title = 'Drywall Distribuidora • Di Brunelli | Interior de SP';
-            if (favEl) favEl.href = '/vite.svg';
-            if (themeEl) themeEl.content = '#0052D9';
-          } else if (isRadio) {
-            document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
-            if (favEl) favEl.href = '/favicon-amplificadora.jpg';
-            if (themeEl) themeEl.content = '#0A0910';
-          } else {
-            document.title = 'AMP Flow — Fluxo de Caixa e DRE sem Mistério';
-            if (favEl) favEl.href = '/amp-mesh-logo.png';
-            if (themeEl) themeEl.content = '#0F2B27';
-          }
-        } catch (e) {}
-      })();
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Favicon SVG: Official Wireframe Globe -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' stroke='%230052D9' stroke-width='6' fill='none'/%3E%3Cline x1='4' y1='50' x2='96' y2='50' stroke='%230052D9' stroke-width='5'/%3E%3Cellipse cx='50' cy='30' rx='41' ry='18' stroke='%230052D9' stroke-width='4' fill='none'/%3E%3Cellipse cx='50' cy='70' rx='41' ry='18' stroke='%230052D9' stroke-width='4' fill='none'/%3E%3Cline x1='50' y1='4' x2='50' y2='96' stroke='%230052D9' stroke-width='5'/%3E%3Cellipse cx='50' cy='50' rx='24' ry='46' stroke='%230052D9' stroke-width='4' fill='none'/%3E%3C/svg%3E" />
   </head>
-  <body>
+  <body class="bg-white text-slate-900 font-sans antialiased selection:bg-[#0052D9]/15 selection:text-[#0052D9]">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

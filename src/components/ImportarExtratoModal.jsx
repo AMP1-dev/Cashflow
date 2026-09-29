@@ -190,12 +190,13 @@ export function parseCSV(text) {
   return transacoes;
 }
 
-export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = [], onImportarLote, onClose }) {
+export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = [], empresa = null, onImportarLote, onClose }) {
   const [etapa, setEtapa] = useState(1);
   const [bancoSelecionado, setBancoSelecionado] = useState('');
   const [transacoes, setTransacoes] = useState([]);
   const [nomeArquivo, setNomeArquivo] = useState('');
   const [importando, setImportando] = useState(false);
+  const [filtroAba, setFiltroAba] = useState('todas'); // 'todas' | 'receitas' | 'despesas' | 'transferencias' | 'duplicatas'
 
   function autoSugerirCategoria(descricao, tipo) {
     if (tipo === 'receita') return { categoria: null, subcategoria: null };
@@ -213,6 +214,9 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
       return { categoria: similar.categoria, subcategoria: similar.subcategoria || '' };
     }
 
+    if (termo.includes('invest') || termo.includes('software') || termo.includes('sistema') || termo.includes('maquina') || termo.includes('computad') || termo.includes('notebook') || termo.includes('reforma') || termo.includes('benfeitoria') || termo.includes('equipamento')) {
+      return { categoria: 'investimento', subcategoria: 'Implantação de Software / Sistemas' };
+    }
     if (termo.includes('fornec') || termo.includes('compra') || termo.includes('embalag') || termo.includes('mercador') || termo.includes('atacado')) {
       return { categoria: 'cmv', subcategoria: 'Mercadorias para revenda' };
     }
@@ -238,6 +242,124 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
     );
   }
 
+  // ─── Detecção Inteligente de Transferência entre Contas / Mesma Titularidade ───
+  function detectarTransferencia(t, listaExistente = [], listaLida = [], empresaObj = null) {
+    const desc = (t.descricao || '').toLowerCase();
+
+    // 1. Termos inequívocos de transferências entre contas e aplicações
+    const termosTransferencia = [
+      'mesma titularidade',
+      'mesmo titular',
+      'transf entre contas',
+      'transferencia entre contas',
+      'transf. entre contas',
+      'transf c/c',
+      'transf. c/c',
+      'transf cc',
+      'transf. cc',
+      'transf conta corrente',
+      'transf. conta corrente',
+      'transf p/ c/c',
+      'transf. p/ c/c',
+      'transf de c/c',
+      'transf. de c/c',
+      'transf.p/aplic',
+      'transf.p/resg',
+      'tef mesma titularidade',
+      'ted mesma titularidade',
+      'doc mesma titularidade',
+      'pix mesma titularidade',
+      'pix - mesma titularidade',
+      'pix transf mesma tit',
+      'resgate autom',
+      'aplicacao autom',
+      'aplic autom',
+      'aplicacao financeira',
+      'aplic. financeira',
+      'aplic.financ',
+      'resgate poupanca',
+      'aplic poupanca',
+      'transf.p/aplicacao',
+      'transf.p/resgate',
+      'cobertura de saldo',
+      'cobertura saldo',
+      'transf saldo',
+      'saldo crediario'
+    ];
+
+    for (const termo of termosTransferencia) {
+      if (desc.includes(termo)) {
+        return {
+          ehTransferencia: true,
+          motivo: `Padrão de transferência identificado: "${termo}"`
+        };
+      }
+    }
+
+    // 2. Se temos dados da empresa (razão social, nome fantasia, cnpj)
+    if (empresaObj) {
+      const nomes = [
+        empresaObj.razao_social,
+        empresaObj.nome_fantasia,
+        empresaObj.fantasia,
+        empresaObj.nome
+      ].filter(Boolean).map(n => n.toLowerCase().trim());
+
+      const ehOperacaoTransf = desc.includes('pix') || desc.includes('ted') || desc.includes('tef') || desc.includes('transf') || desc.includes('transferencia');
+      if (ehOperacaoTransf) {
+        for (const nome of nomes) {
+          if (nome.length >= 4 && desc.includes(nome)) {
+            return {
+              ehTransferencia: true,
+              motivo: `Transferência identificada para a própria empresa (${nome})`
+            };
+          }
+        }
+      }
+    }
+
+    // 3. Cruzamento de Espelho dentro do próprio arquivo (uma saída e uma entrada de mesmo valor e mesma data)
+    const parNoArquivo = listaLida.find(outro => 
+      outro.idTemp !== t.idTemp &&
+      outro.tipo !== t.tipo &&
+      Math.abs(outro.valor - t.valor) < 0.01 &&
+      Math.abs(outro.dia - t.dia) <= 1 &&
+      outro.mes === t.mes &&
+      (
+        desc.includes('pix') || desc.includes('transf') || desc.includes('ted') || desc.includes('tef') ||
+        (outro.descricao || '').toLowerCase().includes('pix') || (outro.descricao || '').toLowerCase().includes('transf')
+      )
+    );
+
+    if (parNoArquivo) {
+      return {
+        ehTransferencia: true,
+        motivo: `Cruzamento de espelho no extrato: par de ${formatBRL(t.valor)} entre contas`
+      };
+    }
+
+    // 4. Cruzamento de Espelho com o Histórico Existente (outra conta já importada ou lançada)
+    const parNoHistorico = listaExistente.find(existente => 
+      existente.tipo !== t.tipo &&
+      Math.abs(existente.valor - t.valor) < 0.01 &&
+      Math.abs(existente.dia - t.dia) <= 1 &&
+      existente.mes === t.mes &&
+      (
+        desc.includes('pix') || desc.includes('transf') || desc.includes('ted') || desc.includes('tef') ||
+        (existente.descricao || '').toLowerCase().includes('pix') || (existente.descricao || '').toLowerCase().includes('transf')
+      )
+    );
+
+    if (parNoHistorico) {
+      return {
+        ehTransferencia: true,
+        motivo: `Cruzou com outra conta já no sistema (dia ${parNoHistorico.dia}, ${formatBRL(parNoHistorico.valor)})`
+      };
+    }
+
+    return { ehTransferencia: false, motivo: null };
+  }
+
   function processarConteudo(textoOuBuffer, formato) {
     let parsed = [];
     if (formato === 'ofx') {
@@ -251,8 +373,9 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
       return;
     }
 
-    const processados = parsed.map(t => {
+    const processados = parsed.map((t, idx, arr) => {
       const duplicado = checarDuplicata(t);
+      const { ehTransferencia, motivo: motivoTransferencia } = detectarTransferencia(t, historicoExistente, arr, empresa);
       const { categoria, subcategoria } = autoSugerirCategoria(t.descricao, t.tipo);
       return {
         ...t,
@@ -260,7 +383,9 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
         categoria,
         subcategoria,
         duplicado,
-        selecionado: !duplicado,
+        ehTransferencia,
+        motivoTransferencia,
+        selecionado: !duplicado && !ehTransferencia,
       };
     });
 
@@ -316,6 +441,28 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
   const selecionados = transacoes.filter(t => t.selecionado);
   const totalReceitas = selecionados.filter(t => t.tipo === 'receita').reduce((s, t) => s + t.valor, 0);
   const totalDespesas = selecionados.filter(t => t.tipo === 'despesa').reduce((s, t) => s + t.valor, 0);
+
+  const qtdTransferencias = transacoes.filter(t => t.ehTransferencia).length;
+  const qtdDuplicatas = transacoes.filter(t => t.duplicado).length;
+
+  const transacoesFiltradas = useMemo(() => {
+    if (filtroAba === 'receitas') return transacoes.filter(t => t.tipo === 'receita' && !t.ehTransferencia);
+    if (filtroAba === 'despesas') return transacoes.filter(t => t.tipo === 'despesa' && !t.ehTransferencia);
+    if (filtroAba === 'transferencias') return transacoes.filter(t => t.ehTransferencia);
+    if (filtroAba === 'duplicatas') return transacoes.filter(t => t.duplicado);
+    return transacoes;
+  }, [transacoes, filtroAba]);
+
+  function selecionarApenasOperacoesReais() {
+    setTransacoes(prev => prev.map(t => ({
+      ...t,
+      selecionado: !t.duplicado && !t.ehTransferencia
+    })));
+  }
+
+  function desmarcarTransferencias() {
+    setTransacoes(prev => prev.map(t => t.ehTransferencia ? { ...t, selecionado: false } : t));
+  }
 
   async function handleConfirmarImportacao() {
     if (selecionados.length === 0) {
@@ -413,6 +560,25 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
             </button>
           </div>
 
+          {/* Banner de Aviso de Transferências Detectadas */}
+          {qtdTransferencias > 0 && (
+            <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 11.5, color: '#1E40AF', lineHeight: 1.4 }}>
+                <RefreshCw size={16} color="#2563EB" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div>
+                  <strong>{qtdTransferencias} Transferência(s) entre contas identificada(s):</strong> Foram desmarcadas automaticamente para <strong>não duplicar receitas nem despesas</strong> na sua DRE.
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={desmarcarTransferencias}
+                style={{ background: '#DBEAFE', border: '1px solid #93C5FD', color: '#1E40AF', fontSize: 10.5, fontWeight: 700, padding: '4px 8px', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              >
+                Manter desmarcadas
+              </button>
+            </div>
+          )}
+
           {/* Resumo do Lote */}
           <div style={{ background: '#0F2B27', borderRadius: 12, padding: '10px 14px', color: '#FAF8F3', display: 'flex', justifyContent: 'space-between' }}>
             <div>
@@ -425,17 +591,94 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
             </div>
           </div>
 
+          {/* Barra de Filtros Rápidos */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setFiltroAba('todas')}
+                style={{
+                  padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: filtroAba === 'todas' ? 700 : 500,
+                  background: filtroAba === 'todas' ? '#0F2B27' : '#fff', color: filtroAba === 'todas' ? '#FAF8F3' : '#5C5A4F',
+                  border: '1px solid #D1CFC7', cursor: 'pointer'
+                }}
+              >
+                Todas ({transacoes.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroAba('receitas')}
+                style={{
+                  padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: filtroAba === 'receitas' ? 700 : 500,
+                  background: filtroAba === 'receitas' ? '#1F5C52' : '#fff', color: filtroAba === 'receitas' ? '#FAF8F3' : '#1F5C52',
+                  border: '1px solid #D1CFC7', cursor: 'pointer'
+                }}
+              >
+                Receitas ({transacoes.filter(t => t.tipo === 'receita' && !t.ehTransferencia).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFiltroAba('despesas')}
+                style={{
+                  padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: filtroAba === 'despesas' ? 700 : 500,
+                  background: filtroAba === 'despesas' ? '#B05A2E' : '#fff', color: filtroAba === 'despesas' ? '#FAF8F3' : '#B05A2E',
+                  border: '1px solid #D1CFC7', cursor: 'pointer'
+                }}
+              >
+                Despesas ({transacoes.filter(t => t.tipo === 'despesa' && !t.ehTransferencia).length})
+              </button>
+              {qtdTransferencias > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFiltroAba('transferencias')}
+                  style={{
+                    padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: filtroAba === 'transferencias' ? 700 : 600,
+                    background: filtroAba === 'transferencias' ? '#1D4ED8' : '#EFF6FF', color: filtroAba === 'transferencias' ? '#fff' : '#1D4ED8',
+                    border: '1px solid #BFDBFE', cursor: 'pointer'
+                  }}
+                >
+                  🔄 Transf. ({qtdTransferencias})
+                </button>
+              )}
+              {qtdDuplicatas > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setFiltroAba('duplicatas')}
+                  style={{
+                    padding: '4px 9px', borderRadius: 7, fontSize: 11, fontWeight: filtroAba === 'duplicatas' ? 700 : 600,
+                    background: filtroAba === 'duplicatas' ? '#7A2E3D' : '#FDF2F4', color: filtroAba === 'duplicatas' ? '#fff' : '#7A2E3D',
+                    border: '1px solid #FECACA', cursor: 'pointer'
+                  }}
+                >
+                  ⚠️ Duplicatas ({qtdDuplicatas})
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={selecionarApenasOperacoesReais}
+              style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              Só operações reais
+            </button>
+          </div>
+
           {/* Lista de Transações */}
           <div style={{ maxHeight: '42vh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingRight: 4 }}>
-            {transacoes.map(t => (
+            {transacoesFiltradas.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '24px 12px', color: '#9C9A8F', fontSize: 12 }}>
+                Nenhuma transação nesta categoria.
+              </div>
+            ) : transacoesFiltradas.map(t => (
               <div
                 key={t.idTemp}
                 style={{
                   background: t.selecionado ? '#fff' : '#F7F6F2',
                   borderRadius: 10,
-                  border: `1px solid ${t.duplicado ? '#F5C6CB' : (t.selecionado ? '#D9EBE6' : '#E5E0D5')}`,
+                  border: `1px solid ${t.duplicado ? '#F5C6CB' : (t.ehTransferencia ? '#BFDBFE' : (t.selecionado ? '#D9EBE6' : '#E5E0D5'))}`,
                   padding: '10px 12px',
-                  opacity: t.selecionado ? 1 : 0.6,
+                  opacity: t.selecionado ? 1 : 0.65,
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 6,
@@ -465,9 +708,18 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
                   </div>
                 </div>
 
+                {/* Tag de Transferência Interna */}
+                {t.ehTransferencia && (
+                  <div style={{ fontSize: 10.5, color: '#1E40AF', background: '#EFF6FF', border: '1px solid #DBEAFE', padding: '3px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <RefreshCw size={12} color="#2563EB" style={{ flexShrink: 0 }} />
+                    <span><strong>Transferência Interna (Mesma Titularidade):</strong> {t.motivoTransferencia || 'Movimentação entre contas próprias desmarcada para não inflar DRE.'}</span>
+                  </div>
+                )}
+
+                {/* Tag de Possível Duplicata */}
                 {t.duplicado && (
                   <div style={{ fontSize: 10.5, color: '#7A2E3D', background: '#FDF2F4', padding: '3px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <AlertCircle size={12} />
+                    <AlertCircle size={12} style={{ flexShrink: 0 }} />
                     <span>Possível duplicata: já existe lançamento com mesmo dia e valor.</span>
                   </div>
                 )}
@@ -484,6 +736,7 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
                       <option value="variavel">Despesa Variável</option>
                       <option value="fixa">Despesa Fixa</option>
                       <option value="financeira">Despesa Financeira / Tarifa</option>
+                      <option value="investimento">Investimentos & CAPEX</option>
                     </select>
 
                     <input

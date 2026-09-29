@@ -16,12 +16,14 @@ export function apurarMetricasMes(lancamentos, mes, ano, pctCmvPadrao = 0) {
   const despesasVar = lista.filter(l => l.tipo === 'despesa' && l.categoria === 'variavel');
   const despesasFix = lista.filter(l => l.tipo === 'despesa' && l.categoria === 'fixa');
   const despesasFin = lista.filter(l => l.tipo === 'despesa' && l.categoria === 'financeira');
+  const despesasInvest = lista.filter(l => l.tipo === 'despesa' && (l.categoria === 'investimento' || l.categoria === 'capex'));
 
   const faturamento = receitas.reduce((s, l) => s + (l.valor || 0), 0);
   const cmvCompras = despesasCmv.reduce((s, l) => s + (l.valor || 0), 0);
   const variaveis = despesasVar.reduce((s, l) => s + (l.valor || 0), 0);
   const fixas = despesasFix.reduce((s, l) => s + (l.valor || 0), 0);
   const financeiras = despesasFin.reduce((s, l) => s + (l.valor || 0), 0);
+  const investimentos = despesasInvest.reduce((s, l) => s + (l.valor || 0), 0);
 
   // CMV DRE (Estimado por % ou Compras)
   let cmv = 0;
@@ -34,10 +36,15 @@ export function apurarMetricasMes(lancamentos, mes, ano, pctCmvPadrao = 0) {
   const margemContribuicao = faturamento - cmv - variaveis;
   const pctMC = faturamento > 0 ? (margemContribuicao / faturamento) * 100 : 0;
   const pontoEquilibrio = pctMC > 0 ? fixas / (pctMC / 100) : 0;
-  const lucroDRE = margemContribuicao - fixas - financeiras;
-  const totalDespesasPagas = fixas + variaveis + cmvCompras + financeiras;
+  
+  // Lucratividade Pré e Pós Investimento
+  const resultadoOperacional = margemContribuicao - fixas; // EBITDA / LAJIDA
+  const margemOperacionalPct = faturamento > 0 ? (resultadoOperacional / faturamento) * 100 : 0;
+  const lucroDRE = resultadoOperacional - financeiras - investimentos;
+  const totalDespesasPagas = fixas + variaveis + cmvCompras + financeiras + investimentos;
   const saldoCaixa = faturamento - totalDespesasPagas;
   const diferencaEstoque = cmvCompras - cmv; // positivo se comprou mais do que consumiu
+  const taxaReinvestimentoPct = faturamento > 0 ? (investimentos / faturamento) * 100 : 0;
 
   const pctAtingidoPE = pontoEquilibrio > 0 ? (faturamento / pontoEquilibrio) * 100 : 0;
   const folgaPE = faturamento - pontoEquilibrio;
@@ -54,6 +61,10 @@ export function apurarMetricasMes(lancamentos, mes, ano, pctCmvPadrao = 0) {
     variaveis,
     fixas,
     financeiras,
+    investimentos,
+    resultadoOperacional,
+    margemOperacionalPct,
+    taxaReinvestimentoPct,
     margemContribuicao,
     pctMC,
     pontoEquilibrio,
@@ -105,12 +116,13 @@ Olá! Segue a tradução analítica dos resultados de *${m.nomeMes}*:
 • Status: *${atingiuPE ? `✅ Meta superada com folga de +${formatBRL(m.folgaPE)}` : `⚠️ Faltaram ${formatBRL(Math.abs(m.folgaPE))} para cobrir custos fixos`}*
 • Margem de Contribuição: *${m.pctMC.toFixed(1)}%* (${formatBRL(m.margemContribuicao)})
 
-📈 *2. RESULTADO OPERACIONAL (DRE - LUCRO ECONÔMICO)*
+📈 *2. RESULTADO OPERACIONAL & LUCRATIVIDADE (DRE)*
 • Faturamento Bruto: *${formatBRL(m.faturamento)}*
 • (-) Custo das Vendas (CMV): *-${formatBRL(m.cmv)}*
 • (-) Despesas Variáveis: *-${formatBRL(m.variaveis)}*
 • (-) Despesas Fixas: *-${formatBRL(m.fixas)}*
-• *LUCRO LÍQUIDO (DRE):* *${deuLucroDRE ? '+' : ''}${formatBRL(m.lucroDRE)}* (${m.margemLiquidaPct.toFixed(1)}% de margem)
+• *(=) Lucro Operacional (EBITDA - Antes de Investir):* *${m.resultadoOperacional >= 0 ? '+' : ''}${formatBRL(m.resultadoOperacional)}* (${m.margemOperacionalPct.toFixed(1)}% de margem)
+${m.financeiras > 0 ? `• (-) Despesas Financeiras: *-${formatBRL(m.financeiras)}*\n` : ''}${m.investimentos > 0 ? `• (-) Investimentos / CAPEX: *-${formatBRL(m.investimentos)}* (${m.taxaReinvestimentoPct.toFixed(1)}% reinvestido)\n` : ''}• *LUCRO LÍQUIDO FINAL (Depois de Investir):* *${deuLucroDRE ? '+' : ''}${formatBRL(m.lucroDRE)}* (${m.margemLiquidaPct.toFixed(1)}% de margem líquida)
 
 🔍 *3. VISÃO DO CAIXA: ONDE FOI PARAR O DINHEIRO?*
 • Entradas no Banco: *${formatBRL(m.faturamento)}*
@@ -118,7 +130,7 @@ Olá! Segue a tradução analítica dos resultados de *${m.nomeMes}*:
 • *SALDO FINAL DO CAIXA:* *${caixaPositivo ? '+' : ''}${formatBRL(m.saldoCaixa)}*
 
 💡 *Reconciliação Exata:*
-${deuLucroDRE && !caixaPositivo 
+${m.investimentos > 0 ? `🚀 *Reinvestimento Estratégico:* A empresa investiu ${formatBRL(m.investimentos)} (${m.taxaReinvestimentoPct.toFixed(1)}% da receita) na modernização / implantação.\n` : ''}${deuLucroDRE && !caixaPositivo 
   ? `(+) Lucro Líquido DRE: *+${formatBRL(m.lucroDRE)}*\n(-) Compras extras de mercadorias pagas: *-${formatBRL(m.diferencaEstoque)}*\n(=) Saldo Bancário do mês: *${formatBRL(m.saldoCaixa)}*\n\n📌 *Conclusão:* O dinheiro *não sumiu*! ${explicacaoEstoque}`
   : `Resultado operacional saudável. ${explicacaoEstoque}`}
 

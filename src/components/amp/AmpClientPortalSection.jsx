@@ -9,10 +9,11 @@ import {
   Mail,
   Lock,
   Headset,
-  Gift,
   Scale,
   CreditCard,
-  Briefcase
+  Briefcase,
+  FileCheck,
+  Gift
 } from 'lucide-react';
 
 export function AmpClientPortalSection() {
@@ -21,6 +22,7 @@ export function AmpClientPortalSection() {
 
   const getPortalIcon = (iconName) => {
     switch (iconName) {
+      case 'FileCheck': return FileCheck;
       case 'ShieldCheck': return ShieldCheck;
       case 'Calculator': return Calculator;
       case 'HeartHandshake': return HeartHandshake;

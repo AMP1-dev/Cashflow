@@ -10,11 +10,46 @@ import {
   Lock,
   TrendingUp,
   Gift,
-  Scale
+  Scale,
+  FileCheck,
+  FileText,
+  Server,
+  Building2,
+  Headset
 } from 'lucide-react';
 
+const ICON_MAP = {
+  ShieldCheck,
+  Calculator,
+  Users,
+  Radio,
+  Lock,
+  TrendingUp,
+  Gift,
+  Scale,
+  FileCheck,
+  FileText,
+  Server,
+  Building2,
+  Headset
+};
+
+function resolveIcon(icon) {
+  if (typeof icon === 'function' || (typeof icon === 'object' && icon !== null)) return icon;
+  if (typeof icon === 'string' && ICON_MAP[icon]) return ICON_MAP[icon];
+  return ShieldCheck;
+}
+
 export function AmpEcosystemSection() {
-  const { themeMode, setIsAssetDetailOpen, toggleRadioPlay, isRadioPlaying, setIsDiagnosticModalOpen, assets } = useAmp();
+  const {
+    themeMode,
+    setIsAssetDetailOpen,
+    toggleRadioPlay,
+    isRadioPlaying,
+    setIsDiagnosticModalOpen,
+    assets,
+    ecosystemItems = []
+  } = useAmp();
   const isDark = themeMode === 'dark';
 
   const handleOpenAsset = (item) => {
@@ -28,7 +63,7 @@ export function AmpEcosystemSection() {
       badge: item.badge,
       tagline: item.tagline,
       description: item.desc,
-      highlights: [
+      highlights: item.highlights || [
         "Infraestrutura de Alta Disponibilidade e Desempenho",
         "Monitoramento Ativo e Cibersegurança Avançada",
         "Integração Nativa com o Ecossistema Corporativo AMP",
@@ -46,64 +81,6 @@ export function AmpEcosystemSection() {
     };
     setIsAssetDetailOpen(fullAsset);
   };
-
-  // 6 Primary Ecosystem Products in continuous seamless grid (Matching Image 3 from reference)
-  const ecosystemItems = [
-    {
-      id: "asset-mesh",
-      name: "MeshCentral Remote NOC",
-      badge: "Suporte 24/7 & NOC",
-      tagline: "Wan3.0-video",
-      desc: "Central de monitoramento e controle de infraestrutura em tempo real. Acesso remoto seguro criptografado AES-256 e SLA < 15 min.",
-      icon: ShieldCheck,
-      url: "https://remoto.amp.ia.br"
-    },
-    {
-      id: "asset-alianca",
-      name: "Aliança Empresarial (Case)",
-      badge: "Site & Gestão de TI",
-      tagline: "Case-Sucesso-TI",
-      desc: "Gestão completa de TI corporativa, segurança da informação, suporte de infraestrutura e hospedagem de alta performance para o setor contábil.",
-      icon: ShieldCheck,
-      url: "https://aliancaempresarial.net.br"
-    },
-    {
-      id: "asset-backup",
-      name: "Painel de Backup Imutável",
-      badge: "Cibersegurança WORM",
-      tagline: "Anti-Ransomware-3.0",
-      desc: "Armazenamento imutável WORM à prova de hackers e sequestro de dados, com restauração bare-metal imediata.",
-      icon: Lock,
-      url: "https://remoto.amp.ia.br"
-    },
-    {
-      id: "asset-erp",
-      name: "AMP Enterprise ERP",
-      badge: "ERP & Gestão Fiscal",
-      tagline: "Qwen3.8-Fiscal",
-      desc: "Gestão integrada de vendas, estoque, compras, financeiro e emissão de notas fiscais com integração contábil nativa.",
-      icon: TrendingUp,
-      url: "#contato"
-    },
-    {
-      id: "asset-loyalty",
-      name: "Aplicativo de Fidelidade",
-      badge: "Marketing & Retenção",
-      tagline: "AMP-Loyalty-Omni",
-      desc: "Motor de fidelidade com pontos, cashback, roleta premiada interativa e campanhas automáticas de retenção via WhatsApp.",
-      icon: Gift,
-      url: "#contato"
-    },
-    {
-      id: "asset-peso",
-      name: "App Pesagem & Balança",
-      badge: "Operações & Logística",
-      tagline: "Logistics-Scale-Pro",
-      desc: "Controle de tíquetes de balança rodoviária e industrial, conferência de peso de frotas e conciliação de fretes de carga.",
-      icon: Scale,
-      url: "https://remoto.amp.ia.br"
-    }
-  ];
 
   return (
     <section id="produtos" className={`py-20 border-t transition-colors duration-200 ${
@@ -199,7 +176,10 @@ export function AmpEcosystemSection() {
                   <div className="space-y-2.5">
                     {/* Small Icon in Subtle Pill Container */}
                     <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[#0052D9] mb-3">
-                      <item.icon className="w-4 h-4" />
+                      {(() => {
+                        const IconComp = resolveIcon(item.icon);
+                        return <IconComp className="w-4 h-4" />;
+                      })()}
                     </div>
 
                     <h4 className={`text-sm font-normal transition-colors group-hover:text-[#0052D9] ${

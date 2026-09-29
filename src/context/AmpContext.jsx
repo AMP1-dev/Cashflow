@@ -61,6 +61,8 @@ export function AmpProvider({ children }) {
   const [services, setServicesState] = useState(() => ampStorageService.getServices());
   const [cases, setCasesState] = useState(() => ampStorageService.getCases());
   const [portalLinks, setPortalLinksState] = useState(() => ampStorageService.getPortalLinks());
+  const [categoryProducts, setCategoryProductsState] = useState(() => ampStorageService.getCategoryProducts());
+  const [ecosystemItems, setEcosystemItemsState] = useState(() => ampStorageService.getEcosystemItems());
   const [articles, setArticlesState] = useState(() => ampStorageService.getArticles());
   const [testimonials, setTestimonialsState] = useState(() => ampStorageService.getTestimonials());
   const [leads, setLeadsState] = useState(() => ampStorageService.getLeads());
@@ -76,7 +78,7 @@ export function AmpProvider({ children }) {
   const [selectedCase, setSelectedCase] = useState(null);
   const [readingArticle, setReadingArticle] = useState(null);
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
-  const [isAssetDetailOpen, setIsAssetDetailOpen] = useState(null); // Asset object
+  const [isAssetDetailOpen, setIsAssetDetailOpen] = useState(null);
 
   // Embedded Radio Streaming Audio Player
   const [isRadioPlaying, setIsRadioPlaying] = useState(false);
@@ -97,7 +99,7 @@ export function AmpProvider({ children }) {
     setTimeout(() => setToast(null), 4000);
   };
 
-  // Light / Soft-Dark Theme Mode (Alibaba Cloud Enterprise Style: default Light)
+  // Light / Soft-Dark Theme Mode (default Light)
   const [themeMode, setThemeMode] = useState(() => {
     try {
       return localStorage.getItem('amp_theme_mode') || 'light';
@@ -124,27 +126,36 @@ export function AmpProvider({ children }) {
     }
   }, [themeMode]);
 
-  // Sync document title and theme
+  // Apply CSS root variables for active palette
   useEffect(() => {
-    if (siteConfig?.name) {
-      document.title = `${siteConfig.name} — ${siteConfig.tagline || '40+ Anos de Excelência em TI & Estratégia'}`;
-    }
-  }, [siteConfig]);
+    const activePalette = AMP_THEME_PALETTES[siteConfig.theme] || AMP_THEME_PALETTES['navy-gold'];
+    const root = document.documentElement;
+    Object.entries(activePalette.vars).forEach(([cssVar, rgbValue]) => {
+      root.style.setProperty(cssVar, rgbValue);
+    });
+    root.style.setProperty('--primary-color', activePalette.primaryColor);
+    root.style.setProperty('--accent-color', activePalette.accentColor);
+  }, [siteConfig.theme]);
 
-  // Audio stream handling
+  // Audio stream initialization
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio('https://s10.streamingcloud.online:13192/stream');
-      audioRef.current.preload = 'auto';
-    }
+    const audio = new Audio('https://stream.zeno.fm/k2k047vuv0hvv');
+    audio.volume = radioVolume;
+    audio.preload = 'none';
+    audioRef.current = audio;
 
-    const audio = audioRef.current;
-    audio.volume = isRadioMuted ? 0 : radioVolume;
+    const handleEnded = () => setIsRadioPlaying(false);
+    const handleError = () => {
+      setIsRadioPlaying(false);
+    };
+
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
 
     return () => {
-      if (audio) {
-        audio.pause();
-      }
+      audio.pause();
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
     };
   }, []);
 
@@ -233,7 +244,6 @@ export function AmpProvider({ children }) {
     return newDiag;
   };
 
-  // Admin Management Actions
   const markLeadStatus = (id, status) => {
     const updated = leads.map(l => l.id === id ? { ...l, status, read: true } : l);
     setLeadsState(updated);
@@ -255,7 +265,145 @@ export function AmpProvider({ children }) {
     showToast('Registro de diagnóstico excluído.', 'info');
   };
 
-  // Corporate Services CRUD
+  // --- Dynamic Category Products CRUD & Reordering ---
+  const addCategoryProduct = (categoryKey, product) => {
+    const newProd = {
+      ...product,
+      id: product.id || `prod-${Date.now()}`,
+      highlights: product.highlights || []
+    };
+    const targetCat = categoryProducts[categoryKey] || [];
+    const updatedCat = [newProd, ...targetCat];
+    const updatedAll = {
+      ...categoryProducts,
+      [categoryKey]: updatedCat
+    };
+    setCategoryProductsState(updatedAll);
+    ampStorageService.saveCategoryProducts(updatedAll);
+    showToast(`Card "${product.name}" adicionado com sucesso!`);
+  };
+
+  const updateCategoryProduct = (categoryKey, productId, fields) => {
+    const targetCat = categoryProducts[categoryKey] || [];
+    const updatedCat = targetCat.map(p => p.id === productId ? { ...p, ...fields } : p);
+    const updatedAll = {
+      ...categoryProducts,
+      [categoryKey]: updatedCat
+    };
+    setCategoryProductsState(updatedAll);
+    ampStorageService.saveCategoryProducts(updatedAll);
+    showToast(`Card "${fields.name || 'do produto'}" atualizado!`);
+  };
+
+  const deleteCategoryProduct = (categoryKey, productId) => {
+    const targetCat = categoryProducts[categoryKey] || [];
+    const updatedCat = targetCat.filter(p => p.id !== productId);
+    const updatedAll = {
+      ...categoryProducts,
+      [categoryKey]: updatedCat
+    };
+    setCategoryProductsState(updatedAll);
+    ampStorageService.saveCategoryProducts(updatedAll);
+    showToast('Card removido com sucesso.', 'info');
+  };
+
+  const moveCategoryProduct = (categoryKey, fromIndex, direction) => {
+    const targetCat = [...(categoryProducts[categoryKey] || [])];
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= targetCat.length) return;
+    
+    const [movedItem] = targetCat.splice(fromIndex, 1);
+    targetCat.splice(toIndex, 0, movedItem);
+
+    const updatedAll = {
+      ...categoryProducts,
+      [categoryKey]: targetCat
+    };
+    setCategoryProductsState(updatedAll);
+    ampStorageService.saveCategoryProducts(updatedAll);
+    showToast('Posição do card reorganizada!');
+  };
+
+  // --- Dynamic Ecosystem Items CRUD & Reordering ---
+  const addEcosystemItem = (item) => {
+    const newItem = {
+      ...item,
+      id: item.id || `asset-${Date.now()}`,
+      highlights: item.highlights || []
+    };
+    const updated = [newItem, ...ecosystemItems];
+    setEcosystemItemsState(updated);
+    ampStorageService.saveEcosystemItems(updated);
+    showToast(`Ativo "${item.name}" adicionado ao Ecossistema!`);
+  };
+
+  const updateEcosystemItem = (id, fields) => {
+    const updated = ecosystemItems.map(item => item.id === id ? { ...item, ...fields } : item);
+    setEcosystemItemsState(updated);
+    ampStorageService.saveEcosystemItems(updated);
+    showToast(`Ativo "${fields.name || 'do ecossistema'}" atualizado!`);
+  };
+
+  const deleteEcosystemItem = (id) => {
+    const updated = ecosystemItems.filter(item => item.id !== id);
+    setEcosystemItemsState(updated);
+    ampStorageService.saveEcosystemItems(updated);
+    showToast('Ativo do ecossistema removido.', 'info');
+  };
+
+  const moveEcosystemItem = (fromIndex, direction) => {
+    const list = [...ecosystemItems];
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= list.length) return;
+    
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, moved);
+
+    setEcosystemItemsState(list);
+    ampStorageService.saveEcosystemItems(list);
+    showToast('Ordem dos cards do ecossistema atualizada!');
+  };
+
+  // --- Dynamic Client Portal Links CRUD & Reordering ---
+  const addPortalLink = (link) => {
+    const newLink = {
+      ...link,
+      id: link.id || `portal-${Date.now()}`
+    };
+    const updated = [newLink, ...portalLinks];
+    setPortalLinksState(updated);
+    ampStorageService.savePortalLinks(updated);
+    showToast(`Portal "${link.title}" adicionado à Central de Clientes!`);
+  };
+
+  const updatePortalLink = (id, fields) => {
+    const updated = portalLinks.map(l => l.id === id ? { ...l, ...fields } : l);
+    setPortalLinksState(updated);
+    ampStorageService.savePortalLinks(updated);
+    showToast(`Portal "${fields.title || ''}" atualizado!`);
+  };
+
+  const deletePortalLink = (id) => {
+    const updated = portalLinks.filter(l => l.id !== id);
+    setPortalLinksState(updated);
+    ampStorageService.savePortalLinks(updated);
+    showToast('Portal removido da Central.', 'info');
+  };
+
+  const movePortalLink = (fromIndex, direction) => {
+    const list = [...portalLinks];
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= list.length) return;
+    
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, moved);
+
+    setPortalLinksState(list);
+    ampStorageService.savePortalLinks(list);
+    showToast('Ordem dos portais atualizada!');
+  };
+
+  // --- Corporate Services CRUD ---
   const addCorporateService = (srv) => {
     const newSrv = { ...srv, id: `srv-${Date.now()}` };
     const updated = [...services, newSrv];
@@ -278,7 +426,20 @@ export function AmpProvider({ children }) {
     showToast('Serviço removido.', 'info');
   };
 
-  // Blog Articles CRUD
+  const moveCorporateService = (fromIndex, direction) => {
+    const list = [...services];
+    const toIndex = direction === 'up' ? fromIndex - 1 : fromIndex + 1;
+    if (toIndex < 0 || toIndex >= list.length) return;
+    
+    const [moved] = list.splice(fromIndex, 1);
+    list.splice(toIndex, 0, moved);
+
+    setServicesState(list);
+    ampStorageService.saveServices(list);
+    showToast('Ordem dos serviços atualizada!');
+  };
+
+  // --- Blog Articles CRUD ---
   const addArticle = (article) => {
     const newArt = {
       ...article,
@@ -307,7 +468,7 @@ export function AmpProvider({ children }) {
     showToast('Artigo removido.', 'info');
   };
 
-  // Authentication
+  // --- Authentication ---
   const loginAdmin = (pass) => {
     if (pass === adminPass) {
       setIsAdmin(true);
@@ -336,103 +497,147 @@ export function AmpProvider({ children }) {
     return true;
   };
 
-  // Full Backup / Restore
-  const reloadFromStorage = () => {
+  const restoreBackup = (jsonString) => {
+    try {
+      const data = JSON.parse(jsonString);
+      if (data.siteConfig) {
+        setSiteConfigState(data.siteConfig);
+        ampStorageService.saveConfig(data.siteConfig);
+      }
+      if (data.services) {
+        setServicesState(data.services);
+        ampStorageService.saveServices(data.services);
+      }
+      if (data.categoryProducts) {
+        setCategoryProductsState(data.categoryProducts);
+        ampStorageService.saveCategoryProducts(data.categoryProducts);
+      }
+      if (data.ecosystemItems) {
+        setEcosystemItemsState(data.ecosystemItems);
+        ampStorageService.saveEcosystemItems(data.ecosystemItems);
+      }
+      if (data.portalLinks) {
+        setPortalLinksState(data.portalLinks);
+        ampStorageService.savePortalLinks(data.portalLinks);
+      }
+      if (data.articles) {
+        setArticlesState(data.articles);
+        ampStorageService.saveArticles(data.articles);
+      }
+      if (data.leads) {
+        setLeadsState(data.leads);
+        ampStorageService.saveLeads(data.leads);
+      }
+      if (data.diagnostics) {
+        setDiagnosticsState(data.diagnostics);
+        ampStorageService.saveDiagnostics(data.diagnostics);
+      }
+      showToast('Backup corporativo restaurado com sucesso!');
+    } catch (err) {
+      console.error('Erro ao restaurar backup:', err);
+      showToast('Arquivo de backup inválido ou corrompido.', 'error');
+    }
+  };
+
+  const resetAllCorporateData = () => {
+    ampStorageService.resetDefaults();
     setSiteConfigState(ampStorageService.getConfig());
     setAssetsState(ampStorageService.getAssets());
     setServicesState(ampStorageService.getServices());
     setCasesState(ampStorageService.getCases());
     setPortalLinksState(ampStorageService.getPortalLinks());
+    setCategoryProductsState(ampStorageService.getCategoryProducts());
+    setEcosystemItemsState(ampStorageService.getEcosystemItems());
     setArticlesState(ampStorageService.getArticles());
     setTestimonialsState(ampStorageService.getTestimonials());
-    setLeadsState(ampStorageService.getLeads());
-    setDiagnosticsState(ampStorageService.getDiagnostics());
-  };
-
-  const restoreBackup = (jsonString) => {
-    const res = ampStorageService.importFullBackup(jsonString);
-    if (res.success) {
-      reloadFromStorage();
-      showToast('Backup corporativo restaurado com êxito!');
-      return true;
-    } else {
-      showToast(`Erro ao restaurar: ${res.error}`, 'error');
-      return false;
-    }
-  };
-
-  const resetAllCorporateData = () => {
-    ampStorageService.resetToDefaults();
-    reloadFromStorage();
-    showToast('Todos os dados foram redefinidos para o padrão oficial AMP.', 'info');
+    showToast('Dados restaurados para os padrões de fábrica.');
   };
 
   return (
-    <AmpContext.Provider
-      value={{
-        siteConfig,
-        updateSiteConfig,
-        setTheme,
-        assets,
-        services,
-        addCorporateService,
-        updateCorporateService,
-        deleteCorporateService,
-        cases,
-        portalLinks,
-        articles,
-        addArticle,
-        updateArticle,
-        deleteArticle,
-        testimonials,
-        leads,
-        submitLead,
-        markLeadStatus,
-        deleteLead,
-        diagnostics,
-        submitDiagnostic,
-        deleteDiagnostic,
-        currentView,
-        setCurrentView,
-        isDiagnosticModalOpen,
-        setIsDiagnosticModalOpen,
-        diagnosticPrefill,
-        setDiagnosticPrefill,
-        selectedService,
-        setSelectedService,
-        selectedCase,
-        setSelectedCase,
-        readingArticle,
-        setReadingArticle,
-        isContactModalOpen,
-        setIsContactModalOpen,
-        isAssetDetailOpen,
-        setIsAssetDetailOpen,
-        // Radio Player
-        isRadioPlaying,
-        toggleRadioPlay,
-        radioVolume,
-        setRadioAudioVolume,
-        isRadioMuted,
-        toggleRadioMute,
-        isRadioExpanded,
-        setIsRadioExpanded,
-        // Admin
-        isAdmin,
-        loginAdmin,
-        logoutAdmin,
-        adminPass,
-        changeAdminPassword,
-        restoreBackup,
-        resetAllCorporateData,
-        // Theme Mode (Light / Soft-Dark)
-        themeMode,
-        toggleThemeMode,
-        // Toast
-        toast,
-        showToast
-      }}
-    >
+    <AmpContext.Provider value={{
+      // Core Entities
+      siteConfig,
+      updateSiteConfig,
+      setTheme,
+      assets,
+      services,
+      addCorporateService,
+      updateCorporateService,
+      deleteCorporateService,
+      moveCorporateService,
+      cases,
+      portalLinks,
+      addPortalLink,
+      updatePortalLink,
+      deletePortalLink,
+      movePortalLink,
+      categoryProducts,
+      addCategoryProduct,
+      updateCategoryProduct,
+      deleteCategoryProduct,
+      moveCategoryProduct,
+      ecosystemItems,
+      addEcosystemItem,
+      updateEcosystemItem,
+      deleteEcosystemItem,
+      moveEcosystemItem,
+      articles,
+      addArticle,
+      updateArticle,
+      deleteArticle,
+      testimonials,
+      leads,
+      diagnostics,
+
+      // Views & Navigation
+      currentView,
+      setCurrentView,
+
+      // Modals
+      isDiagnosticModalOpen,
+      setIsDiagnosticModalOpen,
+      diagnosticPrefill,
+      setDiagnosticPrefill,
+      selectedService,
+      setSelectedService,
+      selectedCase,
+      setSelectedCase,
+      readingArticle,
+      setReadingArticle,
+      isContactModalOpen,
+      setIsContactModalOpen,
+      isAssetDetailOpen,
+      setIsAssetDetailOpen,
+
+      // Radio Streaming
+      isRadioPlaying,
+      toggleRadioPlay,
+      radioVolume,
+      setRadioAudioVolume,
+      isRadioMuted,
+      toggleRadioMute,
+      isRadioExpanded,
+      setIsRadioExpanded,
+
+      // Admin & Security
+      isAdmin,
+      loginAdmin,
+      logoutAdmin,
+      changeAdminPassword,
+      markLeadStatus,
+      deleteLead,
+      deleteDiagnostic,
+      submitLead,
+      submitDiagnostic,
+      restoreBackup,
+      resetAllCorporateData,
+
+      // UI
+      toast,
+      showToast,
+      themeMode,
+      toggleThemeMode
+    }}>
       {children}
     </AmpContext.Provider>
   );
@@ -440,6 +645,8 @@ export function AmpProvider({ children }) {
 
 export function useAmp() {
   const context = useContext(AmpContext);
-  if (!context) throw new Error('useAmp deve ser utilizado dentro de um AmpProvider');
+  if (!context) {
+    throw new Error('useAmp must be used within an AmpProvider');
+  }
   return context;
 }

@@ -17,7 +17,13 @@ import {
 } from 'lucide-react';
 
 export function AmpSolutionsAndCasesSection() {
-  const { themeMode, setIsDiagnosticModalOpen } = useAmp();
+  const {
+    themeMode,
+    setIsDiagnosticModalOpen,
+    categoryProducts = {},
+    setSelectedService,
+    setIsContactModalOpen
+  } = useAmp();
   const isDark = themeMode === 'dark';
 
   // Category sidebar
@@ -27,41 +33,12 @@ export function AmpSolutionsAndCasesSection() {
 
   const categories = [
     { id: 'selected', label: 'Produtos Selecionados' },
+    { id: 'demandas', label: 'Demandas & Consultorias' },
     { id: 'ti_cloud', label: 'TI, Cloud & Servidores' },
     { id: 'finance', label: 'Finanças & BPO' },
     { id: 'logistics', label: 'Logística & Pesagem' },
     { id: 'loyalty', label: 'Marketing & Fidelização' },
   ];
-
-  const categoryProducts = {
-    selected: [
-      { name: "MeshCentral Remote NOC", tag: "Infraestrutura", desc: "Suporte remoto 24/7 com telemetria e resposta em < 12 minutos." },
-      { name: "Backup Imutável WORM", tag: "Cibersegurança", desc: "Defesa anti-ransomware com armazenamento blindado e restauração imediata." },
-      { name: "Gestão de TI & Segurança Contábil", tag: "Case Aliança", desc: "Gerenciamento completo de TI, servidores, cibersegurança e presença digital de alta disponibilidade." },
-      { name: "AMP Enterprise ERP", tag: "Gestão Fiscal", desc: "Emissão de NF-e, NFS-e, MDF-e, estoque e financeiro integrados." },
-      { name: "AMP Flow Financeiro", tag: "Tesouraria", desc: "Fluxo de caixa inteligente com DRE gerencial diária e conciliação bancária." },
-      { name: "App Pesagem & Balança", tag: "Logística", desc: "Controle de tickets de pesagem rodoviária e conciliação de fretes de frotas." },
-    ],
-    ti_cloud: [
-      { name: "MeshCentral Suporte Gerenciado", tag: "Helpdesk", desc: "Centralização de tickets e atendimento de incidentes críticos em tempo real." },
-      { name: "Servidores Híbridos Dedicados", tag: "Cloud", desc: "Hospedagem segura em nuvem privada com alta disponibilidade e failover." },
-      { name: "Defesa EDR & Backup WORM", tag: "Segurança", desc: "Blindagem de dados e conformidade total com a LGPD e ISO 27001." },
-    ],
-    finance: [
-      { name: "Planejamento Tributário Elisão", tag: "Fiscal", desc: "Redução lícita da carga tributária sobre faturamento e serviços." },
-      { name: "BPO Financeiro Integral", tag: "Tesouraria", desc: "Terceirização de contas a pagar, receber, conciliação e fluxo de caixa." },
-      { name: "Holding Patrimonial & Sucessão", tag: "Societário", desc: "Estruturação societária para proteção de patrimônio familiar e empresarial." },
-      { name: "Módulo Banco & Controle de Cheques", tag: "Custódia", desc: "Gestão de carteiras de cheques pré-datados, depósitos e liquidação." },
-    ],
-    logistics: [
-      { name: "Aplicativo de Pesagem & Balança", tag: "Operacional", desc: "Emissão de tickets de pesagem e conferência de peso bruto, tara e líquido." },
-      { name: "Conciliação de Documentos de Carga", tag: "Fiscal", desc: "Parametrização automática de CT-e, MDF-e e manifestos eletrônicos." },
-    ],
-    loyalty: [
-      { name: "AMP Loyalty & Fidelidade", tag: "Fidelização", desc: "Programa de pontos, cashback e campanhas automatizadas via WhatsApp." },
-      { name: "Roleta Premiada Gamificada", tag: "Engajamento", desc: "Mecanismos de premiação instantânea para aumentar o ciclo de recompra." },
-    ]
-  };
 
   const industries = {
     health: {

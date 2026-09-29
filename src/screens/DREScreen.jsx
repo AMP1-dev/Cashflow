@@ -1,4 +1,4 @@
-import { ChevronRight, PackageCheck, Settings2, Sparkles } from 'lucide-react';
+import { ChevronRight, PackageCheck, Settings2, Sparkles, TrendingUp, Rocket } from 'lucide-react';
 import { useMemo, useState, useEffect } from 'react';
 import { EmptyState } from '../components/UIComponents';
 import { supabase } from '../lib/supabase';
@@ -86,6 +86,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     const despesasVar = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'variavel');
     const despesasFix = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'fixa');
     const despesasFin = list.filter(l => l && l.tipo === 'despesa' && l.categoria === 'financeira');
+    const despesasInvest = list.filter(l => l && l.tipo === 'despesa' && (l.categoria === 'investimento' || l.categoria === 'capex'));
     // fornecedor não entra no DRE — aparece só no Fluxo de Caixa
 
     const faturamento = receitas.reduce((s, l) => s + (Number(l.valor) || 0), 0);
@@ -117,6 +118,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     const variaveis = despesasVar.reduce((s, l) => s + (Number(l.valor) || 0), 0);
     const fixas     = despesasFix.reduce((s, l) => s + (Number(l.valor) || 0), 0);
     const financeiras = despesasFin.reduce((s, l) => s + (Number(l.valor) || 0), 0);
+    const investimentos = despesasInvest.reduce((s, l) => s + (Number(l.valor) || 0), 0);
 
     // Mão de Obra Extra (Diárias / Freelancers) e Mão de Obra Fixa
     const despesasMaoDeObraExtra = despesasVar.filter(l => (l.subcategoria && (String(l.subcategoria).toLowerCase().includes('mão de obra') || String(l.subcategoria).toLowerCase().includes('diária') || String(l.subcategoria).toLowerCase().includes('diaria') || String(l.subcategoria).toLowerCase().includes('freelancer'))) || (l.descricao && (String(l.descricao).toLowerCase().includes('diária') || String(l.descricao).toLowerCase().includes('diaria') || String(l.descricao).toLowerCase().includes('freelancer'))));
@@ -136,25 +138,27 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
 
     const resultadoComVendas  = faturamento - cmv;
     const margemContribuicao  = resultadoComVendas - variaveis;
-    const resultadoOperacional = margemContribuicao - fixasComProvisao;
-    const resultadoLiquido    = resultadoOperacional - financeiras;
+    const resultadoOperacional = margemContribuicao - fixasComProvisao; // EBITDA / Lucratividade Operacional (Antes de Investimentos)
+    const resultadoAntesInvestimento = resultadoOperacional - financeiras;
+    const resultadoLiquido    = resultadoAntesInvestimento - investimentos; // Lucro Líquido Final (Depois de Investimentos)
     const pctMC = faturamento > 0 ? margemContribuicao / faturamento : 0;
     const pontoEquilibrio = pctMC > 0 ? fixasComProvisao / pctMC : 0;
     const pontoEquilibrioFinanceiro = pctMC > 0 ? (fixasComProvisao + financeiras) / pctMC : 0;
 
     return {
-      faturamento, cmv, cmvCompras, modoCmv, variaveis, fixas, financeiras,
+      faturamento, cmv, cmvCompras, modoCmv, variaveis, fixas, financeiras, investimentos,
       fixasComProvisao, provisao13, provisaoFerias, provisaoTotal, provisaoAtiva,
-      resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoLiquido,
+      resultadoComVendas, margemContribuicao, resultadoOperacional, resultadoAntesInvestimento, resultadoLiquido,
       pontoEquilibrio, pontoEquilibrioFinanceiro, pctMC,
       maoDeObraExtraTotal, maoDeObraFixaTotal, maoDeObraTotal, custoPrimario,
       itensReceitas: receitas, itensCmv: despesasCmv,
       itensVariaveis: despesasVar, itensFixas: despesasFix, itensFinanceiras: despesasFin,
+      itensInvestimentos: despesasInvest,
       estoqueInicial, estoqueFinal, temEstoque,
     };
   }, [baseLancamentos, pctCmvConfig, provisaoAtiva]);
 
-  const semDados = calc.faturamento === 0 && calc.cmv === 0 && calc.variaveis === 0 && calc.fixas === 0;
+  const semDados = calc.faturamento === 0 && calc.cmv === 0 && calc.variaveis === 0 && calc.fixas === 0 && calc.investimentos === 0;
   const fat = calc.faturamento;
   const pct = (v) => fat > 0 ? (v / fat) * 100 : 0;
 
@@ -198,8 +202,12 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     if (calc.provisaoAtiva && calc.provisaoTotal > 0) {
       dadosExcel.push({ Data: 'Provisão Trabalhista (13º + Férias)', Descrição: 'Provisão contábil 1/12', Categoria: 'fixa', Tipo: 'Despesa', Valor: calc.provisaoTotal });
     }
+    dadosExcel.push({ Data: 'Resultado Operacional (EBITDA)', Descrição: 'Lucratividade Pré-Investimento', Categoria: '', Tipo: '', Valor: calc.resultadoOperacional });
     dadosExcel.push({ Data: 'Despesas Financeiras', Descrição: '', Categoria: '', Tipo: 'Despesa', Valor: calc.financeiras });
-    dadosExcel.push({ Data: 'Resultado Líquido', Descrição: '', Categoria: '', Tipo: '', Valor: calc.resultadoLiquido });
+    if (calc.investimentos > 0) {
+      dadosExcel.push({ Data: 'Investimentos / CAPEX', Descrição: 'Modernização, softwares, equipamentos e reformas', Categoria: 'investimento', Tipo: 'Despesa', Valor: calc.investimentos });
+    }
+    dadosExcel.push({ Data: 'Resultado Líquido Final', Descrição: 'Lucratividade Pós-Investimento', Categoria: '', Tipo: '', Valor: calc.resultadoLiquido });
     dadosExcel.push({ Data: '', Descrição: '', Categoria: '', Tipo: '', Valor: '' });
     
     // Lançamentos Detalhados
@@ -224,6 +232,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
     addItems(calc.itensVariaveis);
     addItems(calc.itensFixas);
     addItems(calc.itensFinanceiras);
+    addItems(calc.itensInvestimentos);
     
     const worksheet = XLSX.utils.json_to_sheet(dadosExcel);
     const workbook = XLSX.utils.book_new();
@@ -450,9 +459,78 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
             </div>
           )}
 
-          <DRELine label="Resultado operacional" valor={calc.resultadoOperacional} pct={pct(calc.resultadoOperacional)} sub />
+          <DRELine label="Resultado operacional (EBITDA)" valor={calc.resultadoOperacional} pct={pct(calc.resultadoOperacional)} sub />
           <DRELine label="(–) Despesas financeiras" valor={-calc.financeiras} pct={pct(-calc.financeiras)} itens={calc.itensFinanceiras} aberto={linhaAberta === 'financeira'} onToggle={() => toggleLinha('financeira')} fat={fat} negativo />
+          <DRELine label="(–) Investimentos / CAPEX" valor={-calc.investimentos} pct={pct(-calc.investimentos)} itens={calc.itensInvestimentos} aberto={linhaAberta === 'investimento'} onToggle={() => toggleLinha('investimento')} fat={fat} negativo />
           <DRELine label={calc.resultadoLiquido < 0 ? "Prejuízo líquido do mês" : "Lucro líquido do mês"} valor={calc.resultadoLiquido} pct={pct(calc.resultadoLiquido)} sub destaque resultadoFinal />
+
+          {/* Card Comparativo de Lucratividade: Pré-Investimento (EBITDA) vs Pós-Investimento */}
+          {fat > 0 && (
+            <div style={{ background: '#fff', borderRadius: 14, padding: 14, border: '1px solid #EFEBE0', marginTop: 8, boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <TrendingUp size={16} color="#1F5C52" />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>
+                    Análise de Lucratividade: Pré vs. Pós-Investimento
+                  </span>
+                </div>
+                <span style={{ fontSize: 10, background: '#EFF6FF', color: '#1D4ED8', padding: '2px 8px', borderRadius: 6, fontWeight: 700 }}>
+                  EBITDA & CAPEX
+                </span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10, marginBottom: 8 }}>
+                {/* 1. Antes do Investimento */}
+                <div style={{ background: '#F8FAF9', border: '1px solid #D9EBE6', borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontSize: 10.5, color: '#5C5A4F', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', display: 'inline-block' }} />
+                    Antes do Investimento
+                  </div>
+                  <div style={{ fontSize: 9.5, color: '#9C9A8F', marginTop: 1 }}>Margem Operacional (EBITDA)</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: calc.resultadoOperacional >= 0 ? '#1F5C52' : '#B05A2E', marginTop: 4 }}>
+                    {pct(calc.resultadoOperacional).toFixed(1)}%
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#5C5A4F' }}>
+                    {formatBRL(calc.resultadoOperacional)}
+                  </div>
+                </div>
+
+                {/* 2. Taxa de Reinvestimento */}
+                <div style={{ background: '#F0F7FF', border: '1px solid #BFDBFE', borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontSize: 10.5, color: '#1E40AF', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#2563EB', display: 'inline-block' }} />
+                    Investimentos / CAPEX
+                  </div>
+                  <div style={{ fontSize: 9.5, color: '#6B7280', marginTop: 1 }}>Reinvestido no Negócio</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#1D4ED8', marginTop: 4 }}>
+                    {pct(calc.investimentos).toFixed(1)}%
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#1E40AF' }}>
+                    {formatBRL(calc.investimentos)}
+                  </div>
+                </div>
+
+                {/* 3. Depois do Investimento */}
+                <div style={{ background: calc.resultadoLiquido >= 0 ? '#FAFDF9' : '#FEF2F2', border: `1px solid ${calc.resultadoLiquido >= 0 ? '#C2E5D3' : '#FECACA'}`, borderRadius: 10, padding: 10 }}>
+                  <div style={{ fontSize: 10.5, color: calc.resultadoLiquido >= 0 ? '#166534' : '#991B1B', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: calc.resultadoLiquido >= 0 ? '#16A34A' : '#DC2626', display: 'inline-block' }} />
+                    Depois do Investimento
+                  </div>
+                  <div style={{ fontSize: 9.5, color: '#9C9A8F', marginTop: 1 }}>Margem Líquida Real (Caixa)</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: calc.resultadoLiquido >= 0 ? '#166534' : '#991B1B', marginTop: 4 }}>
+                    {pct(calc.resultadoLiquido).toFixed(1)}%
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#5C5A4F' }}>
+                    {formatBRL(calc.resultadoLiquido)}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ fontSize: 10.5, color: '#7A7868', lineHeight: 1.5, background: '#FAF8F3', padding: '8px 10px', borderRadius: 8 }}>
+                💡 <strong>Leitura Estratégica:</strong> O <em>Resultado Operacional</em> mede o lucro gerado diretamente pelas operações da empresa. A <em>Margem Líquida</em> reflete o saldo final após amortizar investimentos em softwares, máquinas e expansão.
+              </div>
+            </div>
+          )}
 
           {/* Ponto de equilíbrio */}
           <div style={{ background: '#fff', borderRadius: 12, padding: 14, border: '1px solid #EFEBE0', marginTop: 4 }}>
@@ -583,6 +661,7 @@ export function GraficoComposicaoDRE({ calc }) {
     { label: 'Variáveis', valor: calc.variaveis, cor: '#8A6D1A' },
     { label: 'Fixas', valor: calc.fixas, cor: '#C9A063' },
     { label: 'Financeiras', valor: calc.financeiras, cor: '#7A2E3D' },
+    ...(calc.investimentos > 0 ? [{ label: 'Investimentos', valor: calc.investimentos, cor: '#1D4ED8' }] : []),
     { label: 'Resultado', valor: calc.resultadoLiquido, cor: calc.resultadoLiquido >= 0 ? '#1F5C52' : '#B05A2E' },
   ];
   const maiorValor = Math.max(...barras.map(b => Math.abs(b.valor)), 1);

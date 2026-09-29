@@ -14,7 +14,8 @@ export function AnualScreen({ lancamentosAno, anoAtual, mesAtual, setTela, setMe
       const variaveis = despesas.filter(d => d.categoria === 'variavel').reduce((s, l) => s + l.valor, 0);
       const fixas = despesas.filter(d => d.categoria === 'fixa').reduce((s, l) => s + l.valor, 0);
       const financeiras = despesas.filter(d => d.categoria === 'financeira').reduce((s, l) => s + l.valor, 0);
-      const totalDespesa = cmv + variaveis + fixas + financeiras;
+      const investimentos = despesas.filter(d => d.categoria === 'investimento' || d.categoria === 'capex').reduce((s, l) => s + l.valor, 0);
+      const totalDespesa = cmv + variaveis + fixas + financeiras + investimentos;
       const resultadoLiquido = faturamento - totalDespesa;
       const qtdVendas = receitas.reduce((s, l) => s + (l.qtdVendas || 0), 0);
 
@@ -24,7 +25,7 @@ export function AnualScreen({ lancamentosAno, anoAtual, mesAtual, setTela, setMe
       });
       const diasNegativos = Object.values(porDia).filter(v => v < 0).length;
 
-      return { mes: m, faturamento, cmv, variaveis, fixas, financeiras, totalDespesa, resultadoLiquido, qtdVendas, diasNegativos, temDados: doMes.length > 0 };
+      return { mes: m, faturamento, cmv, variaveis, fixas, financeiras, investimentos, totalDespesa, resultadoLiquido, qtdVendas, diasNegativos, temDados: doMes.length > 0 };
     });
   }, [lancamentosAno]);
 

@@ -1219,6 +1219,7 @@ export default function CashFlowApp() {
           mesAtual={mesAtual}
           anoAtual={anoAtual}
           historicoExistente={lancamentosGeral}
+          empresa={empresaAtualObj}
           onImportarLote={importarLoteLancamentos}
           onClose={() => setShowImportarModal(false)}
         />

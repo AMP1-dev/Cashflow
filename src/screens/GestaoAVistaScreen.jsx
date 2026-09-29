@@ -61,7 +61,7 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
     const totalDespesa = lancamentosMes.filter(l => l && l.tipo === 'despesa').reduce((s, l) => s + (l.valor || 0), 0);
     
     // Despesas por Categoria para o Gráfico
-    const porCategoria = { cmv: 0, variavel: 0, fixa: 0, financeira: 0 };
+    const porCategoria = { cmv: 0, variavel: 0, fixa: 0, financeira: 0, investimento: 0 };
     lancamentosMes.filter(l => l && l.tipo === 'despesa').forEach(l => { 
       if (l.categoria && porCategoria[l.categoria] !== undefined) {
         porCategoria[l.categoria] += (l.valor || 0); 
