@@ -27,6 +27,10 @@ export function EmitirNfseModal({
   const [telefoneTomador, setTelefoneTomador] = useState(dadosIniciais?.telefone || '');
   const [municipioTomador, setMunicipioTomador] = useState(dadosIniciais?.municipio || '');
   const [ufTomador, setUfTomador] = useState(dadosIniciais?.uf || '');
+  const [logradouroTomador, setLogradouroTomador] = useState(dadosIniciais?.logradouro || dadosIniciais?.endereco || '');
+  const [numeroTomador, setNumeroTomador] = useState(dadosIniciais?.numero || '');
+  const [bairroTomador, setBairroTomador] = useState(dadosIniciais?.bairro || '');
+  const [cepTomador, setCepTomador] = useState(dadosIniciais?.cep || '');
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
 
   // Dados do Serviço
@@ -93,6 +97,10 @@ export function EmitirNfseModal({
         if (dados.telefone && !telefoneTomador) setTelefoneTomador(dados.telefone);
         if (dados.municipio) setMunicipioTomador(dados.municipio);
         if (dados.uf) setUfTomador(dados.uf);
+        if (dados.logradouro) setLogradouroTomador(dados.logradouro);
+        if (dados.numero) setNumeroTomador(dados.numero);
+        if (dados.bairro) setBairroTomador(dados.bairro);
+        if (dados.cep) setCepTomador(dados.cep);
       } else {
         alert('CNPJ não localizado automaticamente. Por favor, preencha a Razão Social manualmente.');
       }
@@ -154,6 +162,10 @@ export function EmitirNfseModal({
           telefone: telefoneTomador.trim(),
           municipio: municipioTomador.trim(),
           uf: ufTomador.trim(),
+          logradouro: logradouroTomador.trim(),
+          numero: numeroTomador.trim(),
+          bairro: bairroTomador.trim(),
+          cep: cepTomador.trim(),
         },
         servico: {
           codigoAtividade,
@@ -394,6 +406,12 @@ export function EmitirNfseModal({
               />
             </div>
           </div>
+
+          {(logradouroTomador || municipioTomador) && (
+            <div style={{ marginTop: 10, padding: '8px 10px', background: '#F8F6F0', borderRadius: 8, border: '1px solid #E5E0D5', fontSize: 11, color: '#5C5A4F' }}>
+              📍 <strong>Endereço Fiscal:</strong> {logradouroTomador}{numeroTomador ? `, ${numeroTomador}` : ''} {bairroTomador ? `- ${bairroTomador}` : ''} {municipioTomador ? `| ${municipioTomador}/${ufTomador}` : ''} {cepTomador ? `(CEP: ${cepTomador})` : ''}
+            </div>
+          )}
         </div>
 
         {/* ── 2. DADOS DO SERVIÇO & VALOR TOTAL ── */}
