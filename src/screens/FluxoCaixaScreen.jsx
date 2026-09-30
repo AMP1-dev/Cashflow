@@ -3,8 +3,56 @@ import { UploadCloud } from 'lucide-react';
 import { formatBRL, formatCompacto, daysInMonth } from '../utils/formatters';
 import { LancamentoRow } from './DashboardScreen';
 import { IndicadorCard } from './AnualScreen';
+import { EspelhoDanfseModal } from '../components/EspelhoDanfseModal';
+import { gerarChaveAcessoNfse } from '../utils/nfseService';
 
-export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar, onAbrirImportacao }) {
+export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove, onEditar, onAbrirImportacao }) {
+  const [notaDanfseAtiva, setNotaDanfseAtiva] = useState(null);
+
+  function handleAbrirDanfse(l, numNfse) {
+    const chave = gerarChaveAcessoNfse(empresa?.cnpj, numNfse);
+    const tomadorNome = l.descricao?.split(' - ')[1]?.split('(')[0]?.trim() || 'Cliente Tomador';
+    const descServico = l.descricao || 'Prestação de Serviços em Tecnologia e Gestão';
+    const valTotal = parseFloat(l.valor) || 0;
+    const notaObj = {
+      id: `danfse_fluxo_${numNfse}`,
+      numero: String(numNfse),
+      chaveAcesso: chave,
+      dpsNumero: `${Math.max(1, parseInt(numNfse) - 11)}`,
+      serieDps: '70000',
+      codigoVerificacao: `AMP-${numNfse}01`,
+      ambiente: 'producao',
+      status: 'autorizada',
+      dataEmissao: l.data_lancamento ? `${l.data_lancamento}T10:00:00.000Z` : (l.criado_em || new Date().toISOString()),
+      competenciaMes: mesAtual,
+      competenciaAno: anoAtual,
+      emissor: {
+        cnpj: empresa?.cnpj || '10682233000175',
+        razaoSocial: empresa?.razao_social || empresa?.nome_fantasia || 'AMP DO BRASIL SOLUCOES ADMINISTRATIVAS E TECNOLOGICAS LTDA',
+        municipio: empresa?.municipio || 'Santa Cruz das Palmeiras',
+        uf: empresa?.uf || 'SP',
+        endereco: 'RUA DOM BOSCO, 120, VILA GUILHERME ZANATTA',
+        telefone: empresa?.telefone_contato || '(19) 99448-7795',
+        email: empresa?.email_contato || 'atendimento@amp.adm.br'
+      },
+      tomador: {
+        cpfCnpj: '00.000.000/0000-00',
+        razaoSocial: tomadorNome,
+        municipio: 'Santa Cruz das Palmeiras',
+        uf: 'SP'
+      },
+      servico: {
+        codigoAtividade: '01.07',
+        discriminacao: descServico,
+        valorTotal: valTotal,
+        aliquotaIss: 2.0,
+        valorIss: Math.round((valTotal * 0.02) * 100) / 100,
+        issRetido: false,
+        valorLiquido: valTotal,
+      }
+    };
+    setNotaDanfseAtiva(notaObj);
+  }
   const dias = daysInMonth(mesAtual, anoAtual);
   const porDia = useMemo(() => {
     const acc = {};
@@ -198,10 +246,26 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, onRemove, onEditar
             <div style={{ fontSize: 12.5, color: '#9C9A8F', textAlign: 'center', padding: '10px 0' }}>Sem movimento neste dia.</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {infoSelecionado.itens.map(it => <LancamentoRow key={it.id} l={it} onRemove={onRemove} onEditar={onEditar} />)}
+              {infoSelecionado.itens.map(it => (
+                <LancamentoRow 
+                  key={it.id} 
+                  l={it} 
+                  onRemove={onRemove} 
+                  onEditar={onEditar} 
+                  onAbrirDanfse={handleAbrirDanfse}
+                />
+              ))}
             </div>
           )}
         </div>
+      )}
+
+      {notaDanfseAtiva && (
+        <EspelhoDanfseModal
+          nota={notaDanfseAtiva}
+          empresa={empresa}
+          onClose={() => setNotaDanfseAtiva(null)}
+        />
       )}
     </div>
   );

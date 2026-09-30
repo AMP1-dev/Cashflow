@@ -1207,6 +1207,7 @@ export default function CashFlowApp() {
               lancamentos={lancamentosEmpresa}
               mesAtual={mesAtual}
               anoAtual={anoAtual}
+              empresa={empresaAtualObj}
               onRemove={removeLancamento}
               onEditar={abrirEdicao}
               onAbrirImportacao={() => setShowImportarModal(true)}

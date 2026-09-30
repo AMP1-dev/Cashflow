@@ -720,9 +720,10 @@ export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, corPorCate
   const cat = l.categoria ? CATEGORIAS[l.categoria] : null;
   const corDespesa = corPorCategoria && cat ? cat.color : '#B05A2E';
 
-  // Identificação inteligente de Notas Fiscais (ex: NFS-e Nº 74)
-  const matchNfse = (l.descricao || '').match(/(?:NFS-?e|Nota\s*Fiscal|NF)\s*(?:N[º°\.]?|Num|Numero)?\s*(\d+)/i) ||
-                    ((l.descricao || '').includes('74') ? [null, '74'] : null);
+  // Identificação inteligente de Notas Fiscais (apenas para receitas com menção expressa à NFS-e)
+  const matchNfse = l.tipo === 'receita'
+    ? (l.descricao || '').match(/(?:NFS-?e|Nota\s*Fiscal|NF-?e)\s*(?:N[º°\.]?|Num|Numero)?\s*(\d+)/i)
+    : null;
   const numNfse = matchNfse ? matchNfse[1] : null;
 
   return (
@@ -785,7 +786,15 @@ export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, corPorCate
           )}
         </div>
       </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: l.tipo === 'receita' ? '#1F5C52' : corDespesa }}>
+      <div style={{ 
+        fontSize: 13.5, 
+        fontWeight: 700, 
+        color: l.tipo === 'receita' ? '#1F5C52' : corDespesa,
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        textAlign: 'right',
+        minWidth: 'fit-content'
+      }}>
         {l.tipo === 'receita' ? '+' : '-'}{formatBRL(l.valor)}
       </div>
       {onRemove && (

@@ -301,14 +301,13 @@ export const nfseService = {
       console.warn('Erro ao consultar notas do Supabase:', e);
     }
 
-    // 3. RECONSTRUÇÃO AUTOMÁTICA de Notas Fiscais dos Lançamentos (ex: Nota 74)
-    // Se o lançamento tem descrição de NFS-e ou número 74, reconstrói o espelho oficial
+    // 3. RECONSTRUÇÃO AUTOMÁTICA de Notas Fiscais dos Lançamentos (ex: NFS-e Nº 76)
+    // Apenas lançamentos de RECEITA com menção expressa a NFS-e/Nota Fiscal
     if (lancamentosEmpresa && lancamentosEmpresa.length > 0) {
-      lancamentosEmpresa.forEach(l => {
+      lancamentosEmpresa.filter(l => l.tipo === 'receita').forEach(l => {
         const desc = l.descricao || '';
-        // Procura padrões como "NFS-e Nº 74", "NF 74", "Nota Fiscal 74" ou "NFS-e 74"
-        const match = desc.match(/(?:NFS-?e|Nota\s*Fiscal|NF)\s*(?:N[º°\.]?|Num|Numero)?\s*(\d+)/i) || 
-                      (desc.includes('74') ? [null, '74'] : null);
+        // Procura padrões expressos como "NFS-e Nº 76", "NFS-e 76", "Nota Fiscal 76" ou "NF-e 76"
+        const match = desc.match(/(?:NFS-?e|Nota\s*Fiscal|NF-?e)\s*(?:N[º°\.]?|Num|Numero)?\s*(\d+)/i);
 
         if (match && match[1]) {
           const numNfse = String(match[1]);

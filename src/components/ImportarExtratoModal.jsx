@@ -886,25 +886,27 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
                   gap: 6,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={t.selecionado}
-                    onChange={() => toggleItem(t.idTemp)}
-                    style={{ accentColor: '#1F5C52', width: 16, height: 16, cursor: 'pointer' }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                     <input
-                      value={t.descricao}
-                      onChange={e => atualizarCampo(t.idTemp, 'descricao', e.target.value)}
-                      style={{ width: '100%', fontSize: 13, fontWeight: 600, border: 'none', background: 'transparent', outline: 'none', color: '#1C2421' }}
+                      type="checkbox"
+                      checked={t.selecionado}
+                      onChange={() => toggleItem(t.idTemp)}
+                      style={{ accentColor: '#1F5C52', width: 18, height: 18, cursor: 'pointer', flexShrink: 0 }}
                     />
-                    <div style={{ fontSize: 10.5, color: '#9C9A8F' }}>
-                      Dia {t.dia} · {t.tipo === 'receita' ? 'Entrada' : 'Saída'}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <input
+                        value={t.descricao}
+                        onChange={e => atualizarCampo(t.idTemp, 'descricao', e.target.value)}
+                        style={{ width: '100%', fontSize: 12.5, fontWeight: 600, border: 'none', background: 'transparent', outline: 'none', color: '#1C2421', textOverflow: 'ellipsis', overflow: 'hidden' }}
+                      />
+                      <div style={{ fontSize: 10.5, color: '#9C9A8F' }}>
+                        Dia {t.dia} · {t.tipo === 'receita' ? 'Entrada' : 'Saída'}
+                      </div>
                     </div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: t.tipo === 'receita' ? '#1F5C52' : '#B05A2E' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 'fit-content', paddingLeft: 6 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap', color: t.tipo === 'receita' ? '#1F5C52' : '#B05A2E' }}>
                       {t.tipo === 'receita' ? '+' : '-'}{formatBRL(t.valor)}
                     </div>
                   </div>
@@ -1104,42 +1106,44 @@ export function ImportarExtratoModal({ mesAtual, anoAtual, historicoExistente = 
                               flexDirection: 'column',
                               gap: 6
                             }}>
-                              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <input
                                   value={d.descricao}
                                   onChange={e => atualizarDivisao(t.idTemp, d.id, 'descricao', e.target.value)}
                                   placeholder="Descrição da parte (ex: Pedágio, Combustível, Almoço)..."
-                                  style={{ flex: 2, fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid #D1CFC7' }}
+                                  style={{ flex: '1 1 140px', minWidth: 120, fontSize: 12, padding: '5px 8px', borderRadius: 6, border: '1px solid #D1CFC7' }}
                                 />
-                                <div style={{ position: 'relative', width: 110 }}>
-                                  <span style={{ position: 'absolute', left: 7, top: 6, fontSize: 11, color: '#78716C' }}>R$</span>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    value={d.valor}
-                                    onChange={e => atualizarDivisao(t.idTemp, d.id, 'valor', e.target.value)}
-                                    placeholder="0.00"
-                                    style={{ width: '100%', fontSize: 12, fontWeight: 700, padding: '5px 6px 5px 24px', borderRadius: 6, border: '1px solid #D1CFC7', textAlign: 'right' }}
-                                  />
-                                </div>
-                                <button
-                                  type="button"
-                                  title="Ajustar automaticamente com o saldo restante"
-                                  onClick={() => ajustarRestanteDivisao(t.idTemp, d.id)}
-                                  style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 5, padding: '4px 6px', fontSize: 10, fontWeight: 600, cursor: 'pointer', color: '#374151', whiteSpace: 'nowrap' }}
-                                >
-                                  Saldo
-                                </button>
-                                {(t.divisoes || []).length > 1 && (
+                                <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}>
+                                  <div style={{ position: 'relative', width: 95 }}>
+                                    <span style={{ position: 'absolute', left: 6, top: 6, fontSize: 11, color: '#78716C' }}>R$</span>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={d.valor}
+                                      onChange={e => atualizarDivisao(t.idTemp, d.id, 'valor', e.target.value)}
+                                      placeholder="0.00"
+                                      style={{ width: '100%', fontSize: 12, fontWeight: 700, padding: '5px 5px 5px 22px', borderRadius: 6, border: '1px solid #D1CFC7', textAlign: 'right' }}
+                                    />
+                                  </div>
                                   <button
                                     type="button"
-                                    onClick={() => removerDivisao(t.idTemp, d.id)}
-                                    title="Remover esta parte"
-                                    style={{ background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: 5, padding: '5px', cursor: 'pointer', color: '#DC2626' }}
+                                    title="Ajustar automaticamente com o saldo restante"
+                                    onClick={() => ajustarRestanteDivisao(t.idTemp, d.id)}
+                                    style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', borderRadius: 5, padding: '4px 6px', fontSize: 10, fontWeight: 600, cursor: 'pointer', color: '#374151', whiteSpace: 'nowrap' }}
                                   >
-                                    <Trash2 size={13} />
+                                    Saldo
                                   </button>
-                                )}
+                                  {(t.divisoes || []).length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => removerDivisao(t.idTemp, d.id)}
+                                      title="Remover esta parte"
+                                      style={{ background: '#FEE2E2', border: '1px solid #FECACA', borderRadius: 5, padding: '5px', cursor: 'pointer', color: '#DC2626' }}
+                                    >
+                                      <Trash2 size={13} />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
 
                               <div style={{ display: 'flex', gap: 6 }}>
