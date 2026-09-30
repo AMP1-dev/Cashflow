@@ -1,12 +1,12 @@
 import React from 'react';
 import { 
-  FileText, Download, Printer, X, MessageCircle, ShieldCheck 
+  FileText, Download, Printer, X, MessageCircle, ShieldCheck, Zap, AlertTriangle, Clock 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { formatarCpfCnpj, gerarLinkWhatsAppNfse } from '../utils/nfseService';
 import { MESES } from '../utils/constants';
 
-export function EspelhoDanfseModal({ nota, empresa, onClose }) {
+export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
   if (!nota) return null;
 
   const {
@@ -77,6 +77,7 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
   const vServ = servico?.valorTotal || 0;
   const vLiq = servico?.valorLiquido || vServ;
   const isProducao = ambiente === 'producao';
+  const isOficialReceita = Boolean(nota.certificadoInfo?.transmissaoNativaGov);
 
   return (
     <>
@@ -152,11 +153,11 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
                 fontSize: 10,
                 padding: '2px 7px',
                 borderRadius: 4,
-                background: isProducao ? '#15803D' : '#8A6D1A',
+                background: isOficialReceita ? '#15803D' : '#D97706',
                 color: '#fff',
                 fontWeight: 700
               }}>
-                {isProducao ? 'PRODUÇÃO' : 'HOMOLOGAÇÃO'}
+                {isOficialReceita ? 'OFICIAL RECEITA' : 'RASCUNHO FISCAL'}
               </span>
             </div>
 
@@ -262,6 +263,49 @@ export function EspelhoDanfseModal({ nota, empresa, onClose }) {
               💡 Salve o PDF acima e depois clique em <strong>WhatsApp</strong> para anexá-lo ao cliente.
             </div>
           </div>
+
+          {/* Banner de Rascunho / Alerta de Validação na Receita */}
+          {!isOficialReceita && (
+            <div className="danfse-no-print" style={{
+              background: '#FFFBEB',
+              borderBottom: '1px solid #FCD34D',
+              padding: '9px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 10,
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#92400E', fontSize: 11.5 }}>
+                <AlertTriangle size={15} color="#D97706" style={{ flexShrink: 0 }} />
+                <span>
+                  <strong>Nota gerada como Rascunho Interno.</strong> Ela ainda não possui protocolo do Portal Nacional (SEFIN/ADN).
+                </span>
+              </div>
+              {onValidarNota && (
+                <button
+                  onClick={() => onValidarNota(nota)}
+                  style={{
+                    background: '#D97706',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '6px 13px',
+                    fontSize: 11.5,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    boxShadow: '0 1px 3px rgba(217,119,6,0.3)'
+                  }}
+                >
+                  <Zap size={13} />
+                  <span>Validar e Transmitir na Receita Federal</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* ── Visualizador do Documento Fiscal DANFSe v2.0 (Fiel à Receita Federal) ── */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '14px', background: '#EAE6DD' }}>

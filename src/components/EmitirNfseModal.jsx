@@ -145,6 +145,7 @@ export function EmitirNfseModal({
           municipio: empresa.municipio || 'Santa Cruz das Palmeiras',
           uf: empresa.uf || 'SP',
           ultimoNumero: maiorNumeroExistente,
+          numeroPersonalizado: dadosIniciais?.numeroPersonalizado || dadosIniciais?.numero || undefined,
         },
         dadosTomador: {
           cpfCnpj: somenteDigitos(cpfCnpj),
@@ -218,17 +219,21 @@ export function EmitirNfseModal({
     }
   });
   const proximoNumeroSugerido = maiorNumeroExistente + 1;
+  const isOficializandoExistente = Boolean(dadosIniciais?.numeroPersonalizado || dadosIniciais?.numero);
+  const numeroAlvo = dadosIniciais?.numeroPersonalizado || dadosIniciais?.numero;
 
   return (
-    <ModalShell onClose={onClose} titulo="Emitir Nota Fiscal de Serviços (NFS-e)">
+    <ModalShell onClose={onClose} titulo={isOficializandoExistente ? `Oficializar NFS-e Nº ${numeroAlvo} na Receita Federal` : "Emitir Nota Fiscal de Serviços (NFS-e)"}>
       <div style={{ maxHeight: '78vh', overflowY: 'auto', paddingRight: 4 }}>
         
         {/* Banner Informativo Padrão Nacional Simplificado */}
         <div style={{
-          background: 'linear-gradient(135deg, #EAF4F1 0%, #DDF0EA 100%)',
+          background: isOficializandoExistente 
+            ? 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)' 
+            : 'linear-gradient(135deg, #EAF4F1 0%, #DDF0EA 100%)',
           borderRadius: 12,
           padding: '12px 14px',
-          border: '1px solid #B8DDD2',
+          border: isOficializandoExistente ? '1px solid #F59E0B' : '1px solid #B8DDD2',
           marginBottom: 16,
           display: 'flex',
           justifyContent: 'space-between',
@@ -236,19 +241,25 @@ export function EmitirNfseModal({
           gap: 10
         }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <ShieldCheck size={26} color="#1F5C52" style={{ flexShrink: 0 }} />
+            <ShieldCheck size={26} color={isOficializandoExistente ? "#B45309" : "#1F5C52"} style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>
-                Emissão Direta Padrão Nacional NFS-e
+              <div style={{ fontSize: 13, fontWeight: 700, color: isOficializandoExistente ? '#92400E' : '#0F2B27' }}>
+                {isOficializandoExistente ? `Validação Oficial da Nota Nº ${numeroAlvo}` : 'Emissão Direta Padrão Nacional NFS-e'}
               </div>
-              <div style={{ fontSize: 11, color: '#2C5A51', marginTop: 1 }}>
-                Última nota contábil: <strong>Nº {maiorNumeroExistente}</strong>
+              <div style={{ fontSize: 11, color: isOficializandoExistente ? '#78350F' : '#2C5A51', marginTop: 1 }}>
+                {isOficializandoExistente 
+                  ? 'Esta nota será assinada e transmitida à SEFIN Nacional, substituindo o rascunho sem duplicar o caixa.'
+                  : <>Última nota contábil: <strong>Nº {maiorNumeroExistente}</strong></>}
               </div>
             </div>
           </div>
-          <div style={{ textAlign: 'right', background: '#fff', border: '1px solid #B8DDD2', borderRadius: 8, padding: '4px 10px', flexShrink: 0 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: '#5C5A4F', textTransform: 'uppercase' }}>Próxima Nota</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#1F5C52', fontFamily: 'Georgia, serif' }}>Nº {proximoNumeroSugerido}</div>
+          <div style={{ textAlign: 'right', background: '#fff', border: isOficializandoExistente ? '1px solid #F59E0B' : '1px solid #B8DDD2', borderRadius: 8, padding: '4px 10px', flexShrink: 0 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: '#5C5A4F', textTransform: 'uppercase' }}>
+              {isOficializandoExistente ? 'Número da Nota' : 'Próxima Nota'}
+            </div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: isOficializandoExistente ? '#B45309' : '#1F5C52', fontFamily: 'monospace' }}>
+              Nº {isOficializandoExistente ? numeroAlvo : proximoNumeroSugerido}
+            </div>
           </div>
         </div>
 

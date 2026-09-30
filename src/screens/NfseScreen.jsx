@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, Plus, RefreshCw, CheckCircle, ShieldCheck, Download, 
   ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, 
-  AlertCircle, MessageCircle, FileSpreadsheet, Copy, Check 
+  AlertCircle, MessageCircle, FileSpreadsheet, Copy, Check, Zap, Clock, AlertTriangle 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { 
@@ -127,14 +127,33 @@ export function NfseScreen({
     setShowEmitirModal(true);
   }
 
+  // Dispara validação/oficialização de uma nota existente (ex: Nota 76)
+  function handleValidarNotaPendente(notaAlvo) {
+    setDadosIniciaisEmissao({
+      numeroPersonalizado: notaAlvo.numero,
+      cpfCnpj: (notaAlvo.tomador?.cpfCnpj === '00.000.000/0000-00' || !notaAlvo.tomador?.cpfCnpj) ? '' : notaAlvo.tomador.cpfCnpj,
+      razaoSocial: notaAlvo.tomador?.razaoSocial || '',
+      email: notaAlvo.tomador?.email || '',
+      telefone: notaAlvo.tomador?.telefone || '',
+      valor: notaAlvo.servico?.valorTotal || '',
+      discriminacao: notaAlvo.servico?.discriminacao || '',
+      codigoAtividade: notaAlvo.servico?.codigoAtividade || '01.07',
+      aliquotaIss: notaAlvo.servico?.aliquotaIss ? String(notaAlvo.servico.aliquotaIss).replace('.', ',') : '2,0',
+      mesCompetencia: notaAlvo.competenciaMes !== undefined ? notaAlvo.competenciaMes : mesAtual,
+    });
+    setShowEmitirModal(true);
+  }
+
   // Ao emitir com sucesso
   function handleSucessoEmissao(novaNota, dadosLancamento) {
+    const isOficializacao = Boolean(dadosIniciaisEmissao?.numeroPersonalizado);
     setShowEmitirModal(false);
+    setDadosIniciaisEmissao(null);
     recarregarDados();
     setNotaSelecionadaDanfse(novaNota);
 
-    // Se o usuário quiser, adiciona no caixa
-    if (onAdicionarReceitaAoCaixa) {
+    // Se o usuário quiser, adiciona no caixa (somente para notas novas, não para oficialização de existentes)
+    if (onAdicionarReceitaAoCaixa && !isOficializacao) {
       onAdicionarReceitaAoCaixa({
         tipo: 'receita',
         descricao: `NFS-e Nº ${novaNota.numero} - ${dadosLancamento.tomador} (${dadosLancamento.descricao})`,
@@ -442,15 +461,19 @@ export function NfseScreen({
                           <span style={{ 
                             fontSize: 10.5, 
                             fontWeight: 700, 
-                            color: '#059669', 
-                            background: '#ECFDF5', 
+                            color: n.certificadoInfo?.transmissaoNativaGov ? '#059669' : '#D97706', 
+                            background: n.certificadoInfo?.transmissaoNativaGov ? '#ECFDF5' : '#FEF3C7', 
                             padding: '2px 6px', 
                             borderRadius: 4, 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             gap: 3 
                           }}>
-                            <CheckCircle size={10} /> Autorizada
+                            {n.certificadoInfo?.transmissaoNativaGov ? (
+                              <><CheckCircle size={10} /> Oficial Receita</>
+                            ) : (
+                              <><Clock size={10} /> Rascunho / Pendente Validação</>
+                            )}
                           </span>
                         </div>
 
@@ -540,8 +563,33 @@ export function NfseScreen({
                       justifyContent: 'flex-end', 
                       gap: 8, 
                       paddingTop: 4, 
-                      borderTop: '1px solid #F3F4F6' 
+                      borderTop: '1px solid #F3F4F6',
+                      flexWrap: 'wrap'
                     }}>
+                      {!n.certificadoInfo?.transmissaoNativaGov && (
+                        <button
+                          onClick={() => handleValidarNotaPendente(n)}
+                          title="Transmitir esta nota oficialmente à Receita Federal para validação fiscal e protocolo"
+                          style={{
+                            background: '#D97706',
+                            border: 'none',
+                            color: '#fff',
+                            borderRadius: 8,
+                            padding: '7px 12px',
+                            fontSize: 12,
+                            fontWeight: 700,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 5,
+                            cursor: 'pointer',
+                            boxShadow: '0 1px 3px rgba(217,119,6,0.3)'
+                          }}
+                        >
+                          <Zap size={13} />
+                          <span>Validar na Receita</span>
+                        </button>
+                      )}
+
                       <button
                         onClick={() => setNotaSelecionadaDanfse(n)}
                         style={{
@@ -710,6 +758,10 @@ export function NfseScreen({
           nota={notaSelecionadaDanfse}
           empresa={empresa}
           onClose={() => setNotaSelecionadaDanfse(null)}
+          onValidarNota={(notaParaValidar) => {
+            setNotaSelecionadaDanfse(null);
+            handleValidarNotaPendente(notaParaValidar);
+          }}
         />
       )}
 
