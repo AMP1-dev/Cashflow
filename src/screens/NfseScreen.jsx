@@ -9,7 +9,8 @@ import {
   formatarCpfCnpj, 
   nfseService, 
   resolverDescricaoRecorrente, 
-  gerarLinkWhatsAppNfse 
+  gerarLinkWhatsAppNfse,
+  consultarStatusCertificado 
 } from '../utils/nfseService';
 import { MESES } from '../utils/constants';
 import { EmitirNfseModal } from '../components/EmitirNfseModal';
@@ -40,6 +41,7 @@ export function NfseScreen({
   const [dataInicioFiltro, setDataInicioFiltro] = useState('');
   const [dataFimFiltro, setDataFimFiltro] = useState('');
   const [copiadoId, setCopiadoId] = useState(null);
+  const [certInfo, setCertInfo] = useState(null);
 
   // Carrega dados da empresa (Banco Supabase + LocalStorage + Reconciliação dos lançamentos)
   async function recarregarDados() {
@@ -50,6 +52,8 @@ export function NfseScreen({
       const r = nfseService.getRecorrencias(empresa.id);
       setNotas(n);
       setRecorrencias(r);
+      const c = await consultarStatusCertificado(empresa.id);
+      if (c && c.hasCert) setCertInfo(c);
     } catch (e) {
       console.warn('Erro ao carregar notas:', e);
     } finally {
@@ -204,6 +208,12 @@ export function NfseScreen({
           <div style={{ fontSize: 11.5, color: '#D9EBE6', marginTop: 4 }}>
             {notas.length} nota(s) registrada(s) na base • Chaves salvas com segurança
           </div>
+          {certInfo?.hasCert && (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(16, 185, 129, 0.2)', border: '1px solid rgba(16, 185, 129, 0.4)', borderRadius: 20, padding: '3px 10px', marginTop: 6, fontSize: 11, color: '#A7F3D0' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#34D399', display: 'inline-block' }} />
+              <span>Certificado A1 Conectado (SEFIN Nacional / Receita Federal Ativa)</span>
+            </div>
+          )}
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>

@@ -7,7 +7,8 @@ import { FieldLabel, inputStyle, ModalShell } from './UIComponents';
 import { formatBRL, somenteDigitos } from '../utils/formatters';
 import { 
   ATIVIDADES_SERVICOS_COMUNS, REGIMES_TRIBUTARIOS, formatarCpfCnpj, 
-  validarCpfCnpj, consultarCnpjPublico, resolverDescricaoRecorrente, nfseService 
+  validarCpfCnpj, consultarCnpjPublico, resolverDescricaoRecorrente, nfseService,
+  consultarStatusCertificado 
 } from '../utils/nfseService';
 import { MESES } from '../utils/constants';
 
@@ -40,10 +41,26 @@ export function EmitirNfseModal({
   const [salvarComoRecorrente, setSalvarComoRecorrente] = useState(false);
   const [diaVencimentoRecorrente, setDiaVencimentoRecorrente] = useState(10);
 
-  // Certificado Digital A1 Temporário
+  // Certificado Digital A1 Temporário ou Conectado
   const [certArquivo, setCertArquivo] = useState(null);
   const [certSenha, setCertSenha] = useState('');
   const [lembrarCertSessao, setLembrarCertSessao] = useState(true);
+  const [certStatus, setCertStatus] = useState(null);
+  const [mostrarCamposCert, setMostrarCamposCert] = useState(false);
+
+  useEffect(() => {
+    async function carregarCert() {
+      try {
+        const s = await consultarStatusCertificado(empresa?.id);
+        if (s && s.hasCert) {
+          setCertStatus(s);
+        }
+      } catch (e) {
+        console.warn('Erro ao verificar certificado:', e);
+      }
+    }
+    carregarCert();
+  }, [empresa?.id]);
 
   // Emissão & Feedback
   const [modoAmbiente, setModoAmbiente] = useState('producao');
@@ -107,7 +124,7 @@ export function EmitirNfseModal({
       setErroValidacao('Descreva os serviços prestados.');
       return;
     }
-    if (!certSenha.trim()) {
+    if (!certStatus?.hasCert && !certSenha.trim()) {
       setErroValidacao('Digite a senha do certificado digital A1.');
       return;
     }
@@ -488,51 +505,99 @@ export function EmitirNfseModal({
           )}
         </div>
 
-        {/* ── 4. CERTIFICADO DIGITAL A1 (USO TEMPORÁRIO EM MEMÓRIA) ── */}
-        <div style={{ background: '#FAF8F3', border: '1.5px solid #1F5C52', borderRadius: 12, padding: 14, marginBottom: 16 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#1F5C52', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <KeyRound size={15} /> 4. Assinatura Digital com Certificado A1 (.pfx)
-          </div>
-          <div style={{ fontSize: 11, color: '#5C5A4F', marginBottom: 12, lineHeight: 1.4 }}>
-            O arquivo do certificado é lido temporariamente na memória desta sessão para assinar o documento e não fica exposto em bancos de dados.
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10 }}>
-            <div>
-              <FieldLabel>Arquivo do Certificado A1 (.pfx / .p12)</FieldLabel>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="file"
-                  accept=".pfx,.p12"
-                  onChange={e => setCertArquivo(e.target.files?.[0] || null)}
-                  style={{
-                    ...inputStyle,
-                    padding: '8px',
-                    fontSize: 11.5,
-                    background: '#fff',
-                    cursor: 'pointer'
-                  }}
-                />
-              </div>
-              {certArquivo && (
-                <div style={{ fontSize: 10.5, color: '#1F5C52', marginTop: 3, fontWeight: 600 }}>
-                  ✓ {certArquivo.name} ({Math.round(certArquivo.size / 1024)} KB)
+        {/* ── 4. CERTIFICADO DIGITAL A1 (TRANSMISSÃO GOV OFICIAL) ── */}
+        {certStatus?.hasCert && !mostrarCamposCert ? (
+          <div style={{ background: '#ECFDF5', border: '1.5px solid #10B981', borderRadius: 12, padding: 14, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <CheckCircle size={22} color="#059669" style={{ flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#065F46' }}>
+                    Certificado A1 Conectado & Ativo
+                  </div>
+                  <div style={{ fontSize: 11, color: '#047857' }}>
+                    {certStatus.razaoSocial} • Válido até {new Date(certStatus.validoAte).toLocaleDateString('pt-BR')}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: '#059669', fontWeight: 600, marginTop: 2 }}>
+                    ✓ Emissão oficial direta com a SEFIN Nacional / Receita Federal em 1 clique (Desktop & Mobile)
+                  </div>
                 </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMostrarCamposCert(true)}
+                style={{
+                  fontSize: 11,
+                  color: '#047857',
+                  background: '#fff',
+                  border: '1px solid #A7F3D0',
+                  padding: '5px 10px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
+              >
+                Alterar Certificado
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div style={{ background: '#FAF8F3', border: '1.5px solid #1F5C52', borderRadius: 12, padding: 14, marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#1F5C52', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <KeyRound size={15} /> 4. Assinatura com Certificado A1 (.pfx)
+              </div>
+              {certStatus?.hasCert && (
+                <button
+                  type="button"
+                  onClick={() => setMostrarCamposCert(false)}
+                  style={{ fontSize: 11, color: '#1F5C52', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+                >
+                  Voltar ao certificado ativo
+                </button>
               )}
             </div>
+            <div style={{ fontSize: 11, color: '#5C5A4F', marginBottom: 12, lineHeight: 1.4 }}>
+              O arquivo do certificado é lido para assinatura criptográfica e transmissão mTLS direta para a Receita Federal.
+            </div>
 
-            <div>
-              <FieldLabel>Senha do Certificado</FieldLabel>
-              <input
-                type="password"
-                value={certSenha}
-                onChange={e => setCertSenha(e.target.value)}
-                placeholder="Senha de uso do A1"
-                style={{ ...inputStyle, background: '#fff' }}
-              />
+            <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 10 }}>
+              <div>
+                <FieldLabel>Arquivo do Certificado A1 (.pfx / .p12)</FieldLabel>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="file"
+                    accept=".pfx,.p12"
+                    onChange={e => setCertArquivo(e.target.files?.[0] || null)}
+                    style={{
+                      ...inputStyle,
+                      padding: '8px',
+                      fontSize: 11.5,
+                      background: '#fff',
+                      cursor: 'pointer'
+                    }}
+                  />
+                </div>
+                {certArquivo && (
+                  <div style={{ fontSize: 10.5, color: '#1F5C52', marginTop: 3, fontWeight: 600 }}>
+                    ✓ {certArquivo.name} ({Math.round(certArquivo.size / 1024)} KB)
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <FieldLabel>Senha do Certificado</FieldLabel>
+                <input
+                  type="password"
+                  value={certSenha}
+                  onChange={e => setCertSenha(e.target.value)}
+                  placeholder="Senha de uso do A1"
+                  style={{ ...inputStyle, background: '#fff' }}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
       </div>
 
