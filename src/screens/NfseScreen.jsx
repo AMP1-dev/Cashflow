@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   FileText, Plus, RefreshCw, CheckCircle, ShieldCheck, Download, 
   ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, 
-  AlertCircle, MessageCircle, FileSpreadsheet, Copy, Check, Zap, Clock, AlertTriangle 
+  AlertCircle, MessageCircle, FileSpreadsheet, Copy, Check, Zap, Clock, AlertTriangle,
+  ChevronDown, ChevronUp 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { 
@@ -29,6 +30,28 @@ export function NfseScreen({
   const [notas, setNotas] = useState([]);
   const [recorrencias, setRecorrencias] = useState([]);
   const [carregando, setCarregando] = useState(false);
+
+  // Controle de cards colapsados / expandidos (acordeão minimalista)
+  const [expandidos, setExpandidos] = useState({});
+
+  function toggleExpandir(id) {
+    setExpandidos(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  }
+
+  function alternarTodos(expandir) {
+    if (!expandir) {
+      setExpandidos({});
+    } else {
+      const todos = {};
+      notas.forEach(n => {
+        todos[n.id || n.numero] = true;
+      });
+      setExpandidos(todos);
+    }
+  }
 
   // Modais
   const [showEmitirModal, setShowEmitirModal] = useState(false);
@@ -417,6 +440,29 @@ export function NfseScreen({
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2, padding: '0 2px' }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#4B5563' }}>
+                  {notasFiltradas.length} nota(s) encontrada(s)
+                </span>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => alternarTodos(true)}
+                    style={{ background: 'none', border: 'none', color: '#1F5C52', fontSize: 11.5, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                  >
+                    Expandir todas
+                  </button>
+                  <span style={{ color: '#D1D5DB' }}>•</span>
+                  <button
+                    type="button"
+                    onClick={() => alternarTodos(false)}
+                    style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 11.5, fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                  >
+                    Recolher todas
+                  </button>
+                </div>
+              </div>
+
               {notasFiltradas.map(n => {
                 const dataFormatada = n.dataEmissao 
                   ? new Date(n.dataEmissao).toLocaleDateString('pt-BR') 
@@ -426,24 +472,37 @@ export function NfseScreen({
                   : '';
                 const chave = n.chaveAcesso || '';
                 const chaveResumo = chave ? `${chave.slice(0, 14)}...${chave.slice(-10)}` : '';
+                const idNota = n.id || n.numero;
+                const isExpandido = Boolean(expandidos[idNota]);
 
                 return (
                   <div
-                    key={n.id || n.numero}
+                    key={idNota}
                     style={{
                       background: '#fff',
                       border: '1.5px solid #E5E0D5',
                       borderRadius: 14,
-                      padding: '14px 16px',
+                      padding: isExpandido ? '14px 16px' : '12px 16px',
                       boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 10
+                      gap: isExpandido ? 10 : 0,
+                      transition: 'all 0.15s ease-in-out'
                     }}
                   >
-                    {/* Linha Superior: Cabeçalho com Número, Data e Valor */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
-                      <div>
+                    {/* Linha Superior: Cabeçalho com Número, Data, Status, Nome e Valor (Clique para Colapsar/Expandir) */}
+                    <div 
+                      onClick={() => toggleExpandir(idNota)}
+                      style={{ 
+                        cursor: 'pointer',
+                        userSelect: 'none',
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'flex-start', 
+                        gap: 12 
+                      }}
+                    >
+                      <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
                           <span style={{ 
                             fontSize: 12, 
@@ -481,159 +540,214 @@ export function NfseScreen({
                           {n.tomador?.razaoSocial || 'Cliente'}
                         </div>
 
-                        {n.tomador?.cpfCnpj && (
-                          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>
+                        {isExpandido && n.tomador?.cpfCnpj && (
+                          <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2 }}>
                             CNPJ/CPF: {formatarCpfCnpj(n.tomador.cpfCnpj)}
                           </div>
                         )}
                       </div>
 
-                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                        <div style={{ fontSize: 17, fontWeight: 800, color: '#0F2B27', fontFamily: 'Georgia, serif' }}>
-                          {formatBRL(n.servico?.valorTotal || 0)}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                        <div style={{ textAlign: 'right' }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: '#0F2B27', fontFamily: 'Georgia, serif' }}>
+                            {formatBRL(n.servico?.valorTotal || 0)}
+                          </div>
+                          <div style={{ fontSize: 10.5, color: '#6B7280', marginTop: 2 }}>
+                            Líquido: {formatBRL(n.servico?.valorLiquido || n.servico?.valorTotal || 0)}
+                          </div>
                         </div>
-                        <div style={{ fontSize: 10.5, color: '#6B7280', marginTop: 2 }}>
-                          Líquido: {formatBRL(n.servico?.valorLiquido || n.servico?.valorTotal || 0)}
+
+                        <div 
+                          title={isExpandido ? "Recolher detalhes" : "Expandir detalhes e ações"}
+                          style={{ 
+                            color: '#6B7280', 
+                            background: '#F3F4F6', 
+                            borderRadius: '50%', 
+                            width: 28, 
+                            height: 28, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                          }}
+                        >
+                          {isExpandido ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                         </div>
                       </div>
                     </div>
 
-                    {/* Discriminação do Serviço */}
-                    <div style={{ 
-                      fontSize: 11.5, 
-                      color: '#4B5563', 
-                      background: '#F9FAFB', 
-                      padding: '8px 10px', 
-                      borderRadius: 8,
-                      border: '1px solid #F3F4F6'
-                    }}>
-                      <strong style={{ color: '#1F2937' }}>Serviço:</strong> {n.servico?.discriminacao || 'Prestação de Serviços em Tecnologia e Gestão'}
-                    </div>
-
-                    {/* Chave de Acesso Oficial (50 dígitos) */}
-                    {chave && (
-                      <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: '#FAF8F3',
-                        border: '1px dashed #D8D4C8',
-                        borderRadius: 8,
-                        padding: '6px 10px',
-                        fontSize: 11
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4B5563' }}>
-                          <span style={{ fontWeight: 700, color: '#1F5C52' }}>Chave SPED:</span>
-                          <span style={{ fontFamily: 'monospace' }} title={chave}>{chaveResumo}</span>
+                    {/* Conteúdo Expandido (Detalhes do Serviço, Chave SPED e Botões de Ação) */}
+                    {isExpandido && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 4, paddingTop: 10, borderTop: '1px solid #F3F4F6' }}>
+                        {/* Discriminação do Serviço */}
+                        <div style={{ 
+                          fontSize: 11.5, 
+                          color: '#4B5563', 
+                          background: '#F9FAFB', 
+                          padding: '8px 10px', 
+                          borderRadius: 8,
+                          border: '1px solid #F3F4F6'
+                        }}>
+                          <strong style={{ color: '#1F2937' }}>Serviço:</strong> {n.servico?.discriminacao || 'Prestação de Serviços em Tecnologia e Gestão'}
                         </div>
 
-                        <button
-                          onClick={(e) => handleCopiarChave(chave, n.id || n.numero, e)}
-                          title="Copiar chave de acesso completa (50 dígitos)"
-                          style={{
-                            background: copiadoId === (n.id || n.numero) ? '#10B981' : '#E2E8F0',
-                            border: 'none',
-                            borderRadius: 5,
-                            padding: '3px 8px',
-                            fontSize: 10.5,
-                            fontWeight: 700,
-                            color: copiadoId === (n.id || n.numero) ? '#fff' : '#1E293B',
-                            cursor: 'pointer',
-                            display: 'inline-flex',
+                        {/* Chave de Acesso Oficial (50 dígitos) */}
+                        {chave && (
+                          <div style={{
+                            display: 'flex',
                             alignItems: 'center',
-                            gap: 4
-                          }}
-                        >
-                          {copiadoId === (n.id || n.numero) ? (
-                            <>
-                              <Check size={11} /> Copiado!
-                            </>
-                          ) : (
-                            <>
-                              <Copy size={11} /> Copiar Chave
-                            </>
+                            justifyContent: 'space-between',
+                            background: '#FAF8F3',
+                            border: '1px dashed #D8D4C8',
+                            borderRadius: 8,
+                            padding: '6px 10px',
+                            fontSize: 11
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4B5563' }}>
+                              <span style={{ fontWeight: 700, color: '#1F5C52' }}>Chave SPED:</span>
+                              <span style={{ fontFamily: 'monospace' }} title={chave}>{chaveResumo}</span>
+                            </div>
+
+                            <button
+                              onClick={(e) => handleCopiarChave(chave, idNota, e)}
+                              title="Copiar chave de acesso completa (50 dígitos)"
+                              style={{
+                                background: copiadoId === idNota ? '#10B981' : '#E2E8F0',
+                                border: 'none',
+                                borderRadius: 5,
+                                padding: '3px 8px',
+                                fontSize: 10.5,
+                                fontWeight: 700,
+                                color: copiadoId === idNota ? '#fff' : '#1E293B',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4
+                              }}
+                            >
+                              {copiadoId === idNota ? (
+                                <>
+                                  <Check size={11} /> Copiado!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={11} /> Copiar Chave
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Botões de Ação: Reimpressão / DANFSe, XML e WhatsApp */}
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'flex-end', 
+                          gap: 8, 
+                          paddingTop: 4, 
+                          borderTop: '1px solid #F3F4F6',
+                          flexWrap: 'wrap'
+                        }}>
+                          {!n.certificadoInfo?.transmissaoNativaGov && (
+                            <button
+                              onClick={() => handleValidarNotaPendente(n)}
+                              title="Transmitir esta nota oficialmente à Receita Federal para validação fiscal e protocolo"
+                              style={{
+                                background: '#D97706',
+                                border: 'none',
+                                color: '#fff',
+                                borderRadius: 8,
+                                padding: '7px 12px',
+                                fontSize: 12,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                cursor: 'pointer',
+                                boxShadow: '0 1px 3px rgba(217,119,6,0.3)'
+                              }}
+                            >
+                              <Zap size={13} />
+                              <span>Validar na Receita</span>
+                            </button>
                           )}
-                        </button>
+
+                          <button
+                            onClick={() => setNotaSelecionadaDanfse(n)}
+                            style={{
+                              background: '#1F5C52',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 8,
+                              padding: '7px 12px',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              cursor: 'pointer',
+                              boxShadow: '0 1px 3px rgba(31,92,82,0.2)'
+                            }}
+                          >
+                            <Printer size={13} />
+                            <span>Reimpressão / DANFSe</span>
+                          </button>
+
+                          {n.xmlGerado && (
+                            <button
+                              onClick={() => {
+                                const blob = new Blob([n.xmlGerado], { type: 'application/xml;charset=utf-8' });
+                                const url = URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = `NFSe_${n.numero}_${empresa?.cnpj || 'AMP'}.xml`;
+                                a.click();
+                                URL.revokeObjectURL(url);
+                              }}
+                              style={{
+                                background: '#374151',
+                                border: 'none',
+                                color: '#fff',
+                                borderRadius: 8,
+                                padding: '7px 12px',
+                                fontSize: 12,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <Download size={13} />
+                              <span>Baixar XML</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              const link = gerarLinkWhatsAppNfse(n, empresa);
+                              if (link) window.open(link, '_blank');
+                            }}
+                            style={{
+                              background: '#25D366',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 8,
+                              padding: '7px 12px',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <MessageCircle size={13} />
+                            <span>WhatsApp</span>
+                          </button>
+                        </div>
                       </div>
                     )}
-
-                    {/* Botões de Ação: Reimpressão / DANFSe e WhatsApp */}
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'flex-end', 
-                      gap: 8, 
-                      paddingTop: 4, 
-                      borderTop: '1px solid #F3F4F6',
-                      flexWrap: 'wrap'
-                    }}>
-                      {!n.certificadoInfo?.transmissaoNativaGov && (
-                        <button
-                          onClick={() => handleValidarNotaPendente(n)}
-                          title="Transmitir esta nota oficialmente à Receita Federal para validação fiscal e protocolo"
-                          style={{
-                            background: '#D97706',
-                            border: 'none',
-                            color: '#fff',
-                            borderRadius: 8,
-                            padding: '7px 12px',
-                            fontSize: 12,
-                            fontWeight: 700,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            cursor: 'pointer',
-                            boxShadow: '0 1px 3px rgba(217,119,6,0.3)'
-                          }}
-                        >
-                          <Zap size={13} />
-                          <span>Validar na Receita</span>
-                        </button>
-                      )}
-
-                      <button
-                        onClick={() => setNotaSelecionadaDanfse(n)}
-                        style={{
-                          background: '#1F5C52',
-                          border: 'none',
-                          color: '#fff',
-                          borderRadius: 8,
-                          padding: '7px 12px',
-                          fontSize: 12,
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          cursor: 'pointer',
-                          boxShadow: '0 1px 3px rgba(31,92,82,0.2)'
-                        }}
-                      >
-                        <Printer size={13} />
-                        <span>Reimpressão / DANFSe</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          const link = gerarLinkWhatsAppNfse(n, empresa);
-                          if (link) window.open(link, '_blank');
-                        }}
-                        style={{
-                          background: '#25D366',
-                          border: 'none',
-                          color: '#fff',
-                          borderRadius: 8,
-                          padding: '7px 12px',
-                          fontSize: 12,
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 5,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <MessageCircle size={13} />
-                        <span>WhatsApp</span>
-                      </button>
-                    </div>
                   </div>
                 );
               })}
