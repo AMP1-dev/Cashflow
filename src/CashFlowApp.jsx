@@ -1235,6 +1235,7 @@ export default function CashFlowApp() {
               anoAtual={anoAtual}
               lancamentos={lancamentosEmpresa}
               onAdicionarReceitaAoCaixa={(rec) => addLancamento(rec)}
+              onRecarregarLancamentos={() => carregarLancamentos(empresaAtualObj.id)}
               onVoltar={() => setTela('dashboard')}
             />
           )}

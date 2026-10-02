@@ -84,34 +84,95 @@ export function validarCpfCnpj(valor) {
   return digits.length === 11 || digits.length === 14;
 }
 
-// ─── Consulta Automática de CNPJ via BrasilAPI / ReceitaWS ───
+// ─── Memória & Catálogo Automático de Clientes (Gravação Automática de E-mail/Telefone) ───
+export const STORAGE_CLIENTES_KEY = 'amp_flow_clientes_catalogo_v1';
+
+export function salvarClienteCatalogo(cliente) {
+  if (!cliente) return null;
+  const doc = somenteDigitos(cliente.cpfCnpj || cliente.documento || '');
+  if (!doc) return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_CLIENTES_KEY);
+    const mapa = raw ? JSON.parse(raw) : {};
+    mapa[doc] = {
+      ...(mapa[doc] || {}),
+      cpfCnpj: doc,
+      razaoSocial: (cliente.razaoSocial || cliente.nome || mapa[doc]?.razaoSocial || '').trim(),
+      email: (cliente.email || cliente.emailTomador || mapa[doc]?.email || '').trim(),
+      telefone: (cliente.telefone || cliente.telefoneTomador || mapa[doc]?.telefone || '').trim(),
+      logradouro: (cliente.logradouro || cliente.endereco || mapa[doc]?.logradouro || '').trim(),
+      numero: (cliente.numero || mapa[doc]?.numero || '').trim(),
+      bairro: (cliente.bairro || mapa[doc]?.bairro || '').trim(),
+      municipio: (cliente.municipio || mapa[doc]?.municipio || '').trim(),
+      uf: (cliente.uf || mapa[doc]?.uf || '').trim(),
+      cep: (cliente.cep || mapa[doc]?.cep || '').trim(),
+      atualizadoEm: new Date().toISOString()
+    };
+    localStorage.setItem(STORAGE_CLIENTES_KEY, JSON.stringify(mapa));
+    return mapa[doc];
+  } catch (e) {
+    console.warn('Erro ao salvar cliente no catálogo:', e);
+    return null;
+  }
+}
+
+export function obterClienteCatalogo(docOuCnpj) {
+  const doc = somenteDigitos(docOuCnpj || '');
+  if (!doc) return null;
+  try {
+    const raw = localStorage.getItem(STORAGE_CLIENTES_KEY);
+    const mapa = raw ? JSON.parse(raw) : {};
+    return mapa[doc] || null;
+  } catch {
+    return null;
+  }
+}
+
+export function listarClientesCatalogo() {
+  try {
+    const raw = localStorage.getItem(STORAGE_CLIENTES_KEY);
+    return raw ? Object.values(JSON.parse(raw)) : [];
+  } catch {
+    return [];
+  }
+}
+
+// ─── Consulta Automática de CNPJ via BrasilAPI / ReceitaWS com Memória de Contatos ───
 export async function consultarCnpjPublico(cnpj) {
   const digits = somenteDigitos(cnpj);
   if (digits.length !== 14) return null;
 
+  // 1. Verifica se já temos o cliente gravado na memória com e-mail/telefone
+  const clienteGravado = obterClienteCatalogo(digits);
+
+  let dadosApi = null;
   try {
     const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${digits}`);
-    if (!res.ok) throw new Error('Não localizado na BrasilAPI');
-    const d = await res.json();
-    return {
-      razaoSocial: d.razao_social || d.nome_fantasia || '',
-      nomeFantasia: d.nome_fantasia || '',
-      email: d.email || '',
-      telefone: d.ddd_telefone_1 || '',
-      logradouro: d.logradouro || '',
-      numero: d.numero || '',
-      bairro: d.bairro || '',
-      municipio: d.municipio || '',
-      uf: d.uf || '',
-      cep: d.cep || '',
-    };
+    if (res.ok) {
+      const d = await res.json();
+      dadosApi = {
+        razaoSocial: d.razao_social || d.nome_fantasia || '',
+        nomeFantasia: d.nome_fantasia || '',
+        email: d.email || '',
+        telefone: d.ddd_telefone_1 || '',
+        logradouro: d.logradouro || '',
+        numero: d.numero || '',
+        bairro: d.bairro || '',
+        municipio: d.municipio || '',
+        uf: d.uf || '',
+        cep: d.cep || '',
+      };
+    }
   } catch (e) {
     console.warn('Falha na consulta BrasilAPI, tentando proxy alternativo:', e.message);
+  }
+
+  if (!dadosApi) {
     try {
       const res2 = await fetch(`https://publica.cnpj.ws/cnpj/${digits}`);
       if (res2.ok) {
         const d2 = await res2.json();
-        return {
+        dadosApi = {
           razaoSocial: d2.razao_social || '',
           nomeFantasia: d2.estabelecimento?.nome_fantasia || '',
           email: d2.estabelecimento?.email || '',
@@ -127,8 +188,29 @@ export async function consultarCnpjPublico(cnpj) {
     } catch (err2) {
       console.warn('Consulta CNPJ indisponível no momento:', err2.message);
     }
-    return null;
   }
+
+  // 2. Mescla preservando e priorizando e-mail e telefone salvos pelo usuário
+  const resultado = {
+    razaoSocial: clienteGravado?.razaoSocial || dadosApi?.razaoSocial || '',
+    nomeFantasia: clienteGravado?.nomeFantasia || dadosApi?.nomeFantasia || '',
+    email: clienteGravado?.email || dadosApi?.email || '',
+    telefone: clienteGravado?.telefone || dadosApi?.telefone || '',
+    logradouro: clienteGravado?.logradouro || dadosApi?.logradouro || '',
+    numero: clienteGravado?.numero || dadosApi?.numero || '',
+    bairro: clienteGravado?.bairro || dadosApi?.bairro || '',
+    municipio: clienteGravado?.municipio || dadosApi?.municipio || '',
+    uf: clienteGravado?.uf || dadosApi?.uf || '',
+    cep: clienteGravado?.cep || dadosApi?.cep || '',
+    isClienteGravado: Boolean(clienteGravado),
+  };
+
+  // Se houver dados novos, atualiza o catálogo
+  if (resultado.razaoSocial) {
+    salvarClienteCatalogo({ cpfCnpj: digits, ...resultado });
+  }
+
+  return (resultado.razaoSocial || resultado.email || resultado.telefone) ? resultado : null;
 }
 
 // ─── Resolução Inteligente da Descrição de Recorrência ───
@@ -196,6 +278,84 @@ export const nfseService = {
     });
 
     return nota;
+  },
+
+  // Atualiza uma nota já existente (valor, descrição, tomador) e persiste no cache e Supabase
+  async atualizarNota(empresaId, numero, dadosAtualizados) {
+    if (!empresaId || !numero) return null;
+    const numStr = String(numero);
+    const notas = this.getNotasEmitidas(empresaId);
+    let notaExistente = notas.find(n => String(n.numero) === numStr);
+
+    const vTotal = dadosAtualizados.servico?.valorTotal !== undefined 
+      ? parseFloat(dadosAtualizados.servico.valorTotal) 
+      : (notaExistente?.servico?.valorTotal || 0);
+
+    const alIss = dadosAtualizados.servico?.aliquotaIss !== undefined 
+      ? parseFloat(dadosAtualizados.servico.aliquotaIss) 
+      : (notaExistente?.servico?.aliquotaIss || 2.0);
+
+    const vIss = Math.round((vTotal * (alIss / 100)) * 100) / 100;
+    const vLiq = vTotal;
+
+    const notaAtualizada = {
+      ...(notaExistente || {}),
+      id: notaExistente?.id || `nfse_${numStr}_${Date.now()}`,
+      numero: numStr,
+      ambiente: notaExistente?.ambiente || 'producao',
+      status: notaExistente?.status || 'autorizada',
+      chaveAcesso: notaExistente?.chaveAcesso || gerarChaveAcessoNfse(empresaId, numStr),
+      dpsNumero: notaExistente?.dpsNumero || `${Math.max(1, parseInt(numStr) - 11)}`,
+      serieDps: notaExistente?.serieDps || '70000',
+      codigoVerificacao: notaExistente?.codigoVerificacao || `AMP-${numStr}01`,
+      dataEmissao: notaExistente?.dataEmissao || new Date().toISOString(),
+      competenciaMes: dadosAtualizados.servico?.mesCompetencia !== undefined 
+        ? dadosAtualizados.servico.mesCompetencia 
+        : (notaExistente?.competenciaMes ?? new Date().getMonth()),
+      competenciaAno: dadosAtualizados.servico?.anoCompetencia || notaExistente?.competenciaAno || new Date().getFullYear(),
+      emissor: notaExistente?.emissor || {
+        cnpj: '10682233000175',
+        razaoSocial: 'AMP DO BRASIL SOLUCOES ADMINISTRATIVAS E TECNOLOGICAS LTDA',
+        municipio: 'Santa Cruz das Palmeiras',
+        uf: 'SP'
+      },
+      tomador: {
+        ...(notaExistente?.tomador || {}),
+        ...(dadosAtualizados.tomador || {})
+      },
+      servico: {
+        ...(notaExistente?.servico || {}),
+        ...(dadosAtualizados.servico || {}),
+        valorTotal: vTotal,
+        valorIss: vIss,
+        valorLiquido: vLiq,
+        aliquotaIss: alIss,
+        aliquotaIbs: 0.10,
+        valorIbs: Math.round((vTotal * 0.001) * 100) / 100,
+        aliquotaCbs: 0.90,
+        valorCbs: Math.round((vTotal * 0.009) * 100) / 100,
+        aliquotaImpostoTotal: alIss
+      }
+    };
+
+    // Salva no catálogo de clientes também
+    if (notaAtualizada.tomador?.cpfCnpj) {
+      salvarClienteCatalogo({
+        cpfCnpj: notaAtualizada.tomador.cpfCnpj,
+        razaoSocial: notaAtualizada.tomador.razaoSocial,
+        email: notaAtualizada.tomador.email,
+        telefone: notaAtualizada.tomador.telefone,
+        logradouro: notaAtualizada.tomador.logradouro || notaAtualizada.tomador.endereco,
+        numero: notaAtualizada.tomador.numero,
+        bairro: notaAtualizada.tomador.bairro,
+        municipio: notaAtualizada.tomador.municipio,
+        uf: notaAtualizada.tomador.uf,
+        cep: notaAtualizada.tomador.cep
+      });
+    }
+
+    this.salvarNotaEmitida(empresaId, notaAtualizada);
+    return notaAtualizada;
   },
 
   async persistirNotaNoSupabase(empresaId, nota) {

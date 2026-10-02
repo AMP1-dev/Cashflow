@@ -8,8 +8,9 @@ import { formatBRL, somenteDigitos } from '../utils/formatters';
 import { 
   ATIVIDADES_SERVICOS_COMUNS, REGIMES_TRIBUTARIOS, formatarCpfCnpj, 
   validarCpfCnpj, consultarCnpjPublico, resolverDescricaoRecorrente, nfseService,
-  consultarStatusCertificado 
+  consultarStatusCertificado, salvarClienteCatalogo, obterClienteCatalogo 
 } from '../utils/nfseService';
+import { supabase } from '../lib/supabase';
 import { MESES } from '../utils/constants';
 
 export function EmitirNfseModal({ 
@@ -20,18 +21,26 @@ export function EmitirNfseModal({
   onClose, 
   onSucesso 
 }) {
+  const isEdicao = Boolean(dadosIniciais?.isEdicao);
+  const numeroAlvo = dadosIniciais?.numeroPersonalizado || dadosIniciais?.numero;
+  const isOficializandoExistente = Boolean(numeroAlvo) && !isEdicao;
+
+  // Memória e Catálogo do Cliente
+  const clienteInicial = dadosIniciais?.cpfCnpj ? obterClienteCatalogo(dadosIniciais.cpfCnpj) : null;
+
   // Dados do Tomador (Cliente)
   const [cpfCnpj, setCpfCnpj] = useState(dadosIniciais?.cpfCnpj || '');
-  const [razaoSocial, setRazaoSocial] = useState(dadosIniciais?.razaoSocial || dadosIniciais?.cliente || '');
-  const [emailTomador, setEmailTomador] = useState(dadosIniciais?.email || '');
-  const [telefoneTomador, setTelefoneTomador] = useState(dadosIniciais?.telefone || '');
-  const [municipioTomador, setMunicipioTomador] = useState(dadosIniciais?.municipio || '');
-  const [ufTomador, setUfTomador] = useState(dadosIniciais?.uf || '');
-  const [logradouroTomador, setLogradouroTomador] = useState(dadosIniciais?.logradouro || dadosIniciais?.endereco || '');
-  const [numeroTomador, setNumeroTomador] = useState(dadosIniciais?.numero || '');
-  const [bairroTomador, setBairroTomador] = useState(dadosIniciais?.bairro || '');
-  const [cepTomador, setCepTomador] = useState(dadosIniciais?.cep || '');
+  const [razaoSocial, setRazaoSocial] = useState(dadosIniciais?.razaoSocial || dadosIniciais?.cliente || clienteInicial?.razaoSocial || '');
+  const [emailTomador, setEmailTomador] = useState(dadosIniciais?.email || clienteInicial?.email || '');
+  const [telefoneTomador, setTelefoneTomador] = useState(dadosIniciais?.telefone || clienteInicial?.telefone || '');
+  const [municipioTomador, setMunicipioTomador] = useState(dadosIniciais?.municipio || clienteInicial?.municipio || '');
+  const [ufTomador, setUfTomador] = useState(dadosIniciais?.uf || clienteInicial?.uf || '');
+  const [logradouroTomador, setLogradouroTomador] = useState(dadosIniciais?.logradouro || dadosIniciais?.endereco || clienteInicial?.logradouro || clienteInicial?.endereco || '');
+  const [numeroTomador, setNumeroTomador] = useState(dadosIniciais?.numeroEnd || dadosIniciais?.numero || clienteInicial?.numero || '');
+  const [bairroTomador, setBairroTomador] = useState(dadosIniciais?.bairro || clienteInicial?.bairro || '');
+  const [cepTomador, setCepTomador] = useState(dadosIniciais?.cep || clienteInicial?.cep || '');
   const [buscandoCnpj, setBuscandoCnpj] = useState(false);
+  const [clienteGravado, setClienteGravado] = useState(Boolean(clienteInicial));
 
   // Dados do Serviço
   const [valorTotal, setValorTotal] = useState(dadosIniciais?.valor ? String(dadosIniciais.valor).replace('.', ',') : '');
@@ -101,6 +110,7 @@ export function EmitirNfseModal({
         if (dados.numero) setNumeroTomador(dados.numero);
         if (dados.bairro) setBairroTomador(dados.bairro);
         if (dados.cep) setCepTomador(dados.cep);
+        setClienteGravado(true);
       } else {
         alert('CNPJ não localizado automaticamente. Por favor, preencha a Razão Social manualmente.');
       }
@@ -111,7 +121,148 @@ export function EmitirNfseModal({
     }
   }
 
-  // Submissão da Nota
+  // Preenchimento automático ao digitar CPF ou CNPJ se já cadastrado no catálogo local
+  useEffect(() => {
+    const limpo = somenteDigitos(cpfCnpj);
+    if (limpo.length === 11 || limpo.length === 14) {
+      const cli = obterClienteCatalogo(limpo);
+      if (cli) {
+        setClienteGravado(true);
+        if (!razaoSocial && cli.razaoSocial) setRazaoSocial(cli.razaoSocial);
+        if (!emailTomador && cli.email) setEmailTomador(cli.email);
+        if (!telefoneTomador && cli.telefone) setTelefoneTomador(cli.telefone);
+        if (!municipioTomador && cli.municipio) setMunicipioTomador(cli.municipio);
+        if (!ufTomador && cli.uf) setUfTomador(cli.uf);
+        if (!logradouroTomador && (cli.logradouro || cli.endereco)) setLogradouroTomador(cli.logradouro || cli.endereco);
+        if (!numeroTomador && cli.numero) setNumeroTomador(cli.numero);
+        if (!bairroTomador && cli.bairro) setBairroTomador(cli.bairro);
+        if (!cepTomador && cli.cep) setCepTomador(cli.cep);
+      }
+    }
+  }, [cpfCnpj]);
+
+  // Função para salvar imediatamente o cliente no catálogo de contatos
+  function salvarDadosClienteCatalogo(novos = {}) {
+    const doc = somenteDigitos(cpfCnpj);
+    if (!doc) return;
+    salvarClienteCatalogo({
+      cpfCnpj: doc,
+      razaoSocial: novos.razaoSocial !== undefined ? novos.razaoSocial : razaoSocial,
+      email: novos.email !== undefined ? novos.email : emailTomador,
+      telefone: novos.telefone !== undefined ? novos.telefone : telefoneTomador,
+      municipio: novos.municipio !== undefined ? novos.municipio : municipioTomador,
+      uf: novos.uf !== undefined ? novos.uf : ufTomador,
+      logradouro: novos.logradouro !== undefined ? novos.logradouro : logradouroTomador,
+      numero: novos.numero !== undefined ? novos.numero : numeroTomador,
+      bairro: novos.bairro !== undefined ? novos.bairro : bairroTomador,
+      cep: novos.cep !== undefined ? novos.cep : cepTomador,
+    });
+    setClienteGravado(true);
+  }
+
+  // Salvar Alterações da Nota em Modo Edição (Atualiza NFS-e e Lançamento Financeiro)
+  async function handleSalvarEdicao() {
+    setErroValidacao('');
+
+    if (!razaoSocial.trim()) {
+      setErroValidacao('Informe o Nome ou Razão Social do cliente.');
+      return;
+    }
+    const vTotalNum = parseFloat((valorTotal || '0').replace(',', '.'));
+    if (vTotalNum <= 0) {
+      setErroValidacao('Informe o valor total do serviço.');
+      return;
+    }
+    if (!discriminacao.trim()) {
+      setErroValidacao('Descreva os serviços prestados.');
+      return;
+    }
+
+    setEmitindo(true);
+
+    try {
+      const descResolvida = resolverDescricaoRecorrente(discriminacao, mesCompetencia, anoAtual);
+
+      // 1. Atualiza na camada NFS-e (mapaNotas, localStorage e Supabase nfse_notas)
+      const notaAtualizada = await nfseService.atualizarNota(empresa.id, numeroAlvo, {
+        tomador: {
+          cpfCnpj: somenteDigitos(cpfCnpj),
+          razaoSocial: razaoSocial.trim(),
+          email: emailTomador.trim(),
+          telefone: telefoneTomador.trim(),
+          municipio: municipioTomador.trim(),
+          uf: ufTomador.trim(),
+          logradouro: logradouroTomador.trim(),
+          numero: numeroTomador.trim(),
+          bairro: bairroTomador.trim(),
+          cep: cepTomador.trim(),
+        },
+        servico: {
+          codigoAtividade,
+          discriminacao: descResolvida,
+          valorTotal: vTotalNum,
+          aliquotaIss: parseFloat((aliquotaIss || '0').replace(',', '.')),
+          issRetido,
+          mesCompetencia,
+          anoCompetencia: anoAtual,
+        }
+      });
+
+      // 2. Salva no catálogo de clientes
+      salvarDadosClienteCatalogo();
+
+      // 3. Atualiza o lançamento correspondente no Supabase na tabela public.lancamentos
+      const novaDescricaoLancamento = `NFS-e Nº ${numeroAlvo} - ${razaoSocial.trim()}${descResolvida ? ` (${descResolvida})` : ''}`;
+      try {
+        if (dadosIniciais?.lancamentoId) {
+          await supabase
+            .from('lancamentos')
+            .update({
+              valor: vTotalNum,
+              descricao: novaDescricaoLancamento,
+              atualizado_em: new Date().toISOString()
+            })
+            .eq('id', dadosIniciais.lancamentoId);
+        } else {
+          // Busca o lançamento por número da nota
+          const { data: lancs } = await supabase
+            .from('lancamentos')
+            .select('id')
+            .eq('empresa_id', empresa.id)
+            .ilike('descricao', `NFS-e Nº ${numeroAlvo}%`);
+          
+          if (lancs && lancs.length > 0) {
+            await supabase
+              .from('lancamentos')
+              .update({
+                valor: vTotalNum,
+                descricao: novaDescricaoLancamento,
+                atualizado_em: new Date().toISOString()
+              })
+              .eq('id', lancs[0].id);
+          }
+        }
+      } catch (errLanc) {
+        console.warn('Falha ao atualizar lançamento no Supabase:', errLanc);
+      }
+
+      onSucesso(notaAtualizada, {
+        isEdicao: true,
+        descricao: descResolvida,
+        valor: vTotalNum,
+        mes: mesCompetencia,
+        dia: new Date().getDate(),
+        tomador: razaoSocial.trim(),
+        numeroNota: numeroAlvo
+      });
+    } catch (err) {
+      setErroValidacao('Erro ao salvar alterações da nota: ' + (err.message || 'Falha ao processar.'));
+    } finally {
+      setEmitindo(false);
+    }
+  }
+
+  // Submissão da Nota (Nova Emissão ou Oficialização)
   async function handleEmitir() {
     setErroValidacao('');
 
@@ -142,6 +293,9 @@ export function EmitirNfseModal({
     try {
       // 1. Resolve variáveis de mês de competência na descrição se houver
       const descResolvida = resolverDescricaoRecorrente(discriminacao, mesCompetencia, anoAtual);
+
+      // Salva cliente no catálogo local
+      salvarDadosClienteCatalogo();
 
       // 2. Dispara a emissão oficial via serviço NFS-e
       const notaEmitida = await nfseService.emitirNfse({
@@ -231,21 +385,26 @@ export function EmitirNfseModal({
     }
   });
   const proximoNumeroSugerido = maiorNumeroExistente + 1;
-  const isOficializandoExistente = Boolean(dadosIniciais?.numeroPersonalizado || dadosIniciais?.numero);
-  const numeroAlvo = dadosIniciais?.numeroPersonalizado || dadosIniciais?.numero;
 
   return (
-    <ModalShell onClose={onClose} titulo={isOficializandoExistente ? `Oficializar NFS-e Nº ${numeroAlvo} na Receita Federal` : "Emitir Nota Fiscal de Serviços (NFS-e)"}>
+    <ModalShell 
+      onClose={onClose} 
+      titulo={isEdicao 
+        ? `Editar NFS-e Nº ${numeroAlvo}` 
+        : (isOficializandoExistente ? `Oficializar NFS-e Nº ${numeroAlvo} na Receita Federal` : "Emitir Nota Fiscal de Serviços (NFS-e)")}
+    >
       <div style={{ maxHeight: '78vh', overflowY: 'auto', paddingRight: 4 }}>
         
-        {/* Banner Informativo Padrão Nacional Simplificado */}
+        {/* Banner Informativo */}
         <div style={{
-          background: isOficializandoExistente 
-            ? 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)' 
-            : 'linear-gradient(135deg, #EAF4F1 0%, #DDF0EA 100%)',
+          background: isEdicao 
+            ? 'linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%)'
+            : (isOficializandoExistente 
+                ? 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)' 
+                : 'linear-gradient(135deg, #EAF4F1 0%, #DDF0EA 100%)'),
           borderRadius: 12,
           padding: '12px 14px',
-          border: isOficializandoExistente ? '1px solid #F59E0B' : '1px solid #B8DDD2',
+          border: isEdicao ? '1px solid #93C5FD' : (isOficializandoExistente ? '1px solid #F59E0B' : '1px solid #B8DDD2'),
           marginBottom: 16,
           display: 'flex',
           justifyContent: 'space-between',
@@ -253,68 +412,74 @@ export function EmitirNfseModal({
           gap: 10
         }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-            <ShieldCheck size={26} color={isOficializandoExistente ? "#B45309" : "#1F5C52"} style={{ flexShrink: 0 }} />
+            <ShieldCheck size={26} color={isEdicao ? "#2563EB" : (isOficializandoExistente ? "#B45309" : "#1F5C52")} style={{ flexShrink: 0 }} />
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: isOficializandoExistente ? '#92400E' : '#0F2B27' }}>
-                {isOficializandoExistente ? `Validação Oficial da Nota Nº ${numeroAlvo}` : 'Emissão Direta Padrão Nacional NFS-e'}
+              <div style={{ fontSize: 13, fontWeight: 700, color: isEdicao ? '#1E40AF' : (isOficializandoExistente ? '#92400E' : '#0F2B27') }}>
+                {isEdicao 
+                  ? `Edição dos Dados da NFS-e Nº ${numeroAlvo}`
+                  : (isOficializandoExistente ? `Validação Oficial da Nota Nº ${numeroAlvo}` : 'Emissão Direta Padrão Nacional NFS-e')}
               </div>
-              <div style={{ fontSize: 11, color: isOficializandoExistente ? '#78350F' : '#2C5A51', marginTop: 1 }}>
-                {isOficializandoExistente 
-                  ? 'Esta nota será assinada e transmitida à SEFIN Nacional, substituindo o rascunho sem duplicar o caixa.'
-                  : <>Última nota contábil: <strong>Nº {maiorNumeroExistente}</strong></>}
+              <div style={{ fontSize: 11, color: isEdicao ? '#1E3A8A' : (isOficializandoExistente ? '#78350F' : '#2C5A51'), marginTop: 1 }}>
+                {isEdicao 
+                  ? 'Altere o valor, dados do cliente ou discriminação. Ao salvar, a nota e o lançamento financeiro no caixa serão atualizados.'
+                  : (isOficializandoExistente 
+                      ? 'Esta nota será assinada e transmitida à SEFIN Nacional, substituindo o rascunho sem duplicar o caixa.'
+                      : <>Última nota contábil: <strong>Nº {maiorNumeroExistente}</strong></>)}
               </div>
             </div>
           </div>
-          <div style={{ textAlign: 'right', background: '#fff', border: isOficializandoExistente ? '1px solid #F59E0B' : '1px solid #B8DDD2', borderRadius: 8, padding: '4px 10px', flexShrink: 0 }}>
+          <div style={{ textAlign: 'right', background: '#fff', border: isEdicao ? '1px solid #93C5FD' : (isOficializandoExistente ? '1px solid #F59E0B' : '1px solid #B8DDD2'), borderRadius: 8, padding: '4px 10px', flexShrink: 0 }}>
             <div style={{ fontSize: 9.5, fontWeight: 700, color: '#5C5A4F', textTransform: 'uppercase' }}>
-              {isOficializandoExistente ? 'Número da Nota' : 'Próxima Nota'}
+              {isEdicao ? 'Modo Edição' : (isOficializandoExistente ? 'Número da Nota' : 'Próxima Nota')}
             </div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: isOficializandoExistente ? '#B45309' : '#1F5C52', fontFamily: 'monospace' }}>
-              Nº {isOficializandoExistente ? numeroAlvo : proximoNumeroSugerido}
+            <div style={{ fontSize: 16, fontWeight: 800, color: isEdicao ? '#2563EB' : (isOficializandoExistente ? '#B45309' : '#1F5C52'), fontFamily: 'monospace' }}>
+              Nº {isEdicao || isOficializandoExistente ? numeroAlvo : proximoNumeroSugerido}
             </div>
           </div>
         </div>
 
-        {/* Seletor de Ambiente: Produção Oficial vs Homologação */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8F6F0', borderRadius: 10, border: '1px solid #E5E0D5', marginBottom: 14 }}>
-          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#1C2421' }}>Ambiente Fiscal:</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              type="button"
-              onClick={() => setModoAmbiente('producao')}
-              style={{
-                padding: '4px 10px',
-                borderRadius: 6,
-                border: 'none',
-                background: modoAmbiente === 'producao' ? '#1F5C52' : '#E5E0D5',
-                color: modoAmbiente === 'producao' ? '#fff' : '#5C5A4F',
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.15s'
-              }}
-            >
-              🟢 Produção (Oficial)
-            </button>
-            <button
-              type="button"
-              onClick={() => setModoAmbiente('homologacao')}
-              style={{
-                padding: '4px 10px',
-                borderRadius: 6,
-                border: 'none',
-                background: modoAmbiente === 'homologacao' ? '#8A6D1A' : '#E5E0D5',
-                color: modoAmbiente === 'homologacao' ? '#fff' : '#5C5A4F',
-                fontSize: 11,
-                fontWeight: 700,
-                cursor: 'pointer',
-                transition: 'all 0.15s'
-              }}
-            >
-              🟡 Homologação (Testes)
-            </button>
+        {/* Seletor de Ambiente: Produção Oficial vs Homologação (Oculto em modo edição) */}
+        {!isEdicao && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8F6F0', borderRadius: 10, border: '1px solid #E5E0D5', marginBottom: 14 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#1C2421' }}>Ambiente Fiscal:</span>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                type="button"
+                onClick={() => setModoAmbiente('producao')}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: modoAmbiente === 'producao' ? '#1F5C52' : '#E5E0D5',
+                  color: modoAmbiente === 'producao' ? '#fff' : '#5C5A4F',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                🟢 Produção (Oficial)
+              </button>
+              <button
+                type="button"
+                onClick={() => setModoAmbiente('homologacao')}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: modoAmbiente === 'homologacao' ? '#8A6D1A' : '#E5E0D5',
+                  color: modoAmbiente === 'homologacao' ? '#fff' : '#5C5A4F',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s'
+                }}
+              >
+                🟡 Homologação (Testes)
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {erroValidacao && (
           <div style={{
@@ -336,8 +501,15 @@ export function EmitirNfseModal({
 
         {/* ── 1. DADOS DO CLIENTE / TOMADOR ── */}
         <div style={{ background: '#fff', border: '1px solid #E5E0D5', borderRadius: 12, padding: 14, marginBottom: 14 }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#1F5C52', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-            <UserCheck size={15} /> 1. Dados do Cliente (Tomador)
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#1F5C52', textTransform: 'uppercase', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <UserCheck size={15} /> 1. Dados do Cliente (Tomador)
+            </div>
+            {clienteGravado && (
+              <span style={{ fontSize: 10.5, color: '#047857', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '2px 8px', borderRadius: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <CheckCircle size={11} /> Cliente Salvo na Memória
+              </span>
+            )}
           </div>
 
           <FieldLabel>CPF ou CNPJ do Cliente</FieldLabel>
@@ -380,7 +552,10 @@ export function EmitirNfseModal({
             <FieldLabel>Razão Social / Nome do Cliente</FieldLabel>
             <input
               value={razaoSocial}
-              onChange={e => setRazaoSocial(e.target.value)}
+              onChange={e => {
+                setRazaoSocial(e.target.value);
+                salvarDadosClienteCatalogo({ razaoSocial: e.target.value });
+              }}
               placeholder="Ex: Consultoria ABC Ltda ou João da Silva"
               style={inputStyle}
             />
@@ -391,7 +566,10 @@ export function EmitirNfseModal({
               <FieldLabel>E-mail</FieldLabel>
               <input
                 value={emailTomador}
-                onChange={e => setEmailTomador(e.target.value)}
+                onChange={e => {
+                  setEmailTomador(e.target.value);
+                  salvarDadosClienteCatalogo({ email: e.target.value });
+                }}
                 placeholder="financeiro@cliente.com.br"
                 style={inputStyle}
               />
@@ -400,7 +578,10 @@ export function EmitirNfseModal({
               <FieldLabel>Telefone / WhatsApp</FieldLabel>
               <input
                 value={telefoneTomador}
-                onChange={e => setTelefoneTomador(e.target.value)}
+                onChange={e => {
+                  setTelefoneTomador(e.target.value);
+                  salvarDadosClienteCatalogo({ telefone: e.target.value });
+                }}
                 placeholder="(11) 99999-9999"
                 style={inputStyle}
               />
@@ -535,7 +716,19 @@ export function EmitirNfseModal({
         </div>
 
         {/* ── 4. CERTIFICADO DIGITAL A1 (TRANSMISSÃO GOV OFICIAL) ── */}
-        {certStatus?.hasCert && !mostrarCamposCert ? (
+        {isEdicao ? (
+          <div style={{ background: '#F0FDF4', border: '1.5px solid #86EFAC', borderRadius: 12, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <CheckCircle size={22} color="#16A34A" style={{ flexShrink: 0 }} />
+            <div>
+              <div style={{ fontSize: 12.5, fontWeight: 700, color: '#166534' }}>
+                Modo Edição de Cadastro e Lançamento
+              </div>
+              <div style={{ fontSize: 11, color: '#15803D', marginTop: 2 }}>
+                Não é exigida senha do certificado digital para salvar correções de valor, cliente ou discriminação nesta nota fiscal.
+              </div>
+            </div>
+          </div>
+        ) : certStatus?.hasCert && !mostrarCamposCert ? (
           <div style={{ background: '#ECFDF5', border: '1.5px solid #10B981', borderRadius: 12, padding: 14, marginBottom: 16 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -651,39 +844,75 @@ export function EmitirNfseModal({
           Cancelar
         </button>
 
-        <button
-          type="button"
-          onClick={handleEmitir}
-          disabled={emitindo}
-          style={{
-            flex: 2,
-            padding: '12px',
-            borderRadius: 10,
-            border: 'none',
-            background: emitindo ? '#9C9A8F' : '#0F2B27',
-            color: '#FAF8F3',
-            fontSize: 13.5,
-            fontWeight: 700,
-            cursor: emitindo ? 'not-allowed' : 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            boxShadow: '0 4px 12px rgba(15, 43, 39, 0.25)'
-          }}
-        >
-          {emitindo ? (
-            <>
-              <RefreshCw size={15} className="animate-spin" />
-              <span>Assinando e Transmitindo...</span>
-            </>
-          ) : (
-            <>
-              <ShieldCheck size={16} />
-              <span>Assinar e Emitir NFS-e Nº {proximoNumeroSugerido} ({formatBRL(vNum)})</span>
-            </>
-          )}
-        </button>
+        {isEdicao ? (
+          <button
+            type="button"
+            onClick={handleSalvarEdicao}
+            disabled={emitindo}
+            style={{
+              flex: 2,
+              padding: '12px',
+              borderRadius: 10,
+              border: 'none',
+              background: emitindo ? '#9C9A8F' : '#2563EB',
+              color: '#FFFFFF',
+              fontSize: 13.5,
+              fontWeight: 700,
+              cursor: emitindo ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)'
+            }}
+          >
+            {emitindo ? (
+              <>
+                <RefreshCw size={15} className="animate-spin" />
+                <span>Salvando Alterações...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle size={16} />
+                <span>Salvar Alterações da Nota ({formatBRL(vNum)})</span>
+              </>
+            )}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleEmitir}
+            disabled={emitindo}
+            style={{
+              flex: 2,
+              padding: '12px',
+              borderRadius: 10,
+              border: 'none',
+              background: emitindo ? '#9C9A8F' : '#0F2B27',
+              color: '#FAF8F3',
+              fontSize: 13.5,
+              fontWeight: 700,
+              cursor: emitindo ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              boxShadow: '0 4px 12px rgba(15, 43, 39, 0.25)'
+            }}
+          >
+            {emitindo ? (
+              <>
+                <RefreshCw size={15} className="animate-spin" />
+                <span>Assinando e Transmitindo...</span>
+              </>
+            ) : (
+              <>
+                <ShieldCheck size={16} />
+                <span>Assinar e Emitir NFS-e Nº {proximoNumeroSugerido} ({formatBRL(vNum)})</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </ModalShell>
   );

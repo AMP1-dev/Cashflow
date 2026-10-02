@@ -3,7 +3,7 @@ import {
   FileText, Plus, RefreshCw, CheckCircle, ShieldCheck, Download, 
   ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, 
   AlertCircle, MessageCircle, FileSpreadsheet, Copy, Check, Zap, Clock, AlertTriangle,
-  ChevronDown, ChevronUp 
+  ChevronDown, ChevronUp, Edit 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { 
@@ -24,6 +24,7 @@ export function NfseScreen({
   anoAtual, 
   lancamentos = [],
   onAdicionarReceitaAoCaixa,
+  onRecarregarLancamentos,
   onVoltar
 }) {
   const [abaAtiva, setAbaAtiva] = useState('emitidas'); // 'emitidas' | 'recorrentes'
@@ -167,16 +168,51 @@ export function NfseScreen({
     setShowEmitirModal(true);
   }
 
-  // Ao emitir com sucesso
-  function handleSucessoEmissao(novaNota, dadosLancamento) {
-    const isOficializacao = Boolean(dadosIniciaisEmissao?.numeroPersonalizado);
+  // Dispara modo de edição de uma nota existente (corrige valor, cliente ou discriminação)
+  function handleEditarNota(notaAlvo) {
+    setDadosIniciaisEmissao({
+      isEdicao: true,
+      numero: notaAlvo.numero,
+      numeroPersonalizado: notaAlvo.numero,
+      cpfCnpj: (notaAlvo.tomador?.cpfCnpj === '00.000.000/0000-00') ? '' : (notaAlvo.tomador?.cpfCnpj || ''),
+      razaoSocial: notaAlvo.tomador?.razaoSocial || '',
+      email: notaAlvo.tomador?.email || '',
+      telefone: notaAlvo.tomador?.telefone || '',
+      municipio: notaAlvo.tomador?.municipio || '',
+      uf: notaAlvo.tomador?.uf || '',
+      logradouro: notaAlvo.tomador?.logradouro || notaAlvo.tomador?.endereco || '',
+      numeroEnd: notaAlvo.tomador?.numero || '',
+      bairro: notaAlvo.tomador?.bairro || '',
+      cep: notaAlvo.tomador?.cep || '',
+      valor: notaAlvo.servico?.valorTotal ? String(notaAlvo.servico.valorTotal) : '',
+      discriminacao: notaAlvo.servico?.discriminacao || '',
+      codigoAtividade: notaAlvo.servico?.codigoAtividade || '01.07',
+      aliquotaIss: notaAlvo.servico?.aliquotaIss ? String(notaAlvo.servico.aliquotaIss).replace('.', ',') : '2,0',
+      mesCompetencia: notaAlvo.competenciaMes !== undefined ? notaAlvo.competenciaMes : mesAtual,
+      lancamentoId: notaAlvo.lancamentoId || null,
+    });
+    setShowEmitirModal(true);
+  }
+
+  // Ao emitir ou editar com sucesso
+  async function handleSucessoEmissao(novaNota, dadosLancamento) {
+    const isOficializacao = Boolean(dadosIniciaisEmissao?.numeroPersonalizado && !dadosIniciaisEmissao?.isEdicao);
+    const isEdicao = Boolean(dadosIniciaisEmissao?.isEdicao);
+
     setShowEmitirModal(false);
     setDadosIniciaisEmissao(null);
-    recarregarDados();
+    await recarregarDados();
+    if (onRecarregarLancamentos) {
+      try {
+        await onRecarregarLancamentos();
+      } catch (errRec) {
+        console.warn('Erro ao recarregar lançamentos:', errRec);
+      }
+    }
     setNotaSelecionadaDanfse(novaNota);
 
-    // Se o usuário quiser, adiciona no caixa (somente para notas novas, não para oficialização de existentes)
-    if (onAdicionarReceitaAoCaixa && !isOficializacao) {
+    // Se o usuário quiser, adiciona no caixa (somente para notas novas, não para oficialização nem edição)
+    if (onAdicionarReceitaAoCaixa && !isOficializacao && !isEdicao) {
       onAdicionarReceitaAoCaixa({
         tipo: 'receita',
         descricao: `NFS-e Nº ${novaNota.numero} - ${dadosLancamento.tomador} (${dadosLancamento.descricao})`,
@@ -639,7 +675,7 @@ export function NfseScreen({
                           </div>
                         )}
 
-                        {/* Botões de Ação: Reimpressão / DANFSe, XML e WhatsApp */}
+                        {/* Botões de Ação: Editar, Reimpressão / DANFSe, XML e WhatsApp */}
                         <div style={{ 
                           display: 'flex', 
                           justifyContent: 'flex-end', 
@@ -648,6 +684,28 @@ export function NfseScreen({
                           borderTop: '1px solid #F3F4F6',
                           flexWrap: 'wrap'
                         }}>
+                          <button
+                            onClick={() => handleEditarNota(n)}
+                            title="Editar dados cadastrais do cliente, valor ou discriminação da nota"
+                            style={{
+                              background: '#2563EB',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 8,
+                              padding: '7px 12px',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 5,
+                              cursor: 'pointer',
+                              boxShadow: '0 1px 3px rgba(37,99,235,0.25)'
+                            }}
+                          >
+                            <Edit size={13} />
+                            <span>Editar</span>
+                          </button>
+
                           {!n.certificadoInfo?.transmissaoNativaGov && (
                             <button
                               onClick={() => handleValidarNotaPendente(n)}
