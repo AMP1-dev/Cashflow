@@ -8,7 +8,8 @@ import { formatBRL, somenteDigitos } from '../utils/formatters';
 import { 
   ATIVIDADES_SERVICOS_COMUNS, REGIMES_TRIBUTARIOS, formatarCpfCnpj, 
   validarCpfCnpj, consultarCnpjPublico, resolverDescricaoRecorrente, nfseService,
-  consultarStatusCertificado, salvarClienteCatalogo, obterClienteCatalogo 
+  consultarStatusCertificado, salvarClienteCatalogo, obterClienteCatalogo,
+  salvarClienteNuvem, obterClienteNuvem 
 } from '../utils/nfseService';
 import { supabase } from '../lib/supabase';
 import { MESES } from '../utils/constants';
@@ -99,7 +100,7 @@ export function EmitirNfseModal({
     setBuscandoCnpj(true);
     setErroValidacao('');
     try {
-      const dados = await consultarCnpjPublico(limpo);
+      const dados = await consultarCnpjPublico(limpo, empresa?.id);
       if (dados && dados.razaoSocial) {
         setRazaoSocial(dados.razaoSocial);
         if (dados.email && !emailTomador) setEmailTomador(dados.email);
@@ -121,31 +122,51 @@ export function EmitirNfseModal({
     }
   }
 
-  // Preenchimento automático ao digitar CPF ou CNPJ se já cadastrado no catálogo local
+  // Preenchimento automático ao digitar CPF ou CNPJ (Híbrido: Memória Local + Nuvem Supabase)
   useEffect(() => {
+    let ativo = true;
     const limpo = somenteDigitos(cpfCnpj);
     if (limpo.length === 11 || limpo.length === 14) {
-      const cli = obterClienteCatalogo(limpo);
-      if (cli) {
+      // 1. Verificação instantânea local
+      const cliLocal = obterClienteCatalogo(limpo);
+      if (cliLocal) {
         setClienteGravado(true);
-        if (!razaoSocial && cli.razaoSocial) setRazaoSocial(cli.razaoSocial);
-        if (!emailTomador && cli.email) setEmailTomador(cli.email);
-        if (!telefoneTomador && cli.telefone) setTelefoneTomador(cli.telefone);
-        if (!municipioTomador && cli.municipio) setMunicipioTomador(cli.municipio);
-        if (!ufTomador && cli.uf) setUfTomador(cli.uf);
-        if (!logradouroTomador && (cli.logradouro || cli.endereco)) setLogradouroTomador(cli.logradouro || cli.endereco);
-        if (!numeroTomador && cli.numero) setNumeroTomador(cli.numero);
-        if (!bairroTomador && cli.bairro) setBairroTomador(cli.bairro);
-        if (!cepTomador && cli.cep) setCepTomador(cli.cep);
+        if (!razaoSocial && cliLocal.razaoSocial) setRazaoSocial(cliLocal.razaoSocial);
+        if (!emailTomador && cliLocal.email) setEmailTomador(cliLocal.email);
+        if (!telefoneTomador && cliLocal.telefone) setTelefoneTomador(cliLocal.telefone);
+        if (!municipioTomador && cliLocal.municipio) setMunicipioTomador(cliLocal.municipio);
+        if (!ufTomador && cliLocal.uf) setUfTomador(cliLocal.uf);
+        if (!logradouroTomador && (cliLocal.logradouro || cliLocal.endereco)) setLogradouroTomador(cliLocal.logradouro || cliLocal.endereco);
+        if (!numeroTomador && cliLocal.numero) setNumeroTomador(cliLocal.numero);
+        if (!bairroTomador && cliLocal.bairro) setBairroTomador(cliLocal.bairro);
+        if (!cepTomador && cliLocal.cep) setCepTomador(cliLocal.cep);
+      }
+
+      // 2. Sincronização da nuvem Supabase (recupera dados mesmo em outro navegador / computador)
+      if (empresa?.id) {
+        obterClienteNuvem(limpo, empresa.id).then(cliNuvem => {
+          if (!ativo || !cliNuvem) return;
+          setClienteGravado(true);
+          if (cliNuvem.razaoSocial) setRazaoSocial(prev => prev || cliNuvem.razaoSocial);
+          if (cliNuvem.email) setEmailTomador(prev => prev || cliNuvem.email);
+          if (cliNuvem.telefone) setTelefoneTomador(prev => prev || cliNuvem.telefone);
+          if (cliNuvem.municipio) setMunicipioTomador(prev => prev || cliNuvem.municipio);
+          if (cliNuvem.uf) setUfTomador(prev => prev || cliNuvem.uf);
+          if (cliNuvem.logradouro) setLogradouroTomador(prev => prev || cliNuvem.logradouro);
+          if (cliNuvem.numero) setNumeroTomador(prev => prev || cliNuvem.numero);
+          if (cliNuvem.bairro) setBairroTomador(prev => prev || cliNuvem.bairro);
+          if (cliNuvem.cep) setCepTomador(prev => prev || cliNuvem.cep);
+        }).catch(() => {});
       }
     }
-  }, [cpfCnpj]);
+    return () => { ativo = false; };
+  }, [cpfCnpj, empresa?.id]);
 
-  // Função para salvar imediatamente o cliente no catálogo de contatos
+  // Função para salvar imediatamente o cliente no catálogo de contatos (Local + Nuvem Supabase)
   function salvarDadosClienteCatalogo(novos = {}) {
     const doc = somenteDigitos(cpfCnpj);
     if (!doc) return;
-    salvarClienteCatalogo({
+    salvarClienteNuvem({
       cpfCnpj: doc,
       razaoSocial: novos.razaoSocial !== undefined ? novos.razaoSocial : razaoSocial,
       email: novos.email !== undefined ? novos.email : emailTomador,
@@ -156,7 +177,7 @@ export function EmitirNfseModal({
       numero: novos.numero !== undefined ? novos.numero : numeroTomador,
       bairro: novos.bairro !== undefined ? novos.bairro : bairroTomador,
       cep: novos.cep !== undefined ? novos.cep : cepTomador,
-    });
+    }, empresa?.id);
     setClienteGravado(true);
   }
 
@@ -507,7 +528,7 @@ export function EmitirNfseModal({
             </div>
             {clienteGravado && (
               <span style={{ fontSize: 10.5, color: '#047857', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '2px 8px', borderRadius: 12, fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <CheckCircle size={11} /> Cliente Salvo na Memória
+                <CheckCircle size={11} /> Cliente Salvo no Banco (Nuvem)
               </span>
             )}
           </div>

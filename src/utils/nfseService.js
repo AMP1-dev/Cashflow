@@ -84,7 +84,7 @@ export function validarCpfCnpj(valor) {
   return digits.length === 11 || digits.length === 14;
 }
 
-// ─── Memória & Catálogo Automático de Clientes (Gravação Automática de E-mail/Telefone) ───
+// ─── Memória & Catálogo Automático de Clientes (Nuvem Supabase + LocalStorage Híbrido) ───
 export const STORAGE_CLIENTES_KEY = 'amp_flow_clientes_catalogo_v1';
 
 export function salvarClienteCatalogo(cliente) {
@@ -116,6 +116,48 @@ export function salvarClienteCatalogo(cliente) {
   }
 }
 
+// Salva cliente no cache local e persiste na nuvem Supabase (sincronização multi-dispositivo)
+export async function salvarClienteNuvem(cliente, empresaId) {
+  if (!cliente) return null;
+  const doc = somenteDigitos(cliente.cpfCnpj || cliente.documento || '');
+  if (!doc) return null;
+
+  // 1. Salva no cache local para resposta ultra-rápida offline
+  salvarClienteCatalogo(cliente);
+
+  // 2. Persiste na nuvem do Supabase se empresaId estiver disponível
+  if (empresaId) {
+    try {
+      const payload = {
+        empresa_id: empresaId,
+        cpf_cnpj: doc,
+        razao_social: (cliente.razaoSocial || cliente.nome || '').trim(),
+        nome_fantasia: (cliente.nomeFantasia || '').trim(),
+        email: (cliente.email || cliente.emailTomador || '').trim(),
+        telefone: (cliente.telefone || cliente.telefoneTomador || '').trim(),
+        logradouro: (cliente.logradouro || cliente.endereco || '').trim(),
+        numero: (cliente.numero || '').trim(),
+        bairro: (cliente.bairro || '').trim(),
+        municipio: (cliente.municipio || '').trim(),
+        uf: (cliente.uf || '').trim(),
+        cep: (cliente.cep || '').trim(),
+        origem: 'nfse_catalogo',
+        atualizado_em: new Date().toISOString()
+      };
+
+      // Tenta gravar na tabela pública de clientes
+      const { error: errCli } = await supabase.from('clientes').upsert(payload, { onConflict: 'empresa_id, cpf_cnpj' });
+      if (errCli) {
+        console.warn('Aviso: Sincronização em public.clientes (Supabase):', errCli.message);
+      }
+    } catch (e) {
+      console.warn('Falha silenciosa ao sincronizar cliente no Supabase:', e);
+    }
+  }
+
+  return cliente;
+}
+
 export function obterClienteCatalogo(docOuCnpj) {
   const doc = somenteDigitos(docOuCnpj || '');
   if (!doc) return null;
@@ -128,6 +170,82 @@ export function obterClienteCatalogo(docOuCnpj) {
   }
 }
 
+// Busca o cliente tanto na memória local quanto na nuvem Supabase (tabela clientes ou histórico nfse_notas)
+export async function obterClienteNuvem(docOuCnpj, empresaId) {
+  const doc = somenteDigitos(docOuCnpj || '');
+  if (!doc) return null;
+
+  // 1. Verifica cache local
+  const local = obterClienteCatalogo(doc);
+
+  // 2. Se temos empresaId, busca no Supabase para sincronizar entre navegadores
+  if (empresaId) {
+    try {
+      // 2.1 Tenta buscar na tabela public.clientes
+      const { data: dbCli } = await supabase
+        .from('clientes')
+        .select('*')
+        .eq('empresa_id', empresaId)
+        .eq('cpf_cnpj', doc)
+        .maybeSingle();
+
+      if (dbCli && (dbCli.razao_social || dbCli.email || dbCli.telefone)) {
+        const consolidado = {
+          cpfCnpj: doc,
+          razaoSocial: dbCli.razao_social || local?.razaoSocial || '',
+          nomeFantasia: dbCli.nome_fantasia || local?.nomeFantasia || '',
+          email: dbCli.email || local?.email || '',
+          telefone: dbCli.telefone || local?.telefone || '',
+          logradouro: dbCli.logradouro || local?.logradouro || '',
+          numero: dbCli.numero || local?.numero || '',
+          bairro: dbCli.bairro || local?.bairro || '',
+          municipio: dbCli.municipio || local?.municipio || '',
+          uf: dbCli.uf || local?.uf || '',
+          cep: dbCli.cep || local?.cep || '',
+          isClienteGravado: true,
+          origem: 'nuvem_clientes'
+        };
+        salvarClienteCatalogo(consolidado);
+        return consolidado;
+      }
+
+      // 2.2 Se ainda não achou em clientes, busca no histórico de notas já emitidas no Supabase!
+      const { data: notasAnteriores } = await supabase
+        .from('nfse_notas')
+        .select('tomador_documento, tomador_nome, tomador_email, tomador_telefone, tomador_municipio, tomador_uf, dados_completos')
+        .eq('empresa_id', empresaId)
+        .ilike('tomador_documento', `%${doc}%`)
+        .order('data_emissao', { ascending: false })
+        .limit(1);
+
+      if (notasAnteriores && notasAnteriores.length > 0) {
+        const n = notasAnteriores[0];
+        const tom = n.dados_completos?.tomador || {};
+        const consolidado = {
+          cpfCnpj: doc,
+          razaoSocial: n.tomador_nome || tom.razaoSocial || local?.razaoSocial || '',
+          email: n.tomador_email || tom.email || local?.email || '',
+          telefone: n.tomador_telefone || tom.telefone || local?.telefone || '',
+          logradouro: tom.logradouro || tom.endereco || local?.logradouro || '',
+          numero: tom.numero || local?.numero || '',
+          bairro: tom.bairro || local?.bairro || '',
+          municipio: n.tomador_municipio || tom.municipio || local?.municipio || '',
+          uf: n.tomador_uf || tom.uf || local?.uf || '',
+          cep: tom.cep || local?.cep || '',
+          isClienteGravado: true,
+          origem: 'nuvem_nfse_notas'
+        };
+        salvarClienteCatalogo(consolidado);
+        return consolidado;
+      }
+    } catch (e) {
+      console.warn('Erro ao consultar cliente na nuvem Supabase:', e);
+    }
+  }
+
+  return local;
+}
+
 export function listarClientesCatalogo() {
   try {
     const raw = localStorage.getItem(STORAGE_CLIENTES_KEY);
@@ -138,12 +256,12 @@ export function listarClientesCatalogo() {
 }
 
 // ─── Consulta Automática de CNPJ via BrasilAPI / ReceitaWS com Memória de Contatos ───
-export async function consultarCnpjPublico(cnpj) {
+export async function consultarCnpjPublico(cnpj, empresaId = null) {
   const digits = somenteDigitos(cnpj);
   if (digits.length !== 14) return null;
 
-  // 1. Verifica se já temos o cliente gravado na memória com e-mail/telefone
-  const clienteGravado = obterClienteCatalogo(digits);
+  // 1. Verifica se já temos o cliente gravado na memória ou nuvem com e-mail/telefone
+  const clienteGravado = empresaId ? (await obterClienteNuvem(digits, empresaId)) : obterClienteCatalogo(digits);
 
   let dadosApi = null;
   try {
@@ -338,9 +456,9 @@ export const nfseService = {
       }
     };
 
-    // Salva no catálogo de clientes também
+    // Salva no catálogo de clientes também (Local + Nuvem Supabase)
     if (notaAtualizada.tomador?.cpfCnpj) {
-      salvarClienteCatalogo({
+      salvarClienteNuvem({
         cpfCnpj: notaAtualizada.tomador.cpfCnpj,
         razaoSocial: notaAtualizada.tomador.razaoSocial,
         email: notaAtualizada.tomador.email,
@@ -351,7 +469,7 @@ export const nfseService = {
         municipio: notaAtualizada.tomador.municipio,
         uf: notaAtualizada.tomador.uf,
         cep: notaAtualizada.tomador.cep
-      });
+      }, empresaId).catch(() => {});
     }
 
     this.salvarNotaEmitida(empresaId, notaAtualizada);
