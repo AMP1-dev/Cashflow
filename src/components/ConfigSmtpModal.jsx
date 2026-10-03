@@ -1,12 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, ShieldCheck, KeyRound, Server, Send, CheckCircle, AlertCircle, X, HelpCircle } from 'lucide-react';
+import { Mail, ShieldCheck, KeyRound, Server, Send, CheckCircle, AlertCircle, X, HelpCircle, Lock, Cloud } from 'lucide-react';
 import { FieldLabel, inputStyle, ModalShell } from './UIComponents';
-import { obterConfigSmtp, salvarConfigSmtp, PROVEDORES_SMTP_SUGERIDOS } from '../utils/emailService';
+import { 
+  obterConfigSmtp, 
+  carregarConfigSmtpNuvem, 
+  salvarConfigSmtp, 
+  PROVEDORES_SMTP_SUGERIDOS,
+  ASSINATURA_OFICIAL_PADRAO 
+} from '../utils/emailService';
 
 export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
   const [provedorId, setProvedorId] = useState('custom');
   const [host, setHost] = useState('');
   const [porta, setPorta] = useState(587);
+  const [autenticado, setAutenticado] = useState(true);
   const [seguranca, setSeguranca] = useState('tls');
   const [usuario, setUsuario] = useState('');
   const [senha, setSenha] = useState('');
@@ -14,25 +21,37 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
   const [emailResposta, setEmailResposta] = useState('');
   const [conteudoPadrao, setConteudoPadrao] = useState('');
   const [assinatura, setAssinatura] = useState('');
-  const [ativo, setAtivo] = useState(false);
+  const [ativo, setAtivo] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [carregandoNuvem, setCarregandoNuvem] = useState(true);
   const [mensagemSucesso, setMensagemSucesso] = useState('');
 
   useEffect(() => {
-    if (empresa?.id) {
-      const cfg = obterConfigSmtp(empresa.id);
-      setProvedorId(cfg.provedor || 'custom');
-      setHost(cfg.host || '');
-      setPorta(cfg.porta || 587);
-      setSeguranca(cfg.seguranca || 'tls');
-      setUsuario(cfg.usuario || '');
-      setSenha(cfg.senha || '');
-      setNomeRemetente(cfg.nomeRemetente || empresa.razao_social || 'AMP DO BRASIL');
-      setEmailResposta(cfg.emailResposta || empresa.email_contato || 'atendimento@amp.adm.br');
-      setConteudoPadrao(cfg.conteudoPadrao || 'Olá {cliente},\n\nSegue em anexo a Nota Fiscal de Serviços Eletrônica (NFS-e Nº {numero}) referente ao serviço prestado.\n\nQualquer dúvida, estamos à disposição.\n\n{assinatura}');
-      setAssinatura(cfg.assinatura || 'Atenciosamente,\nAMP DO BRASIL SOLUÇÕES ADMINISTRATIVAS E TECNOLÓGICAS LTDA\n(19) 99448-7795 | atendimento@amp.adm.br');
-      setAtivo(Boolean(cfg.ativo));
+    async function carregar() {
+      if (empresa?.id) {
+        setCarregandoNuvem(true);
+        try {
+          const cfg = await carregarConfigSmtpNuvem(empresa.id);
+          setProvedorId(cfg.provedor || 'custom');
+          setHost(cfg.host || '');
+          setPorta(cfg.porta || 587);
+          setAutenticado(cfg.autenticado !== false);
+          setSeguranca(cfg.seguranca || 'tls');
+          setUsuario(cfg.usuario || 'atendimento@amp.adm.br');
+          setSenha(cfg.senha || '');
+          setNomeRemetente(cfg.nomeRemetente || 'MARCO ANTONIO PAVANI | AMP DO BRASIL');
+          setEmailResposta(cfg.emailResposta || 'atendimento@amp.adm.br');
+          setConteudoPadrao(cfg.conteudoPadrao || 'Olá {cliente},\n\nSegue em anexo a Nota Fiscal de Serviços Eletrônica (NFS-e Nº {numero}) referente ao serviço prestado no valor de {valor}.\n\nQualquer dúvida, estamos à inteira disposição.\n\n{assinatura}');
+          setAssinatura(cfg.assinatura || ASSINATURA_OFICIAL_PADRAO);
+          setAtivo(Boolean(cfg.ativo));
+        } catch (e) {
+          console.warn('Erro ao carregar dados SMTP:', e);
+        } finally {
+          setCarregandoNuvem(false);
+        }
+      }
     }
+    carregar();
   }, [empresa?.id]);
 
   function handleSelecionarProvedor(id) {
@@ -42,6 +61,7 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
       setHost(sel.host);
       setPorta(sel.porta);
       setSeguranca(sel.seguranca);
+      setAutenticado(sel.autenticado);
     }
   }
 
@@ -53,6 +73,7 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
         provedor: provedorId,
         host: host.trim(),
         porta: parseInt(porta) || 587,
+        autenticado: Boolean(autenticado),
         seguranca,
         usuario: usuario.trim(),
         senha: senha.trim(),
@@ -65,11 +86,11 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
       };
 
       await salvarConfigSmtp(empresa.id, payload);
-      setMensagemSucesso('Configurações de SMTP e Assinatura salvas com sucesso!');
+      setMensagemSucesso('Configurações de SMTP e Assinatura sincronizadas com sucesso no Banco Supabase!');
       if (onSalvo) onSalvo(payload);
       setTimeout(() => {
         onClose();
-      }, 1200);
+      }, 1400);
     } catch (e) {
       alert('Erro ao salvar configurações de e-mail: ' + e.message);
     } finally {
@@ -78,18 +99,18 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
   }
 
   return (
-    <ModalShell onClose={onClose} maxWidth={640}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+    <ModalShell onClose={onClose} maxWidth={650}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Mail size={20} color="#0F2B27" />
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Mail size={22} color="#0F2B27" />
           </div>
           <div>
             <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0F2B27', margin: 0 }}>
-              Configuração do Provedor de E-mail (SMTP)
+              Configuração do Provedor de E-mail (SMTP) & Assinatura
             </h2>
             <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 0' }}>
-              Configure o envio direto de NFS-e (PDF/XML) e a sua assinatura corporativa
+              Disparo automático de NFS-e (PDF/XML) sincronizado em Nuvem no Supabase
             </p>
           </div>
         </div>
@@ -108,11 +129,11 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 13 }}>
         
         {/* Escolha do Provedor Rápido */}
         <div>
-          <FieldLabel>Provedor de E-mail</FieldLabel>
+          <FieldLabel>Provedor SMTP Sugerido</FieldLabel>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8, marginTop: 4 }}>
             {PROVEDORES_SMTP_SUGERIDOS.map(p => (
               <button
@@ -120,9 +141,9 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
                 type="button"
                 onClick={() => handleSelecionarProvedor(p.id)}
                 style={{
-                  padding: '8px 10px',
+                  padding: '7px 8px',
                   borderRadius: 8,
-                  fontSize: 11.5,
+                  fontSize: 11,
                   fontWeight: 700,
                   cursor: 'pointer',
                   border: provedorId === p.id ? '2px solid #1F5C52' : '1px solid #E5E0D5',
@@ -137,7 +158,7 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
           </div>
         </div>
 
-        {/* Servidor Host e Porta */}
+        {/* Servidor Host, Porta e Segurança */}
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10 }}>
           <div>
             <FieldLabel>Servidor SMTP (Host)</FieldLabel>
@@ -169,43 +190,59 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
               style={inputStyle}
             >
               <option value="tls">TLS (STARTTLS)</option>
-              <option value="ssl">SSL</option>
+              <option value="ssl">SSL / SMTPS</option>
             </select>
           </div>
         </div>
 
-        {/* Usuário e Senha */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div>
-            <FieldLabel>E-mail / Usuário de Autenticação</FieldLabel>
-            <input
-              type="email"
-              placeholder="ex: atendimento@amp.adm.br"
-              value={usuario}
-              onChange={e => setUsuario(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
-            <FieldLabel>Senha ou Senha de Aplicativo (Token)</FieldLabel>
-            <input
-              type="password"
-              placeholder="••••••••••••"
-              value={senha}
-              onChange={e => setSenha(e.target.value)}
-              style={inputStyle}
-            />
-          </div>
+        {/* Requer Autenticação (Login e Senha) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F8FAFC', padding: '8px 12px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+          <input
+            type="checkbox"
+            id="smtp-autenticado"
+            checked={autenticado}
+            onChange={e => setAutenticado(e.target.checked)}
+            style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#1F5C52' }}
+          />
+          <label htmlFor="smtp-autenticado" style={{ fontSize: 12, fontWeight: 700, color: '#1E293B', cursor: 'pointer' }}>
+            Servidor Requer Autenticação (Usuário e Senha)
+          </label>
         </div>
+
+        {/* Usuário e Senha (visíveis se autenticado) */}
+        {autenticado && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div>
+              <FieldLabel>Usuário de Envio (E-mail)</FieldLabel>
+              <input
+                type="email"
+                placeholder="atendimento@amp.adm.br"
+                value={usuario}
+                onChange={e => setUsuario(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <FieldLabel>Senha ou Senha de App (Token)</FieldLabel>
+              <input
+                type="password"
+                placeholder="••••••••••••"
+                value={senha}
+                onChange={e => setSenha(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Nome do Remetente e E-mail de Resposta */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            <FieldLabel>Nome do Remetente (Exibido ao Cliente)</FieldLabel>
+            <FieldLabel>Nome do Remetente (Assinatura)</FieldLabel>
             <input
               type="text"
-              placeholder="AMP do Brasil"
+              placeholder="MARCO ANTONIO PAVANI"
               value={nomeRemetente}
               onChange={e => setNomeRemetente(e.target.value)}
               style={inputStyle}
@@ -224,25 +261,46 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
           </div>
         </div>
 
-        {/* Assinatura Corporativa Personalizada */}
+        {/* Identidade Visual da Assinatura: Logotipo Oficial MP */}
         <div>
-          <FieldLabel>
-            Sua Assinatura de E-mail (Texto ou HTML simples)
-          </FieldLabel>
+          <FieldLabel>Logotipo e Assinatura Corporativa</FieldLabel>
+          <div style={{ 
+            background: '#FAF9F6', 
+            border: '1px solid #E5E0D5', 
+            borderRadius: 8, 
+            padding: '8px 12px', 
+            marginBottom: 6, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            gap: 12 
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img 
+                src="/logo_assinatura_mp.jpg" 
+                alt="MP _ AMPLIANDO SEUS CONHECIMENTOS" 
+                style={{ maxHeight: 32, maxWidth: 170, objectFit: 'contain' }} 
+              />
+              <span style={{ fontSize: 11, color: '#4B5563' }}>
+                Logotipo Oficial: <strong>MP _ AMPLIANDO SEUS CONHECIMENTOS</strong>
+              </span>
+            </div>
+            <span style={{ fontSize: 10, background: '#D9EBE6', color: '#0F2B27', fontWeight: 700, padding: '2px 6px', borderRadius: 4 }}>
+              Ativo
+            </span>
+          </div>
+
           <textarea
-            rows={4}
-            placeholder="Cole aqui a sua assinatura personalizada..."
+            rows={5}
+            placeholder="Assinatura com dados de contato e aviso de confidencialidade..."
             value={assinatura}
             onChange={e => setAssinatura(e.target.value)}
-            style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 11.5, resize: 'vertical' }}
+            style={{ ...inputStyle, fontFamily: 'monospace', fontSize: 11, resize: 'vertical', lineHeight: 1.35 }}
           />
-          <span style={{ fontSize: 11, color: '#6B7280', marginTop: 3, display: 'block' }}>
-            Esta assinatura será anexada no rodapé de todas as mensagens automáticas de NFS-e.
-          </span>
         </div>
 
         {/* Checkbox Ativo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F8FAFC', padding: '10px 12px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F8FAFC', padding: '9px 12px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
           <input
             type="checkbox"
             id="smtp-ativo"
@@ -250,51 +308,58 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
             onChange={e => setAtivo(e.target.checked)}
             style={{ width: 16, height: 16, cursor: 'pointer', accentColor: '#1F5C52' }}
           />
-          <label htmlFor="smtp-ativo" style={{ fontSize: 12.5, fontWeight: 700, color: '#1E293B', cursor: 'pointer' }}>
-            Ativar disparo automático direto pelo servidor SMTP
+          <label htmlFor="smtp-ativo" style={{ fontSize: 12, fontWeight: 700, color: '#1E293B', cursor: 'pointer' }}>
+            Ativar disparo automático direto pelo servidor SMTP (sem abrir Outlook/Webmail)
           </label>
         </div>
 
-        {/* Botão de Salvar */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: '#F3F4F6',
-              border: 'none',
-              borderRadius: 8,
-              padding: '9px 16px',
-              fontSize: 12.5,
-              fontWeight: 600,
-              color: '#4B5563',
-              cursor: 'pointer'
-            }}
-          >
-            Cancelar
-          </button>
+        {/* Botão de Salvar com indicação do Supabase */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#059669' }}>
+            <Cloud size={14} />
+            <span>Sincronização Nuvem Supabase Ativa</span>
+          </div>
 
-          <button
-            type="button"
-            onClick={handleSalvar}
-            disabled={salvando}
-            style={{
-              background: '#1F5C52',
-              border: 'none',
-              borderRadius: 8,
-              padding: '9px 20px',
-              fontSize: 12.5,
-              fontWeight: 700,
-              color: '#fff',
-              cursor: 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6
-            }}
-          >
-            <ShieldCheck size={16} />
-            <span>{salvando ? 'Salvando...' : 'Salvar Configurações'}</span>
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              type="button"
+              onClick={onClose}
+              style={{
+                background: '#F3F4F6',
+                border: 'none',
+                borderRadius: 8,
+                padding: '9px 15px',
+                fontSize: 12,
+                fontWeight: 600,
+                color: '#4B5563',
+                cursor: 'pointer'
+              }}
+            >
+              Cancelar
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSalvar}
+              disabled={salvando}
+              style={{
+                background: '#1F5C52',
+                border: 'none',
+                borderRadius: 8,
+                padding: '9px 20px',
+                fontSize: 12.5,
+                fontWeight: 700,
+                color: '#fff',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+            >
+              <ShieldCheck size={16} />
+              <span>{salvando ? 'Salvando na Nuvem...' : 'Salvar no Supabase'}</span>
+            </button>
+          </div>
         </div>
       </div>
     </ModalShell>
