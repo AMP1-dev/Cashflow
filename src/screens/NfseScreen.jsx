@@ -3,9 +3,9 @@ import {
   FileText, Plus, RefreshCw, CheckCircle, ShieldCheck, Download, 
   ExternalLink, Trash2, Calendar, Search, ArrowRight, ArrowLeft, Printer, 
   AlertCircle, MessageCircle, FileSpreadsheet, Copy, Check, Zap, Clock, AlertTriangle,
-  ChevronDown, ChevronUp, Edit 
+  ChevronDown, ChevronUp, Edit, Mail, Settings, XCircle, Repeat 
 } from 'lucide-react';
-import { formatBRL } from '../utils/formatters';
+import { formatBRL, somenteDigitos } from '../utils/formatters';
 import { 
   formatarCpfCnpj, 
   nfseService, 
@@ -17,6 +17,9 @@ import { MESES } from '../utils/constants';
 import { EmitirNfseModal } from '../components/EmitirNfseModal';
 import { EspelhoDanfseModal } from '../components/EspelhoDanfseModal';
 import { RelatorioNfseModal } from '../components/RelatorioNfseModal';
+import { ConfigSmtpModal } from '../components/ConfigSmtpModal';
+import { EnviarEmailNfseModal } from '../components/EnviarEmailNfseModal';
+import { CancelarNfseModal } from '../components/CancelarNfseModal';
 
 export function NfseScreen({ 
   empresa, 
@@ -59,6 +62,9 @@ export function NfseScreen({
   const [dadosIniciaisEmissao, setDadosIniciaisEmissao] = useState(null);
   const [notaSelecionadaDanfse, setNotaSelecionadaDanfse] = useState(null);
   const [showRelatorioModal, setShowRelatorioModal] = useState(false);
+  const [showConfigSmtp, setShowConfigSmtp] = useState(false);
+  const [notaParaEmail, setNotaParaEmail] = useState(null);
+  const [notaParaCancelar, setNotaParaCancelar] = useState(null);
 
   // Filtros de Busca e Faixa de Datas
   const [termoBusca, setTermoBusca] = useState('');
@@ -194,6 +200,45 @@ export function NfseScreen({
     setShowEmitirModal(true);
   }
 
+  // Dispara modo de substituição de uma nota fiscal oficial
+  function handleSubstituirNota(notaAlvo) {
+    setDadosIniciaisEmissao({
+      isSubstituicao: true,
+      numeroSubstituida: notaAlvo.numero,
+      cpfCnpj: (notaAlvo.tomador?.cpfCnpj === '00.000.000/0000-00') ? '' : (notaAlvo.tomador?.cpfCnpj || ''),
+      razaoSocial: notaAlvo.tomador?.razaoSocial || '',
+      email: notaAlvo.tomador?.email || '',
+      telefone: notaAlvo.tomador?.telefone || '',
+      municipio: notaAlvo.tomador?.municipio || '',
+      uf: notaAlvo.tomador?.uf || '',
+      logradouro: notaAlvo.tomador?.logradouro || notaAlvo.tomador?.endereco || '',
+      numeroEnd: notaAlvo.tomador?.numero || '',
+      bairro: notaAlvo.tomador?.bairro || '',
+      cep: notaAlvo.tomador?.cep || '',
+      valor: notaAlvo.servico?.valorTotal ? String(notaAlvo.servico.valorTotal) : '',
+      discriminacao: notaAlvo.servico?.discriminacao || '',
+      codigoAtividade: notaAlvo.servico?.codigoAtividade || '01.07',
+      aliquotaIss: notaAlvo.servico?.aliquotaIss ? String(notaAlvo.servico.aliquotaIss).replace('.', ',') : '2,0',
+      mesCompetencia: notaAlvo.competenciaMes !== undefined ? notaAlvo.competenciaMes : mesAtual,
+    });
+    setShowEmitirModal(true);
+  }
+
+  // Executa o cancelamento oficial da nota
+  async function handleConfirmarCancelamento({ numero, motivo, justificativa, estornarCaixa }) {
+    try {
+      await nfseService.cancelarNota(empresa.id, numero, motivo, justificativa, estornarCaixa);
+      await recarregarDados();
+      if (onRecarregarLancamentos) {
+        try {
+          await onRecarregarLancamentos();
+        } catch (e) {}
+      }
+    } catch (e) {
+      alert('Erro ao cancelar a nota: ' + e.message);
+    }
+  }
+
   // Ao emitir ou editar com sucesso
   async function handleSucessoEmissao(novaNota, dadosLancamento) {
     const isOficializacao = Boolean(dadosIniciaisEmissao?.numeroPersonalizado && !dadosIniciaisEmissao?.isEdicao);
@@ -317,6 +362,27 @@ export function NfseScreen({
           >
             <FileSpreadsheet size={15} color="#9FE0C8" />
             <span>Relatório & Excel</span>
+          </button>
+
+          <button
+            onClick={() => setShowConfigSmtp(true)}
+            title="Configurar Provedor de E-mail SMTP & Assinatura Corporativa"
+            style={{
+              background: 'rgba(255, 255, 255, 0.12)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              borderRadius: 12,
+              padding: '11px 14px',
+              color: '#FAF8F3',
+              fontSize: 12.5,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6
+            }}
+          >
+            <Mail size={15} color="#9FE0C8" />
+            <span>E-mail / SMTP</span>
           </button>
 
           <button
@@ -514,6 +580,16 @@ export function NfseScreen({
                 const idNota = n.id || n.numero;
                 const isExpandido = Boolean(expandidos[idNota]);
 
+                const docTomador = somenteDigitos(n.tomador?.cpfCnpj || '');
+                const recVinculada = recorrencias.find(r => 
+                  (docTomador && r.cpfCnpj && somenteDigitos(r.cpfCnpj) === docTomador) ||
+                  (r.cliente && n.tomador?.razaoSocial && r.cliente.trim().toLowerCase() === n.tomador.razaoSocial.trim().toLowerCase())
+                );
+                const isRecorrente = Boolean(n.recorrente || recVinculada);
+                const diaRecorrencia = n.diaVencimento || recVinculada?.diaVencimento || recVinculada?.dia;
+                const isCancelada = n.status === 'cancelada';
+                const isSubstituida = n.status === 'substituida';
+
                 return (
                   <div
                     key={idNota}
@@ -559,20 +635,60 @@ export function NfseScreen({
                           <span style={{ 
                             fontSize: 10.5, 
                             fontWeight: 700, 
-                            color: n.certificadoInfo?.transmissaoNativaGov ? '#059669' : '#D97706', 
-                            background: n.certificadoInfo?.transmissaoNativaGov ? '#ECFDF5' : '#FEF3C7', 
+                            color: isCancelada ? '#DC2626' : (isSubstituida ? '#6B7280' : (n.certificadoInfo?.transmissaoNativaGov ? '#059669' : '#D97706')), 
+                            background: isCancelada ? '#FEE2E2' : (isSubstituida ? '#F3F4F6' : (n.certificadoInfo?.transmissaoNativaGov ? '#ECFDF5' : '#FEF3C7')), 
                             padding: '2px 6px', 
                             borderRadius: 4, 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             gap: 3 
                           }}>
-                            {n.certificadoInfo?.transmissaoNativaGov ? (
+                            {isCancelada ? (
+                              <><XCircle size={10} /> Cancelada</>
+                            ) : isSubstituida ? (
+                              <><RefreshCw size={10} /> Substituída {n.substituidaPor ? `pela Nº ${n.substituidaPor}` : ''}</>
+                            ) : n.certificadoInfo?.transmissaoNativaGov ? (
                               <><CheckCircle size={10} /> Oficial Receita</>
                             ) : (
                               <><Clock size={10} /> Rascunho / Pendente Validação</>
                             )}
                           </span>
+
+                          {/* BADGES RECORRENTE: SIM e DIA: XX */}
+                          {isRecorrente && (
+                            <>
+                              <span style={{ 
+                                fontSize: 10.5, 
+                                fontWeight: 700, 
+                                color: '#059669', 
+                                background: '#ECFDF5', 
+                                border: '1px solid #A7F3D0',
+                                padding: '2px 6px', 
+                                borderRadius: 4, 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: 3 
+                              }}>
+                                <Repeat size={10} /> RECORRENTE: SIM
+                              </span>
+                              {diaRecorrencia && (
+                                <span style={{ 
+                                  fontSize: 10.5, 
+                                  fontWeight: 700, 
+                                  color: '#047857', 
+                                  background: '#D1FAE5', 
+                                  border: '1px solid #6EE7B7',
+                                  padding: '2px 6px', 
+                                  borderRadius: 4, 
+                                  display: 'inline-flex', 
+                                  alignItems: 'center', 
+                                  gap: 3 
+                                }}>
+                                  <Calendar size={10} /> DIA: {diaRecorrencia}
+                                </span>
+                              )}
+                            </>
+                          )}
                         </div>
 
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginTop: 5 }}>
@@ -678,38 +794,101 @@ export function NfseScreen({
                           </div>
                         )}
 
-                        {/* Botões de Ação: Editar, Reimpressão / DANFSe, XML e WhatsApp */}
+                        {/* Avisos de Cancelamento ou Substituição */}
+                        {isCancelada && (
+                          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 10px', fontSize: 11.5, color: '#991B1B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <AlertTriangle size={14} color="#DC2626" />
+                            <span><strong>Nota Fiscal Cancelada</strong> em {n.cancelamento?.dataHora ? new Date(n.cancelamento.dataHora).toLocaleDateString('pt-BR') : ''}. Motivo: {n.cancelamento?.justificativa || 'Cancelada pelo emissor.'}</span>
+                          </div>
+                        )}
+
+                        {isSubstituida && (
+                          <div style={{ background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: 8, padding: '8px 10px', fontSize: 11.5, color: '#4B5563', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <RefreshCw size={14} color="#6B7280" />
+                            <span><strong>Nota Fiscal Substituída</strong> pela NFS-e Nº {n.substituidaPor || '—'}.</span>
+                          </div>
+                        )}
+
+                        {/* Botões de Ação: Editar, Substituir, Cancelar, PDF, E-mail, Whats e XML */}
                         <div style={{ 
                           display: 'flex', 
                           justifyContent: 'flex-end', 
-                          gap: 8, 
+                          gap: 6, 
                           paddingTop: 4, 
                           borderTop: '1px solid #F3F4F6',
                           flexWrap: 'wrap'
                         }}>
-                          <button
-                            onClick={() => handleEditarNota(n)}
-                            title="Editar dados cadastrais do cliente, valor ou discriminação da nota"
-                            style={{
-                              background: '#2563EB',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 8,
-                              padding: '7px 12px',
-                              fontSize: 12,
-                              fontWeight: 700,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 5,
-                              cursor: 'pointer',
-                              boxShadow: '0 1px 3px rgba(37,99,235,0.25)'
-                            }}
-                          >
-                            <Edit size={13} />
-                            <span>Editar</span>
-                          </button>
+                          {!isCancelada && !isSubstituida && (
+                            <button
+                              onClick={() => handleEditarNota(n)}
+                              title="Editar dados cadastrais do cliente, valor ou discriminação da nota"
+                              style={{
+                                background: '#2563EB',
+                                border: 'none',
+                                color: '#fff',
+                                borderRadius: 8,
+                                padding: '7px 11px',
+                                fontSize: 11.5,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                cursor: 'pointer',
+                                boxShadow: '0 1px 3px rgba(37,99,235,0.25)'
+                              }}
+                            >
+                              <Edit size={13} />
+                              <span>Editar</span>
+                            </button>
+                          )}
 
-                          {!n.certificadoInfo?.transmissaoNativaGov && (
+                          {!isCancelada && (
+                            <button
+                              onClick={() => handleSubstituirNota(n)}
+                              title="Substituir esta nota fiscal gerando uma nova nota com vínculo oficial perante o Fisco"
+                              style={{
+                                background: '#4B5563',
+                                border: 'none',
+                                color: '#fff',
+                                borderRadius: 8,
+                                padding: '7px 11px',
+                                fontSize: 11.5,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <RefreshCw size={13} />
+                              <span>Substituir</span>
+                            </button>
+                          )}
+
+                          {!isCancelada && (
+                            <button
+                              onClick={() => setNotaParaCancelar(n)}
+                              title="Cancelar oficialmente esta nota fiscal perante a Receita Federal"
+                              style={{
+                                background: '#DC2626',
+                                border: 'none',
+                                color: '#fff',
+                                borderRadius: 8,
+                                padding: '7px 11px',
+                                fontSize: 11.5,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <XCircle size={13} />
+                              <span>Cancelar</span>
+                            </button>
+                          )}
+
+                          {!n.certificadoInfo?.transmissaoNativaGov && !isCancelada && (
                             <button
                               onClick={() => handleValidarNotaPendente(n)}
                               title="Transmitir esta nota oficialmente à Receita Federal para validação fiscal e protocolo"
@@ -718,40 +897,88 @@ export function NfseScreen({
                                 border: 'none',
                                 color: '#fff',
                                 borderRadius: 8,
-                                padding: '7px 12px',
-                                fontSize: 12,
+                                padding: '7px 11px',
+                                fontSize: 11.5,
                                 fontWeight: 700,
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 5,
+                                gap: 4,
                                 cursor: 'pointer',
                                 boxShadow: '0 1px 3px rgba(217,119,6,0.3)'
                               }}
                             >
                               <Zap size={13} />
-                              <span>Validar na Receita</span>
+                              <span>Validar</span>
                             </button>
                           )}
 
                           <button
                             onClick={() => setNotaSelecionadaDanfse(n)}
+                            title="Visualizar e Imprimir Espelho DANFSe Oficial em PDF"
                             style={{
                               background: '#1F5C52',
                               border: 'none',
                               color: '#fff',
                               borderRadius: 8,
-                              padding: '7px 12px',
-                              fontSize: 12,
+                              padding: '7px 11px',
+                              fontSize: 11.5,
                               fontWeight: 700,
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 5,
+                              gap: 4,
                               cursor: 'pointer',
                               boxShadow: '0 1px 3px rgba(31,92,82,0.2)'
                             }}
                           >
                             <Printer size={13} />
-                            <span>Reimpressão / DANFSe</span>
+                            <span>PDF</span>
+                          </button>
+
+                          {!isCancelada && (
+                            <button
+                              onClick={() => setNotaParaEmail(n)}
+                              title="Enviar Nota Fiscal e DANFSe por E-mail ao Cliente"
+                              style={{
+                                background: '#3B82F6',
+                                border: 'none',
+                                color: '#fff',
+                                borderRadius: 8,
+                                padding: '7px 11px',
+                                fontSize: 11.5,
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 4,
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <Mail size={13} />
+                              <span>E-mail</span>
+                            </button>
+                          )}
+
+                          <button
+                            onClick={() => {
+                              const link = gerarLinkWhatsAppNfse(n, empresa);
+                              if (link) window.open(link, '_blank');
+                            }}
+                            title="Enviar mensagem oficial no WhatsApp do Cliente"
+                            style={{
+                              background: '#25D366',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 8,
+                              padding: '7px 11px',
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <MessageCircle size={13} />
+                            <span>Whats</span>
                           </button>
 
                           {n.xmlGerado && (
@@ -765,47 +992,25 @@ export function NfseScreen({
                                 a.click();
                                 URL.revokeObjectURL(url);
                               }}
+                              title="Baixar arquivo XML assinado digitalmente"
                               style={{
                                 background: '#374151',
                                 border: 'none',
                                 color: '#fff',
                                 borderRadius: 8,
-                                padding: '7px 12px',
-                                fontSize: 12,
+                                padding: '7px 10px',
+                                fontSize: 11.5,
                                 fontWeight: 700,
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: 5,
+                                gap: 4,
                                 cursor: 'pointer'
                               }}
                             >
                               <Download size={13} />
-                              <span>Baixar XML</span>
+                              <span>XML</span>
                             </button>
                           )}
-
-                          <button
-                            onClick={() => {
-                              const link = gerarLinkWhatsAppNfse(n, empresa);
-                              if (link) window.open(link, '_blank');
-                            }}
-                            style={{
-                              background: '#25D366',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 8,
-                              padding: '7px 12px',
-                              fontSize: 12,
-                              fontWeight: 700,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: 5,
-                              cursor: 'pointer'
-                            }}
-                          >
-                            <MessageCircle size={13} />
-                            <span>WhatsApp</span>
-                          </button>
                         </div>
                       </div>
                     )}
@@ -946,6 +1151,34 @@ export function NfseScreen({
           notas={notas}
           empresa={empresa}
           onClose={() => setShowRelatorioModal(false)}
+        />
+      )}
+
+      {/* Modal de Cancelamento Oficial da Nota */}
+      {notaParaCancelar && (
+        <CancelarNfseModal
+          nota={notaParaCancelar}
+          empresa={empresa}
+          onClose={() => setNotaParaCancelar(null)}
+          onConfirmarCancelamento={handleConfirmarCancelamento}
+        />
+      )}
+
+      {/* Modal de Envio Rápido por E-mail */}
+      {notaParaEmail && (
+        <EnviarEmailNfseModal
+          nota={notaParaEmail}
+          empresa={empresa}
+          onClose={() => setNotaParaEmail(null)}
+          onAbrirConfigSmtp={() => setShowConfigSmtp(true)}
+        />
+      )}
+
+      {/* Modal de Configuração do Provedor SMTP e Assinatura */}
+      {showConfigSmtp && (
+        <ConfigSmtpModal
+          empresa={empresa}
+          onClose={() => setShowConfigSmtp(false)}
         />
       )}
     </div>

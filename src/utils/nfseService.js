@@ -483,6 +483,92 @@ export const nfseService = {
     return notaAtualizada;
   },
 
+  // Cancela uma nota oficialmente (com motivo RFB e justificativa)
+  async cancelarNota(empresaId, numero, motivo = '1', justificativa = '', estornarCaixa = false) {
+    if (!empresaId || !numero) return null;
+    const numStr = String(numero);
+    const notas = this.getNotasEmitidas(empresaId);
+    let notaExistente = notas.find(n => String(n.numero) === numStr);
+    if (!notaExistente) return null;
+
+    const notaCancelada = {
+      ...notaExistente,
+      status: 'cancelada',
+      cancelamento: {
+        dataHora: new Date().toISOString(),
+        motivo,
+        justificativa,
+      }
+    };
+
+    this.salvarNotaEmitida(empresaId, notaCancelada);
+
+    // Atualiza status no Supabase
+    try {
+      await supabase
+        .from('nfse_notas')
+        .update({
+          status: 'cancelada',
+          dados_completos: notaCancelada
+        })
+        .eq('empresa_id', empresaId)
+        .eq('numero', numStr);
+    } catch (e) {
+      console.warn('Erro ao cancelar nota no Supabase:', e);
+    }
+
+    // Se solicitado estorno no fluxo de caixa
+    if (estornarCaixa) {
+      try {
+        const { data: lancs } = await supabase
+          .from('lancamentos')
+          .select('id, descricao')
+          .eq('empresa_id', empresaId)
+          .ilike('descricao', `NFS-e Nº ${numStr}%`);
+        
+        if (lancs && lancs.length > 0) {
+          for (const l of lancs) {
+            await supabase
+              .from('lancamentos')
+              .update({
+                descricao: `[CANCELADA] ${l.descricao}`,
+                atualizado_em: new Date().toISOString()
+              })
+              .eq('id', l.id);
+          }
+        }
+      } catch (errLanc) {
+        console.warn('Erro ao atualizar lançamento do caixa no cancelamento:', errLanc);
+      }
+    }
+
+    return notaCancelada;
+  },
+
+  // Substitui uma nota: marca a original como substituída pela nova
+  async substituirNota(empresaId, numeroOriginal, numeroNovo) {
+    if (!empresaId || !numeroOriginal || !numeroNovo) return null;
+    const numOrigStr = String(numeroOriginal);
+    const numNovoStr = String(numeroNovo);
+    const notas = this.getNotasEmitidas(empresaId);
+    let notaOrig = notas.find(n => String(n.numero) === numOrigStr);
+    if (notaOrig) {
+      notaOrig.status = 'substituida';
+      notaOrig.substituidaPor = numNovoStr;
+      this.salvarNotaEmitida(empresaId, notaOrig);
+      try {
+        await supabase
+          .from('nfse_notas')
+          .update({
+            status: 'substituida',
+            dados_completos: notaOrig
+          })
+          .eq('empresa_id', empresaId)
+          .eq('numero', numOrigStr);
+      } catch (e) {}
+    }
+  },
+
   async persistirNotaNoSupabase(empresaId, nota) {
     if (!empresaId || !nota) return;
     try {

@@ -1,13 +1,18 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
-  FileText, Download, Printer, X, MessageCircle, ShieldCheck, Zap, AlertTriangle, Clock 
+  FileText, Download, Printer, X, MessageCircle, ShieldCheck, Zap, AlertTriangle, Clock, Mail 
 } from 'lucide-react';
 import { formatBRL } from '../utils/formatters';
 import { formatarCpfCnpj, gerarLinkWhatsAppNfse } from '../utils/nfseService';
 import { MESES } from '../utils/constants';
+import { EnviarEmailNfseModal } from './EnviarEmailNfseModal';
+import { ConfigSmtpModal } from './ConfigSmtpModal';
 
 export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
   if (!nota) return null;
+
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showSmtpModal, setShowSmtpModal] = useState(false);
 
   const {
     numero,
@@ -161,7 +166,8 @@ export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {/* Botão PDF / Imprimir (compacto com ícone de impressora/PDF) */}
               <button
                 onClick={handleImprimir}
                 title="Salvar como PDF ou Imprimir documento oficial"
@@ -169,28 +175,29 @@ export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
                   background: '#1F5C52',
                   border: '1px solid #9FE0C8',
                   borderRadius: 6,
-                  padding: '6px 12px',
+                  padding: '6px 10px',
                   color: '#FAF8F3',
                   fontSize: 11.5,
                   fontWeight: 700,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 5
+                  gap: 4
                 }}
               >
-                <Printer size={13} />
-                <span>Salvar PDF / Imprimir</span>
+                <Printer size={14} />
+                <span>PDF</span>
               </button>
 
+              {/* Botão E-mail (envelope para disparo via SMTP ou Webmail) */}
               <button
-                onClick={handleWhatsApp}
-                title="Enviar no WhatsApp do Cliente"
+                onClick={() => setShowEmailModal(true)}
+                title="Enviar NFS-e por E-mail ao Cliente"
                 style={{
-                  background: '#25D366',
+                  background: '#2563EB',
                   border: 'none',
                   borderRadius: 6,
-                  padding: '6px 11px',
+                  padding: '6px 10px',
                   color: '#fff',
                   fontSize: 11.5,
                   fontWeight: 700,
@@ -200,10 +207,33 @@ export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
                   gap: 4
                 }}
               >
-                <MessageCircle size={13} />
-                <span>WhatsApp</span>
+                <Mail size={14} />
+                <span>E-mail</span>
               </button>
 
+              {/* Botão Whats (comunicação direta) */}
+              <button
+                onClick={handleWhatsApp}
+                title="Enviar no WhatsApp do Cliente"
+                style={{
+                  background: '#25D366',
+                  border: 'none',
+                  borderRadius: 6,
+                  padding: '6px 10px',
+                  color: '#fff',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}
+              >
+                <MessageCircle size={14} />
+                <span>Whats</span>
+              </button>
+
+              {/* Botão XML */}
               <button
                 onClick={handleDownloadXml}
                 title="Baixar Arquivo XML Oficial"
@@ -211,7 +241,7 @@ export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
                   background: 'rgba(255,255,255,0.15)',
                   border: 'none',
                   borderRadius: 6,
-                  padding: '6px 10px',
+                  padding: '6px 9px',
                   color: '#9FE0C8',
                   fontSize: 11.5,
                   fontWeight: 600,
@@ -221,7 +251,8 @@ export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
                   gap: 4
                 }}
               >
-                <Download size={13} /> XML
+                <Download size={13} />
+                <span>XML</span>
               </button>
 
               <button
@@ -674,6 +705,22 @@ export function EspelhoDanfseModal({ nota, empresa, onClose, onValidarNota }) {
 
         </div>
       </div>
+
+      {showEmailModal && (
+        <EnviarEmailNfseModal
+          nota={nota}
+          empresa={empresa}
+          onClose={() => setShowEmailModal(false)}
+          onAbrirConfigSmtp={() => setShowSmtpModal(true)}
+        />
+      )}
+
+      {showSmtpModal && (
+        <ConfigSmtpModal
+          empresa={empresa}
+          onClose={() => setShowSmtpModal(false)}
+        />
+      )}
     </>
   );
 }
