@@ -597,11 +597,11 @@ export function NfseScreen({
                       background: '#fff',
                       border: '1.5px solid #E5E0D5',
                       borderRadius: 14,
-                      padding: isExpandido ? '14px 16px' : '12px 16px',
-                      boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
+                      padding: isExpandido ? '10px 14px' : '9px 13px',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: isExpandido ? 10 : 0,
+                      gap: isExpandido ? 8 : 0,
                       transition: 'all 0.15s ease-in-out'
                     }}
                   >
@@ -614,31 +614,34 @@ export function NfseScreen({
                         display: 'flex', 
                         justifyContent: 'space-between', 
                         alignItems: 'flex-start', 
-                        gap: 12 
+                        gap: 10 
                       }}
                     >
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                           <span style={{ 
-                            fontSize: 12, 
+                            fontSize: 11.5, 
                             fontWeight: 800, 
                             color: '#0F2B27', 
-                            background: '#D9EBE6', 
-                            padding: '3px 8px', 
-                            borderRadius: 6 
+                            background: '#E2E8F0', 
+                            padding: '2px 7px', 
+                            borderRadius: 5 
                           }}>
                             NFS-e Nº {n.numero}
                           </span>
-                          <span style={{ fontSize: 11, color: '#6B7280' }}>
+                          <span style={{ fontSize: 11, color: '#64748B' }}>
                             {dataFormatada} {horaFormatada ? `às ${horaFormatada}` : ''}
                           </span>
+
+                          {/* Badge de Status Oficial / Rascunho / Cancelada */}
                           <span style={{ 
                             fontSize: 10.5, 
                             fontWeight: 700, 
-                            color: isCancelada ? '#DC2626' : (isSubstituida ? '#6B7280' : (n.certificadoInfo?.transmissaoNativaGov ? '#059669' : '#D97706')), 
-                            background: isCancelada ? '#FEE2E2' : (isSubstituida ? '#F3F4F6' : (n.certificadoInfo?.transmissaoNativaGov ? '#ECFDF5' : '#FEF3C7')), 
-                            padding: '2px 6px', 
-                            borderRadius: 4, 
+                            color: isCancelada ? '#B91C1C' : (isSubstituida ? '#475569' : (n.certificadoInfo?.transmissaoNativaGov ? '#15803D' : '#B45309')), 
+                            background: isCancelada ? '#FEF2F2' : (isSubstituida ? '#F1F5F9' : (n.certificadoInfo?.transmissaoNativaGov ? '#F0FDF4' : '#FFFBEB')), 
+                            border: `1px solid ${isCancelada ? '#FECACA' : (isSubstituida ? '#E2E8F0' : (n.certificadoInfo?.transmissaoNativaGov ? '#BBF7D0' : '#FDE68A'))}`,
+                            padding: '2px 7px', 
+                            borderRadius: 5, 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             gap: 3 
@@ -650,48 +653,31 @@ export function NfseScreen({
                             ) : n.certificadoInfo?.transmissaoNativaGov ? (
                               <><CheckCircle size={10} /> Oficial Receita</>
                             ) : (
-                              <><Clock size={10} /> Rascunho / Pendente Validação</>
+                              <><Clock size={10} /> Rascunho</>
                             )}
                           </span>
 
-                          {/* BADGES RECORRENTE: SIM e DIA: XX */}
+                          {/* BADGES RECORRENTE COM O DIA ALINHADO NA MESMA LINHA */}
                           {isRecorrente && (
-                            <>
-                              <span style={{ 
-                                fontSize: 10.5, 
-                                fontWeight: 700, 
-                                color: '#059669', 
-                                background: '#ECFDF5', 
-                                border: '1px solid #A7F3D0',
-                                padding: '2px 6px', 
-                                borderRadius: 4, 
-                                display: 'inline-flex', 
-                                alignItems: 'center', 
-                                gap: 3 
-                              }}>
-                                <Repeat size={10} /> RECORRENTE: SIM
-                              </span>
-                              {diaRecorrencia && (
-                                <span style={{ 
-                                  fontSize: 10.5, 
-                                  fontWeight: 700, 
-                                  color: '#047857', 
-                                  background: '#D1FAE5', 
-                                  border: '1px solid #6EE7B7',
-                                  padding: '2px 6px', 
-                                  borderRadius: 4, 
-                                  display: 'inline-flex', 
-                                  alignItems: 'center', 
-                                  gap: 3 
-                                }}>
-                                  <Calendar size={10} /> DIA: {diaRecorrencia}
-                                </span>
-                              )}
-                            </>
+                            <span style={{ 
+                              fontSize: 10.5, 
+                              fontWeight: 700, 
+                              color: '#15803D', 
+                              background: '#F0FDF4', 
+                              border: '1px solid #BBF7D0',
+                              padding: '2px 7px', 
+                              borderRadius: 5, 
+                              display: 'inline-flex', 
+                              alignItems: 'center', 
+                              gap: 4 
+                            }}>
+                              <Repeat size={10} />
+                              <span>RECORRENTE: SIM{diaRecorrencia ? ` • DIA: ${diaRecorrencia}` : ''}</span>
+                            </span>
                           )}
                         </div>
 
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827', marginTop: 5 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B', marginTop: 4 }}>
                           {n.tomador?.razaoSocial || 'Cliente'}
                         </div>
 
@@ -809,35 +795,35 @@ export function NfseScreen({
                           </div>
                         )}
 
-                        {/* Botões de Ação: Editar, Substituir, Cancelar, PDF, E-mail, Whats e XML */}
+                        {/* Botões de Ação: Editar (somente rascunhos), Substituir, Cancelar, PDF, E-mail, Whats e XML */}
                         <div style={{ 
                           display: 'flex', 
                           justifyContent: 'flex-end', 
                           gap: 6, 
                           paddingTop: 4, 
-                          borderTop: '1px solid #F3F4F6',
+                          borderTop: '1px solid #F1F5F9',
                           flexWrap: 'wrap'
                         }}>
-                          {!isCancelada && !isSubstituida && (
+                          {/* Botão Editar: Aparece EXCLUSIVAMENTE se a nota for Rascunho / não transmitida oficialmente */}
+                          {!isCancelada && !isSubstituida && !n.certificadoInfo?.transmissaoNativaGov && (
                             <button
                               onClick={() => handleEditarNota(n)}
-                              title="Editar dados cadastrais do cliente, valor ou discriminação da nota"
+                              title="Editar dados cadastrais do cliente, valor ou discriminação deste rascunho"
                               style={{
-                                background: '#2563EB',
-                                border: 'none',
-                                color: '#fff',
-                                borderRadius: 8,
-                                padding: '7px 11px',
-                                fontSize: 11.5,
-                                fontWeight: 700,
+                                background: '#EFF6FF',
+                                border: '1px solid #BFDBFE',
+                                color: '#1D4ED8',
+                                borderRadius: 7,
+                                padding: '5px 9px',
+                                fontSize: 11,
+                                fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
-                                cursor: 'pointer',
-                                boxShadow: '0 1px 3px rgba(37,99,235,0.25)'
+                                cursor: 'pointer'
                               }}
                             >
-                              <Edit size={13} />
+                              <Edit size={12} />
                               <span>Editar</span>
                             </button>
                           )}
@@ -847,20 +833,20 @@ export function NfseScreen({
                               onClick={() => handleSubstituirNota(n)}
                               title="Substituir esta nota fiscal gerando uma nova nota com vínculo oficial perante o Fisco"
                               style={{
-                                background: '#4B5563',
-                                border: 'none',
-                                color: '#fff',
-                                borderRadius: 8,
-                                padding: '7px 11px',
-                                fontSize: 11.5,
-                                fontWeight: 700,
+                                background: '#F8FAFC',
+                                border: '1px solid #CBD5E1',
+                                color: '#334155',
+                                borderRadius: 7,
+                                padding: '5px 9px',
+                                fontSize: 11,
+                                fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
                                 cursor: 'pointer'
                               }}
                             >
-                              <RefreshCw size={13} />
+                              <RefreshCw size={12} />
                               <span>Substituir</span>
                             </button>
                           )}
@@ -870,20 +856,20 @@ export function NfseScreen({
                               onClick={() => setNotaParaCancelar(n)}
                               title="Cancelar oficialmente esta nota fiscal perante a Receita Federal"
                               style={{
-                                background: '#DC2626',
-                                border: 'none',
-                                color: '#fff',
-                                borderRadius: 8,
-                                padding: '7px 11px',
-                                fontSize: 11.5,
-                                fontWeight: 700,
+                                background: '#FEF2F2',
+                                border: '1px solid #FECACA',
+                                color: '#B91C1C',
+                                borderRadius: 7,
+                                padding: '5px 9px',
+                                fontSize: 11,
+                                fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
                                 cursor: 'pointer'
                               }}
                             >
-                              <XCircle size={13} />
+                              <XCircle size={12} />
                               <span>Cancelar</span>
                             </button>
                           )}
@@ -893,21 +879,20 @@ export function NfseScreen({
                               onClick={() => handleValidarNotaPendente(n)}
                               title="Transmitir esta nota oficialmente à Receita Federal para validação fiscal e protocolo"
                               style={{
-                                background: '#D97706',
-                                border: 'none',
-                                color: '#fff',
-                                borderRadius: 8,
-                                padding: '7px 11px',
-                                fontSize: 11.5,
-                                fontWeight: 700,
+                                background: '#FFFBEB',
+                                border: '1px solid #FDE68A',
+                                color: '#B45309',
+                                borderRadius: 7,
+                                padding: '5px 9px',
+                                fontSize: 11,
+                                fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
-                                cursor: 'pointer',
-                                boxShadow: '0 1px 3px rgba(217,119,6,0.3)'
+                                cursor: 'pointer'
                               }}
                             >
-                              <Zap size={13} />
+                              <Zap size={12} />
                               <span>Validar</span>
                             </button>
                           )}
@@ -916,21 +901,20 @@ export function NfseScreen({
                             onClick={() => setNotaSelecionadaDanfse(n)}
                             title="Visualizar e Imprimir Espelho DANFSe Oficial em PDF"
                             style={{
-                              background: '#1F5C52',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 8,
-                              padding: '7px 11px',
-                              fontSize: 11.5,
-                              fontWeight: 700,
+                              background: '#F0FDF4',
+                              border: '1px solid #BBF7D0',
+                              color: '#166534',
+                              borderRadius: 7,
+                              padding: '5px 9px',
+                              fontSize: 11,
+                              fontWeight: 600,
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 4,
-                              cursor: 'pointer',
-                              boxShadow: '0 1px 3px rgba(31,92,82,0.2)'
+                              cursor: 'pointer'
                             }}
                           >
-                            <Printer size={13} />
+                            <Printer size={12} />
                             <span>PDF</span>
                           </button>
 
@@ -939,20 +923,20 @@ export function NfseScreen({
                               onClick={() => setNotaParaEmail(n)}
                               title="Enviar Nota Fiscal e DANFSe por E-mail ao Cliente"
                               style={{
-                                background: '#3B82F6',
-                                border: 'none',
-                                color: '#fff',
-                                borderRadius: 8,
-                                padding: '7px 11px',
-                                fontSize: 11.5,
-                                fontWeight: 700,
+                                background: '#EFF6FF',
+                                border: '1px solid #BFDBFE',
+                                color: '#1D4ED8',
+                                borderRadius: 7,
+                                padding: '5px 9px',
+                                fontSize: 11,
+                                fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
                                 cursor: 'pointer'
                               }}
                             >
-                              <Mail size={13} />
+                              <Mail size={12} />
                               <span>E-mail</span>
                             </button>
                           )}
@@ -964,20 +948,20 @@ export function NfseScreen({
                             }}
                             title="Enviar mensagem oficial no WhatsApp do Cliente"
                             style={{
-                              background: '#25D366',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 8,
-                              padding: '7px 11px',
-                              fontSize: 11.5,
-                              fontWeight: 700,
+                              background: '#ECFDF5',
+                              border: '1px solid #A7F3D0',
+                              color: '#047857',
+                              borderRadius: 7,
+                              padding: '5px 9px',
+                              fontSize: 11,
+                              fontWeight: 600,
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 4,
                               cursor: 'pointer'
                             }}
                           >
-                            <MessageCircle size={13} />
+                            <MessageCircle size={12} />
                             <span>Whats</span>
                           </button>
 
@@ -992,22 +976,22 @@ export function NfseScreen({
                                 a.click();
                                 URL.revokeObjectURL(url);
                               }}
-                              title="Baixar arquivo XML assinado digitalmente"
+                              title="Baixar Arquivo XML Oficial da NFS-e"
                               style={{
-                                background: '#374151',
-                                border: 'none',
-                                color: '#fff',
-                                borderRadius: 8,
-                                padding: '7px 10px',
-                                fontSize: 11.5,
-                                fontWeight: 700,
+                                background: '#F4F4F5',
+                                border: '1px solid #E4E4E7',
+                                color: '#3F3F46',
+                                borderRadius: 7,
+                                padding: '5px 9px',
+                                fontSize: 11,
+                                fontWeight: 600,
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: 4,
                                 cursor: 'pointer'
                               }}
                             >
-                              <Download size={13} />
+                              <FileSpreadsheet size={12} />
                               <span>XML</span>
                             </button>
                           )}

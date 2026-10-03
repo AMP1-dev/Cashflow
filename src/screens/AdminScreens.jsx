@@ -1,7 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, LogOut } from 'lucide-react';
+import { ChevronLeft, LogOut, Mail, Server, Shield, Key, Eye, EyeOff, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { STATUS_ASSINATURA } from '../utils/constants';
 import { ModalShell, FieldLabel, EmptyState } from '../components/UIComponents';
+import { 
+  carregarConfigSmtpNuvem, 
+  salvarConfigSmtp, 
+  ASSINATURA_OFICIAL_PADRAO, 
+  PROVEDORES_SMTP_SUGERIDOS 
+} from '../utils/emailService';
 
 export function AdminLoginScreen({ onLogin, onVoltar }) {
   const [usuario, setUsuario] = useState('');
@@ -371,8 +377,77 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [msgLink, setMsgLink] = useState('');
   const [erroLink, setErroLink] = useState('');
 
+  // Configurações de Envio de E-mail / Servidor SMTP
+  const [smtpProvedor, setSmtpProvedor] = useState('custom');
+  const [smtpHost, setSmtpHost] = useState('');
+  const [smtpPorta, setSmtpPorta] = useState(587);
+  const [smtpSeguranca, setSmtpSeguranca] = useState('tls');
+  const [smtpAutenticado, setSmtpAutenticado] = useState(true);
+  const [smtpUsuario, setSmtpUsuario] = useState('');
+  const [smtpSenha, setSmtpSenha] = useState('');
+  const [smtpNomeRemetente, setSmtpNomeRemetente] = useState('');
+  const [smtpEmailResposta, setSmtpEmailResposta] = useState('');
+  const [smtpAssinatura, setSmtpAssinatura] = useState(ASSINATURA_OFICIAL_PADRAO);
+  const [mostrarSenhaSmtp, setMostrarSenhaSmtp] = useState(false);
+  const [expandirSmtp, setExpandirSmtp] = useState(true);
+
+  // Carrega configuração de SMTP da nuvem para o assinante selecionado
+  useEffect(() => {
+    let ativo = true;
+    async function carregarSmtp() {
+      try {
+        const config = await carregarConfigSmtpNuvem(assinante.id);
+        if (!ativo || !config) return;
+        setSmtpProvedor(config.provedor || 'custom');
+        setSmtpHost(config.host || '');
+        setSmtpPorta(config.porta || 587);
+        setSmtpSeguranca(config.seguranca || 'tls');
+        setSmtpAutenticado(config.autenticado ?? true);
+        setSmtpUsuario(config.usuario || assinante.email || '');
+        setSmtpSenha(config.senha || '');
+        setSmtpNomeRemetente(config.nomeRemetente || assinante.fantasia || assinante.empresa || 'MARCO ANTONIO PAVANI | AMP DO BRASIL');
+        setSmtpEmailResposta(config.emailResposta || assinante.email || 'atendimento@amp.adm.br');
+        setSmtpAssinatura(config.assinatura || ASSINATURA_OFICIAL_PADRAO);
+      } catch (err) {
+        console.warn('Erro ao carregar SMTP do assinante:', err);
+      }
+    }
+    carregarSmtp();
+    return () => { ativo = false; };
+  }, [assinante.id]);
+
+  function handleSelecionarProvedor(provId) {
+    setSmtpProvedor(provId);
+    const prov = PROVEDORES_SMTP_SUGERIDOS.find(p => p.id === provId);
+    if (prov && prov.host) {
+      setSmtpHost(prov.host);
+      setSmtpPorta(prov.porta);
+      setSmtpSeguranca(prov.seguranca);
+      setSmtpAutenticado(prov.autenticado);
+    }
+  }
+
   async function handleSalvar() {
     setSalvando(true);
+    
+    // Objeto consolidado de configuração SMTP do cliente
+    const smtpPayload = {
+      provedor: smtpProvedor,
+      host: smtpHost.trim(),
+      porta: parseInt(smtpPorta) || 587,
+      seguranca: smtpSeguranca,
+      autenticado: Boolean(smtpAutenticado),
+      usuario: smtpUsuario.trim(),
+      senha: smtpSenha,
+      nomeRemetente: smtpNomeRemetente.trim() || formFantasia.trim() || formEmpresa.trim(),
+      emailResposta: smtpEmailResposta.trim() || formEmail.trim(),
+      assinatura: smtpAssinatura || ASSINATURA_OFICIAL_PADRAO,
+      ativo: Boolean(smtpHost.trim())
+    };
+
+    // Salva na tabela dedicada e fallback em nuvem Supabase
+    await salvarConfigSmtp(assinante.id, smtpPayload);
+
     // Também salva no localStorage como fallback para testes imediatos
     localStorage.setItem(`amp_modulo_nfse_${assinante.id}`, moduloNfse ? 'true' : 'false');
     localStorage.setItem(`amp_modulo_tradutor_${assinante.id}`, moduloTradutor ? 'true' : 'false');
@@ -394,6 +469,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       nome_responsavel: formNome.trim(),
       email_contato: formEmail.trim(),
       telefone_contato: formTelefone.trim(),
+      smtp_config: smtpPayload
     });
     setSalvando(false);
     if (!resultado.ok) alert('Erro ao salvar: ' + resultado.erro);
@@ -630,6 +706,177 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
             </select>
             <div style={{ fontSize: 10.5, color: '#7A7868', marginTop: 4 }}>
               O app do assinante exibirá automaticamente apenas as sugestões e presets adequados a este ramo.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── SEÇÃO DE CONFIGURAÇÃO DE E-MAIL / PROVEDOR SMTP DO CLIENTE ── */}
+      <div style={{ background: '#FAF8F3', border: '1.5px solid #2563EB', borderRadius: 12, padding: '14px', marginBottom: 20 }}>
+        <div 
+          onClick={() => setExpandirSmtp(!expandirSmtp)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+        >
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Mail size={16} color="#2563EB" />
+              <span>Configuração de E-mail & Provedor SMTP</span>
+              <span style={{ fontSize: 9.5, background: '#DBEAFE', color: '#1E40AF', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>
+                {smtpHost ? 'ATIVO' : 'OPCIONAL'}
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: '#5C5A4F', marginTop: 2 }}>
+              Disparo direto de NFS-e (PDF/XML), relatórios e mensagens com assinatura personalizada
+            </div>
+          </div>
+          <button 
+            type="button" 
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1E40AF' }}
+          >
+            {expandirSmtp ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+        </div>
+
+        {expandirSmtp && (
+          <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px dashed #CBD5E1', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Escolha rápida de Provedor */}
+            <div>
+              <FieldLabel>Provedor de E-mail / Servidor</FieldLabel>
+              <select
+                value={smtpProvedor}
+                onChange={e => handleSelecionarProvedor(e.target.value)}
+                style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff', fontWeight: 600, color: '#1E293B' }}
+              >
+                {PROVEDORES_SMTP_SUGERIDOS.map(p => (
+                  <option key={p.id} value={p.id}>{p.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Host e Porta */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+              <div>
+                <FieldLabel>Servidor SMTP (Host)</FieldLabel>
+                <input
+                  type="text"
+                  value={smtpHost}
+                  onChange={e => setSmtpHost(e.target.value)}
+                  placeholder="smtp.seudominio.com.br"
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                />
+              </div>
+              <div>
+                <FieldLabel>Porta</FieldLabel>
+                <input
+                  type="number"
+                  value={smtpPorta}
+                  onChange={e => setSmtpPorta(e.target.value)}
+                  placeholder="587"
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                />
+              </div>
+            </div>
+
+            {/* Segurança e Autenticação */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <FieldLabel>Segurança de Conexão</FieldLabel>
+                <select
+                  value={smtpSeguranca}
+                  onChange={e => setSmtpSeguranca(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                >
+                  <option value="tls">STARTTLS / TLS (Porta 587 recomendada)</option>
+                  <option value="ssl">SSL / SMTPS (Porta 465 recomendada)</option>
+                  <option value="nenhuma">Nenhuma / Aberta (Porta 25)</option>
+                </select>
+              </div>
+
+              <div>
+                <FieldLabel>Requer Autenticação?</FieldLabel>
+                <select
+                  value={smtpAutenticado ? 'sim' : 'nao'}
+                  onChange={e => setSmtpAutenticado(e.target.value === 'sim')}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                >
+                  <option value="sim">Sim (Requer Usuário e Senha)</option>
+                  <option value="nao">Não (Envio Anônimo / Relay Interno)</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Usuário e Senha SMTP */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <FieldLabel>Usuário SMTP / E-mail da Conta</FieldLabel>
+                <input
+                  type="text"
+                  value={smtpUsuario}
+                  onChange={e => setSmtpUsuario(e.target.value)}
+                  placeholder="atendimento@amp.adm.br"
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                />
+              </div>
+
+              <div>
+                <FieldLabel>Senha ou Token de Aplicativo</FieldLabel>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={mostrarSenhaSmtp ? 'text' : 'password'}
+                    value={smtpSenha}
+                    onChange={e => setSmtpSenha(e.target.value)}
+                    placeholder="••••••••••••"
+                    style={{ width: '100%', padding: '8px 36px 8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarSenhaSmtp(!mostrarSenhaSmtp)}
+                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', padding: 2 }}
+                  >
+                    {mostrarSenhaSmtp ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Nome do Remetente e E-mail de Resposta */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div>
+                <FieldLabel>Nome do Remetente</FieldLabel>
+                <input
+                  type="text"
+                  value={smtpNomeRemetente}
+                  onChange={e => setSmtpNomeRemetente(e.target.value)}
+                  placeholder="MARCO ANTONIO PAVANI | AMP DO BRASIL"
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                />
+              </div>
+
+              <div>
+                <FieldLabel>E-mail de Resposta (Reply-To)</FieldLabel>
+                <input
+                  type="email"
+                  value={smtpEmailResposta}
+                  onChange={e => setSmtpEmailResposta(e.target.value)}
+                  placeholder="atendimento@amp.adm.br"
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+                />
+              </div>
+            </div>
+
+            {/* Assinatura Oficial e Termos de Confidencialidade */}
+            <div>
+              <FieldLabel>Assinatura & Aviso de Confidencialidade (Anexado nos e-mails)</FieldLabel>
+              <textarea
+                rows={5}
+                value={smtpAssinatura}
+                onChange={e => setSmtpAssinatura(e.target.value)}
+                placeholder="Insira a assinatura e termos legais deste cliente..."
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 11.5, boxSizing: 'border-box', background: '#fff', fontFamily: 'inherit', resize: 'vertical' }}
+              />
+              <div style={{ fontSize: 10.5, color: '#64748B', marginTop: 4 }}>
+                Inclui a assinatura de Marco Antonio Pavani com termos em Português e Inglês.
+              </div>
             </div>
           </div>
         )}
