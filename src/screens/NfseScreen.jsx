@@ -209,7 +209,10 @@ export function NfseScreen({
         console.warn('Erro ao recarregar lançamentos:', errRec);
       }
     }
-    setNotaSelecionadaDanfse(novaNota);
+    // Se for emissão nova ou oficialização, abre o DANFSe para conferência/impressão; se for edição simples, não abre
+    if (!isEdicao) {
+      setNotaSelecionadaDanfse(novaNota);
+    }
 
     // Se o usuário quiser, adiciona no caixa (somente para notas novas, não para oficialização nem edição)
     if (onAdicionarReceitaAoCaixa && !isOficializacao && !isEdicao) {

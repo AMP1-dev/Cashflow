@@ -232,6 +232,22 @@ export function EmitirNfseModal({
       // 2. Salva no catálogo de clientes
       salvarDadosClienteCatalogo();
 
+      // 3. Se optou por salvar como modelo recorrente
+      if (salvarComoRecorrente) {
+        nfseService.salvarRecorrencia(empresa.id, {
+          cliente: razaoSocial.trim(),
+          cpfCnpj: somenteDigitos(cpfCnpj),
+          email: emailTomador.trim(),
+          telefone: telefoneTomador.trim(),
+          valor: vTotalNum,
+          diaVencimento: diaVencimentoRecorrente,
+          codigoAtividade,
+          aliquotaIss: parseFloat((aliquotaIss || '0').replace(',', '.')),
+          discriminacaoTemplate: discriminacao,
+          ativo: true,
+        });
+      }
+
       // 3. Atualiza o lançamento correspondente no Supabase na tabela public.lancamentos
       const novaDescricaoLancamento = `NFS-e Nº ${numeroAlvo} - ${razaoSocial.trim()}${descResolvida ? ` (${descResolvida})` : ''}`;
       try {
