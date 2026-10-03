@@ -398,6 +398,26 @@ export const nfseService = {
     return nota;
   },
 
+  // Marca uma nota fiscal como enviada por e-mail com registro de destinatário, cópia e data/hora
+  async marcarNotaComoEnviada(empresaId, numero, { destinatario, copia } = {}) {
+    if (!empresaId || !numero) return null;
+    const numStr = String(numero);
+    const notas = this.getNotasEmitidas(empresaId);
+    let notaExistente = notas.find(n => String(n.numero) === numStr);
+    if (!notaExistente) return null;
+
+    const notaAtualizada = {
+      ...notaExistente,
+      emailEnviado: true,
+      emailEnviadoEm: new Date().toISOString(),
+      emailDestinatario: destinatario || notaExistente.tomador?.email || '',
+      emailCopia: copia || ''
+    };
+
+    this.salvarNotaEmitida(empresaId, notaAtualizada);
+    return notaAtualizada;
+  },
+
   // Atualiza uma nota já existente (valor, descrição, tomador) e persiste no cache e Supabase
   async atualizarNota(empresaId, numero, dadosAtualizados) {
     if (!empresaId || !numero) return null;

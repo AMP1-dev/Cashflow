@@ -10,8 +10,9 @@ import {
   ASSINATURA_OFICIAL_PADRAO 
 } from '../utils/emailService';
 
-export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp }) {
+export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp, onSucessoEnvio }) {
   const [destinatario, setDestinatario] = useState('');
+  const [copia, setCopia] = useState('');
   const [assunto, setAssunto] = useState('');
   const [corpo, setCorpo] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -24,9 +25,11 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
       if (empresa?.id) {
         const cfg = await carregarConfigSmtpNuvem(empresa.id);
         setConfigSmtp(cfg);
+        setCopia(cfg.emailCopia || cfg.usuario || 'atendimento@amp.adm.br');
         if (nota) {
           const msg = montarMensagemNfse(nota, empresa, cfg);
           setDestinatario(msg.destinatario || '');
+          if (msg.copia) setCopia(msg.copia);
           setAssunto(msg.assunto || `Nota Fiscal de Serviços Eletrônica (NFS-e Nº ${nota.numero}) - ${msg.prestador}`);
           setCorpo(msg.corpo || 'Olá,\n\nSegue em anexo a Nota Fiscal de Serviços Eletrônica referente aos serviços prestados.');
         }
@@ -54,25 +57,30 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
       const res = await dispararEmailNfse({
         empresaId: empresa?.id,
         destinatario: destinatario.trim(),
+        copia: copia.trim(),
         assunto: assunto.trim(),
         corpo: corpo.trim(),
         nota,
         empresa,
       });
 
-      if (res.via === 'smtp_backend' && res.ok) {
-        setStatusEnvio({ 
-          tipo: 'sucesso', 
-          msg: `E-mail enviado com sucesso com DANFSe (PDF) e XML para ${destinatario} diretamente via SMTP!` 
-        });
-        setTimeout(() => onClose(), 2200);
-      } else {
-        // Mostra confirmação de disparo e permite envio imediato
-        setStatusEnvio({
-          tipo: 'sucesso',
-          msg: `E-mail oficial com DANFSe em PDF e XML formatado com sucesso para ${destinatario}!`
+      // Registra a nota como ENVIADA no estado e no banco de dados
+      if (onSucessoEnvio) {
+        await onSucessoEnvio(nota, { 
+          destinatario: destinatario.trim(), 
+          copia: copia.trim() 
         });
       }
+
+      setStatusEnvio({ 
+        tipo: 'sucesso', 
+        msg: `E-mail enviado com sucesso com DANFSe (PDF) e XML para ${destinatario}${copia.trim() ? ` (com cópia para ${copia.trim()})` : ''}!` 
+      });
+
+      // Fecha automaticamente a janela para não prender a tela do usuário
+      setTimeout(() => {
+        onClose();
+      }, 1800);
     } catch (e) {
       setStatusEnvio({ tipo: 'erro', msg: 'Erro ao disparar e-mail: ' + e.message });
     } finally {
@@ -81,12 +89,25 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
   }
 
   function handleAbrirMailto() {
-    const link = gerarLinkMailto(destinatario, assunto, corpo);
+    const link = gerarLinkMailto(destinatario, assunto, corpo, copia);
     window.location.href = link;
+    if (onSucessoEnvio) {
+      onSucessoEnvio(nota, { 
+        destinatario: destinatario.trim(), 
+        copia: copia.trim() 
+      });
+    }
+    setStatusEnvio({
+      tipo: 'sucesso',
+      msg: `Webmail aberto com sucesso! Destinatário: ${destinatario}${copia ? ` (com cópia para ${copia})` : ''}`
+    });
+    setTimeout(() => {
+      onClose();
+    }, 1800);
   }
 
   return (
-    <ModalShell onClose={onClose} maxWidth={620}>
+    <ModalShell onClose={onClose} maxWidth={640}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 40, height: 40, borderRadius: 10, background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -121,7 +142,7 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
           gap: 8,
           color: statusEnvio.tipo === 'sucesso' ? '#065F46' : (statusEnvio.tipo === 'info' ? '#1E40AF' : '#991B1B'),
           fontSize: 12,
-          fontWeight: 600
+          fontWeight: 700
         }}>
           {statusEnvio.tipo === 'sucesso' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
           <span>{statusEnvio.msg}</span>
@@ -130,16 +151,28 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         
-        {/* Destinatário */}
-        <div>
-          <FieldLabel>E-mail do Destinatário (Tomador do Serviço)</FieldLabel>
-          <input
-            type="email"
-            placeholder="cliente@exemplo.com.br"
-            value={destinatario}
-            onChange={e => setDestinatario(e.target.value)}
-            style={inputStyle}
-          />
+        {/* Destinatário e Cópia (CC) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+          <div>
+            <FieldLabel>E-mail do Destinatário (Cliente)</FieldLabel>
+            <input
+              type="email"
+              placeholder="cliente@exemplo.com.br"
+              value={destinatario}
+              onChange={e => setDestinatario(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <FieldLabel>Com Cópia para (CC) — Receba em seu e-mail</FieldLabel>
+            <input
+              type="email"
+              placeholder="atendimento@amp.adm.br"
+              value={copia}
+              onChange={e => setCopia(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
         </div>
 
         {/* Assunto */}

@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.smtp_configuracoes (
   senha               text NOT NULL,
   remetente_nome      text,
   email_resposta      text,
+  email_copia         text,
   assunto_padrao      text,
   conteudo_padrao     text,
   assinatura_texto    text,
@@ -28,6 +29,9 @@ CREATE TABLE IF NOT EXISTS public.smtp_configuracoes (
   atualizado_em       timestamptz DEFAULT now(),
   CONSTRAINT smtp_empresa_unique UNIQUE (empresa_id)
 );
+
+-- Adiciona a coluna email_copia caso a tabela já tenha sido criada anteriormente
+ALTER TABLE public.smtp_configuracoes ADD COLUMN IF NOT EXISTS email_copia text;
 
 -- Índices de Performance
 CREATE INDEX IF NOT EXISTS smtp_empresa_idx ON public.smtp_configuracoes (empresa_id);

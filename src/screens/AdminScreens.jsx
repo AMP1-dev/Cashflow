@@ -387,6 +387,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [smtpSenha, setSmtpSenha] = useState('');
   const [smtpNomeRemetente, setSmtpNomeRemetente] = useState('');
   const [smtpEmailResposta, setSmtpEmailResposta] = useState('');
+  const [smtpEmailCopia, setSmtpEmailCopia] = useState('');
   const [smtpAssinatura, setSmtpAssinatura] = useState(ASSINATURA_OFICIAL_PADRAO);
   const [mostrarSenhaSmtp, setMostrarSenhaSmtp] = useState(false);
   const [expandirSmtp, setExpandirSmtp] = useState(true);
@@ -407,6 +408,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
         setSmtpSenha(config.senha || '');
         setSmtpNomeRemetente(config.nomeRemetente || assinante.fantasia || assinante.empresa || 'MARCO ANTONIO PAVANI | AMP DO BRASIL');
         setSmtpEmailResposta(config.emailResposta || assinante.email || 'atendimento@amp.adm.br');
+        setSmtpEmailCopia(config.emailCopia || 'atendimento@amp.adm.br');
         setSmtpAssinatura(config.assinatura || ASSINATURA_OFICIAL_PADRAO);
       } catch (err) {
         console.warn('Erro ao carregar SMTP do assinante:', err);
@@ -441,6 +443,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       senha: smtpSenha,
       nomeRemetente: smtpNomeRemetente.trim() || formFantasia.trim() || formEmpresa.trim(),
       emailResposta: smtpEmailResposta.trim() || formEmail.trim(),
+      emailCopia: smtpEmailCopia.trim() || 'atendimento@amp.adm.br',
       assinatura: smtpAssinatura || ASSINATURA_OFICIAL_PADRAO,
       ativo: Boolean(smtpHost.trim())
     };
@@ -861,6 +864,21 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
                   placeholder="atendimento@amp.adm.br"
                   style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
                 />
+              </div>
+            </div>
+
+            {/* E-mail com Cópia (CC) */}
+            <div>
+              <FieldLabel>E-mail para Receber Cópia das Notas (CC)</FieldLabel>
+              <input
+                type="email"
+                value={smtpEmailCopia}
+                onChange={e => setSmtpEmailCopia(e.target.value)}
+                placeholder="atendimento@amp.adm.br (receba cópia com PDF e XML de todas as notas)"
+                style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid #CBD5E1', fontSize: 13, boxSizing: 'border-box', background: '#fff' }}
+              />
+              <div style={{ fontSize: 10.5, color: '#64748B', marginTop: 3 }}>
+                Garante que uma cópia de segurança caia em sua caixa de entrada para uso no Outlook ou arquivo.
               </div>
             </div>
 

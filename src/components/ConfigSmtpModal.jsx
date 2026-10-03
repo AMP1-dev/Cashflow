@@ -19,6 +19,7 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
   const [senha, setSenha] = useState('');
   const [nomeRemetente, setNomeRemetente] = useState('');
   const [emailResposta, setEmailResposta] = useState('');
+  const [emailCopia, setEmailCopia] = useState('');
   const [conteudoPadrao, setConteudoPadrao] = useState('');
   const [assinatura, setAssinatura] = useState('');
   const [ativo, setAtivo] = useState(true);
@@ -41,6 +42,7 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
           setSenha(cfg.senha || '');
           setNomeRemetente(cfg.nomeRemetente || 'MARCO ANTONIO PAVANI | AMP DO BRASIL');
           setEmailResposta(cfg.emailResposta || 'atendimento@amp.adm.br');
+          setEmailCopia(cfg.emailCopia || 'atendimento@amp.adm.br');
           setConteudoPadrao(cfg.conteudoPadrao || 'Olá {cliente},\n\nSegue em anexo a Nota Fiscal de Serviços Eletrônica (NFS-e Nº {numero}) referente ao serviço prestado no valor de {valor}.\n\nQualquer dúvida, estamos à inteira disposição.\n\n{assinatura}');
           setAssinatura(cfg.assinatura || ASSINATURA_OFICIAL_PADRAO);
           setAtivo(Boolean(cfg.ativo));
@@ -79,6 +81,7 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
         senha: senha.trim(),
         nomeRemetente: nomeRemetente.trim(),
         emailResposta: emailResposta.trim(),
+        emailCopia: emailCopia.trim(),
         conteudoPadrao,
         assinatura,
         ativo,
@@ -258,6 +261,21 @@ export function ConfigSmtpModal({ empresa, onClose, onSalvo }) {
               onChange={e => setEmailResposta(e.target.value)}
               style={inputStyle}
             />
+          </div>
+        </div>
+
+        {/* E-mail com Cópia (CC) */}
+        <div>
+          <FieldLabel>E-mail para Receber Cópia das Notas (CC)</FieldLabel>
+          <input
+            type="email"
+            placeholder="atendimento@amp.adm.br (cópia de todas as notas enviadas)"
+            value={emailCopia}
+            onChange={e => setEmailCopia(e.target.value)}
+            style={inputStyle}
+          />
+          <div style={{ fontSize: 10.5, color: '#64748B', marginTop: 3 }}>
+            Receba uma cópia em sua caixa de entrada com DANFSe (PDF) e XML anexados para arquivo ou reenvio pelo Outlook.
           </div>
         </div>
 

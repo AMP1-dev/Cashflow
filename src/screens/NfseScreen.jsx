@@ -239,6 +239,23 @@ export function NfseScreen({
     }
   }
 
+  // Ao enviar e-mail com sucesso, marca a nota fiscal como ENVIADA e atualiza a listagem
+  async function handleSucessoEnvioEmail(nota, { destinatario, copia }) {
+    if (!empresa?.id || !nota) return;
+    try {
+      await nfseService.marcarNotaComoEnviada(empresa.id, nota.numero, { destinatario, copia });
+      setNotas(prev => prev.map(n => String(n.numero) === String(nota.numero) ? {
+        ...n,
+        emailEnviado: true,
+        emailEnviadoEm: new Date().toISOString(),
+        emailDestinatario: destinatario,
+        emailCopia: copia
+      } : n));
+    } catch (e) {
+      console.warn('Erro ao marcar nota como enviada:', e);
+    }
+  }
+
   // Ao emitir ou editar com sucesso
   async function handleSucessoEmissao(novaNota, dadosLancamento) {
     const isOficializacao = Boolean(dadosIniciaisEmissao?.numeroPersonalizado && !dadosIniciaisEmissao?.isEdicao);
@@ -618,7 +635,8 @@ export function NfseScreen({
                       }}
                     >
                       <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        {/* Linha 1: Identificador da Nota e Data/Hora de Emissão */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 3 }}>
                           <span style={{ 
                             fontSize: 11.5, 
                             fontWeight: 800, 
@@ -632,7 +650,10 @@ export function NfseScreen({
                           <span style={{ fontSize: 11, color: '#64748B' }}>
                             {dataFormatada} {horaFormatada ? `às ${horaFormatada}` : ''}
                           </span>
+                        </div>
 
+                        {/* Linha 2 (milimetricamente abaixo): Badges Fiscais, Recorrência e Status de Envio */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap' }}>
                           {/* Badge de Status Oficial / Rascunho / Cancelada */}
                           <span style={{ 
                             fontSize: 10.5, 
@@ -657,7 +678,7 @@ export function NfseScreen({
                             )}
                           </span>
 
-                          {/* BADGES RECORRENTE COM O DIA ALINHADO NA MESMA LINHA */}
+                          {/* BADGES RECORRENTE COM O DIA ALINHADO */}
                           {isRecorrente && (
                             <span style={{ 
                               fontSize: 10.5, 
@@ -675,8 +696,50 @@ export function NfseScreen({
                               <span>RECORRENTE: SIM{diaRecorrencia ? ` • DIA: ${diaRecorrencia}` : ''}</span>
                             </span>
                           )}
+
+                          {/* BADGE DE CONTROLE DE DISPARO DE E-MAIL: ENVIADO SIM / NÃO */}
+                          {n.emailEnviado ? (
+                            <span 
+                              title={`Enviado por e-mail em ${n.emailEnviadoEm ? new Date(n.emailEnviadoEm).toLocaleString('pt-BR') : 'recentemente'}${n.emailDestinatario ? ` para ${n.emailDestinatario}` : ''}${n.emailCopia ? ` (cópia: ${n.emailCopia})` : ''}`}
+                              style={{ 
+                                fontSize: 10.5, 
+                                fontWeight: 700, 
+                                color: '#15803D', 
+                                background: '#F0FDF4', 
+                                border: '1px solid #BBF7D0',
+                                padding: '2px 7px', 
+                                borderRadius: 5, 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: 3.5 
+                              }}
+                            >
+                              <CheckCircle size={10} />
+                              <span>ENVIADO: SIM</span>
+                            </span>
+                          ) : (
+                            <span 
+                              title="Esta nota fiscal ainda não foi enviada por e-mail ao cliente"
+                              style={{ 
+                                fontSize: 10.5, 
+                                fontWeight: 700, 
+                                color: '#64748B', 
+                                background: '#F8FAFC', 
+                                border: '1px solid #E2E8F0',
+                                padding: '2px 7px', 
+                                borderRadius: 5, 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: 3.5 
+                              }}
+                            >
+                              <Mail size={10} />
+                              <span>ENVIADO: NÃO</span>
+                            </span>
+                          )}
                         </div>
 
+                        {/* Linha 3: Nome do Tomador */}
                         <div style={{ fontSize: 13, fontWeight: 700, color: '#1E293B', marginTop: 4 }}>
                           {n.tomador?.razaoSocial || 'Cliente'}
                         </div>
@@ -1155,6 +1218,7 @@ export function NfseScreen({
           empresa={empresa}
           onClose={() => setNotaParaEmail(null)}
           onAbrirConfigSmtp={() => setShowConfigSmtp(true)}
+          onSucessoEnvio={handleSucessoEnvioEmail}
         />
       )}
 

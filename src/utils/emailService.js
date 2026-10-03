@@ -36,6 +36,7 @@ export function obterConfigSmtp(empresaId) {
     senha: '',
     nomeRemetente: 'MARCO ANTONIO PAVANI | AMP DO BRASIL',
     emailResposta: 'atendimento@amp.adm.br',
+    emailCopia: 'atendimento@amp.adm.br',
     assuntoPadrao: 'Nota Fiscal de Serviços Eletrônica (NFS-e Nº {numero}) - {prestador}',
     conteudoPadrao: 'Olá {cliente},\n\nSegue em anexo a Nota Fiscal de Serviços Eletrônica (NFS-e Nº {numero}) referente aos serviços prestados no valor de {valor}.\n\nQualquer dúvida, estamos à inteira disposição.\n\n{assinatura}',
     assinatura: ASSINATURA_OFICIAL_PADRAO,
@@ -82,6 +83,7 @@ export async function carregarConfigSmtpNuvem(empresaId) {
         senha: dbSmtp.senha || '',
         nomeRemetente: dbSmtp.remetente_nome || '',
         emailResposta: dbSmtp.email_resposta || '',
+        emailCopia: dbSmtp.email_copia || configAtual.emailCopia || '',
         assuntoPadrao: dbSmtp.assunto_padrao || configAtual.assuntoPadrao,
         conteudoPadrao: dbSmtp.conteudo_padrao || configAtual.conteudoPadrao,
         assinatura: dbSmtp.assinatura_texto || ASSINATURA_OFICIAL_PADRAO,
@@ -135,6 +137,7 @@ export async function salvarConfigSmtp(empresaId, config) {
         senha: config.senha,
         remetente_nome: config.nomeRemetente,
         email_resposta: config.emailResposta,
+        email_copia: config.emailCopia,
         assunto_padrao: config.assuntoPadrao,
         conteudo_padrao: config.conteudoPadrao,
         assinatura_texto: config.assinatura,
@@ -192,6 +195,7 @@ export function montarMensagemNfse(nota, empresa, configCustom = null) {
 
   return {
     destinatario: emailDestino,
+    copia: cfg.emailCopia || cfg.usuario || '',
     assunto,
     corpo,
     prestador,
@@ -201,14 +205,15 @@ export function montarMensagemNfse(nota, empresa, configCustom = null) {
   };
 }
 
-export function gerarLinkMailto(destinatario, assunto, corpo) {
+export function gerarLinkMailto(destinatario, assunto, corpo, copia = '') {
   const d = encodeURIComponent(destinatario || '');
   const a = encodeURIComponent(assunto || '');
   const c = encodeURIComponent(corpo || '');
-  return `mailto:${d}?subject=${a}&body=${c}`;
+  const cc = copia ? `&cc=${encodeURIComponent(copia)}` : '';
+  return `mailto:${d}?subject=${a}${cc}&body=${c}`;
 }
 
-export async function dispararEmailNfse({ empresaId, destinatario, assunto, corpo, nota, empresa }) {
+export async function dispararEmailNfse({ empresaId, destinatario, copia, assunto, corpo, nota, empresa }) {
   const config = obterConfigSmtp(empresaId);
 
   // Payload com anexos PDF (DANFSe) e XML
@@ -240,9 +245,11 @@ export async function dispararEmailNfse({ empresaId, destinatario, assunto, corp
             senha: config.senha,
             nomeRemetente: config.nomeRemetente || 'MARCO ANTONIO PAVANI',
             emailResposta: config.emailResposta || config.usuario,
+            emailCopia: copia || config.emailCopia,
           },
           mensagem: {
             destinatario,
+            copia: copia || config.emailCopia || '',
             assunto,
             corpo,
             anexos,
@@ -260,13 +267,14 @@ export async function dispararEmailNfse({ empresaId, destinatario, assunto, corp
     }
   }
 
-  // 2. Se o backend ainda não estiver escutando na porta, retorna status
+  // 2. Fallback: Retorna pronto para disparo com link mailto formatado com CC
   return { 
     ok: true, 
     via: 'pronto_para_disparo',
     destinatario,
+    copia,
     assunto,
     corpo,
-    linkMailto: gerarLinkMailto(destinatario, assunto, corpo) 
+    linkMailto: gerarLinkMailto(destinatario, assunto, corpo, copia) 
   };
 }
