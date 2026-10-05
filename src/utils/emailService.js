@@ -214,7 +214,7 @@ export function gerarLinkMailto(destinatario, assunto, corpo, copia = '') {
 }
 
 export async function dispararEmailNfse({ empresaId, destinatario, copia, assunto, corpo, nota, empresa }) {
-  const config = obterConfigSmtp(empresaId);
+  const config = await carregarConfigSmtpNuvem(empresaId);
 
   // Payload com anexos PDF (DANFSe) e XML
   const anexos = [];
@@ -223,58 +223,55 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
       anexos.push({
         filename: `NFSe_${nota.numero}_${empresa?.cnpj || 'AMP'}.xml`,
         content: btoa(unescape(encodeURIComponent(nota.xmlGerado))),
-        encoding: 'base64'
+        encoding: 'base64',
+        contentType: 'application/xml'
       });
     } catch (eXml) {}
   }
 
-  // 1. Tenta envio direto via microserviço SMTP nativo
-  if (config.host) {
-    try {
-      const res = await fetch('https://amp.ia.br/api/email/enviar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          empresaId,
-          smtp: {
-            host: config.host,
-            porta: config.porta || 587,
-            autenticado: config.autenticado !== false,
-            seguranca: config.seguranca || 'tls',
-            usuario: config.usuario,
-            senha: config.senha,
-            nomeRemetente: config.nomeRemetente || 'MARCO ANTONIO PAVANI',
-            emailResposta: config.emailResposta || config.usuario,
-            emailCopia: copia || config.emailCopia,
-          },
-          mensagem: {
-            destinatario,
-            copia: copia || config.emailCopia || '',
-            assunto,
-            corpo,
-            anexos,
-            numero: nota?.numero,
-          }
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        return { ok: true, via: 'smtp_backend', data };
-      }
-    } catch (e) {
-      console.warn('Backend SMTP direto inacessível no momento:', e.message);
-    }
+  if (!config.host || !config.usuario || !config.senha) {
+    throw new Error('Configuração de SMTP incompleta. Acesse "E-mail / SMTP" e informe o servidor, e-mail e senha.');
   }
 
-  // 2. Fallback: Retorna pronto para disparo com link mailto formatado com CC
-  return { 
-    ok: true, 
-    via: 'pronto_para_disparo',
-    destinatario,
-    copia,
-    assunto,
-    corpo,
-    linkMailto: gerarLinkMailto(destinatario, assunto, corpo, copia) 
-  };
+  // 1. Dispara diretamente pela nuvem Supabase (Edge Function independente da VPS)
+  try {
+    const { data, error } = await supabase.functions.invoke('enviar-email-smtp', {
+      body: {
+        empresaId,
+        smtp: {
+          host: config.host,
+          porta: parseInt(config.porta) || 587,
+          autenticado: config.autenticado !== false,
+          seguranca: config.seguranca || 'tls',
+          usuario: config.usuario,
+          senha: config.senha,
+          nomeRemetente: config.nomeRemetente || 'MARCO ANTONIO PAVANI',
+          emailResposta: config.emailResposta || config.usuario,
+          emailCopia: copia || config.emailCopia,
+        },
+        mensagem: {
+          destinatario,
+          copia: copia || config.emailCopia || '',
+          assunto,
+          corpo,
+          anexos,
+          numero: nota?.numero,
+        }
+      }
+    });
+
+    if (!error && data?.sucesso) {
+      return { ok: true, via: 'supabase_edge', data };
+    }
+
+    if (error || (data && !data.sucesso)) {
+      const detalheErro = data?.error || error?.message || 'Servidor SMTP recusou a conexão.';
+      throw new Error(detalheErro);
+    }
+  } catch (err) {
+    console.error('Falha no envio direto via Edge Function:', err);
+    throw err;
+  }
+
+  return { ok: true };
 }

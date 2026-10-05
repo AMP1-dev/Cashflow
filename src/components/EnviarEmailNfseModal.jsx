@@ -138,14 +138,39 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
           padding: '10px 14px',
           marginBottom: 12,
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: statusEnvio.tipo === 'erro' ? 'column' : 'row',
+          alignItems: statusEnvio.tipo === 'erro' ? 'flex-start' : 'center',
           gap: 8,
           color: statusEnvio.tipo === 'sucesso' ? '#065F46' : (statusEnvio.tipo === 'info' ? '#1E40AF' : '#991B1B'),
           fontSize: 12,
-          fontWeight: 700
+          fontWeight: 600
         }}>
-          {statusEnvio.tipo === 'sucesso' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
-          <span>{statusEnvio.msg}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {statusEnvio.tipo === 'sucesso' ? <CheckCircle size={16} /> : <AlertTriangle size={16} />}
+            <span>{statusEnvio.msg}</span>
+          </div>
+          {statusEnvio.tipo === 'erro' && (
+            <button
+              onClick={handleAbrirMailto}
+              style={{
+                marginTop: 4,
+                padding: '6px 12px',
+                borderRadius: 6,
+                border: '1px solid #DC2626',
+                background: '#fff',
+                color: '#B91C1C',
+                fontSize: 11.5,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 5
+              }}
+            >
+              <ExternalLink size={13} />
+              <span>Abrir no Webmail / Outlook com anexos</span>
+            </button>
+          )}
         </div>
       )}
 
