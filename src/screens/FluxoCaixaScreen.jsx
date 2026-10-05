@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { UploadCloud } from 'lucide-react';
+import { UploadCloud, Search, X } from 'lucide-react';
 import { formatBRL, formatCompacto, daysInMonth } from '../utils/formatters';
 import { LancamentoRow } from './DashboardScreen';
 import { IndicadorCard } from './AnualScreen';
@@ -66,6 +66,36 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove,
   }, [lancamentos, dias]);
 
   const [diaSelecionado, setDiaSelecionado] = useState(null);
+  const [showBusca, setShowBusca] = useState(false);
+  const [termoBusca, setTermoBusca] = useState('');
+
+  const resultadoBusca = useMemo(() => {
+    const t = (termoBusca || '').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (!t) return null;
+
+    const itens = lancamentos.filter(l => {
+      const desc = (l.descricao || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const banco = (l.banco || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const subcat = (l.subcategoria || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const cat = (l.categoria || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const meio = (l.meio_pagamento || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      const forn = (l.fornecedor || l.cliente || l.tomador || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return desc.includes(t) || banco.includes(t) || subcat.includes(t) || cat.includes(t) || meio.includes(t) || forn.includes(t);
+    }).sort((a, b) => (b.dia || 0) - (a.dia || 0));
+
+    const totalReceita = itens.filter(l => l.tipo === 'receita').reduce((s, l) => s + l.valor, 0);
+    const totalDespesa = itens.filter(l => l.tipo === 'despesa').reduce((s, l) => s + l.valor, 0);
+    const saldo = totalReceita - totalDespesa;
+
+    return {
+      itens,
+      totalReceita,
+      totalDespesa,
+      saldo,
+      qtd: itens.length
+    };
+  }, [lancamentos, termoBusca]);
+
   const offsetSemana = new Date(anoAtual, mesAtual, 1).getDay();
   const diasSemana = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'];
 
@@ -182,11 +212,149 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove,
         })}
       </div>
 
-      <div style={{ display: 'flex', gap: 14, fontSize: 11, color: '#9C9A8F', marginBottom: 16, flexWrap: 'wrap' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 3, background: '#EAF4F1', border: '1px solid #1F5C52', display: 'inline-block' }} /> saldo positivo</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 3, background: '#FBEFE8', border: '1px solid #B05A2E', display: 'inline-block' }} /> saldo negativo</span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ color: '#E8A33D', fontSize: 11, fontWeight: 700 }}>⚠️</span> pico de concentração</span>
+      {/* ── LEGENDA E BOTÃO DA LUPA DE BUSCA ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: (showBusca || termoBusca) ? 10 : 16, flexWrap: 'wrap', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#9C9A8F', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 3, background: '#EAF4F1', border: '1px solid #1F5C52', display: 'inline-block' }} /> saldo positivo</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ width: 9, height: 9, borderRadius: 3, background: '#FBEFE8', border: '1px solid #B05A2E', display: 'inline-block' }} /> saldo negativo</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><span style={{ color: '#E8A33D', fontSize: 11, fontWeight: 700 }}>⚠️</span> pico de concentração</span>
+        </div>
+
+        {/* Botão de Busca / Lupa */}
+        <button
+          onClick={() => {
+            setShowBusca(prev => !prev);
+            if (showBusca) setTermoBusca('');
+          }}
+          title="Buscar lançamentos e totalizar valores específicos (ex: retiradas, pró-labore, pix)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '4px 10px',
+            borderRadius: 8,
+            border: `1px solid ${showBusca || termoBusca ? '#1F5C52' : '#E5E0D5'}`,
+            background: showBusca || termoBusca ? '#EAF4F1' : '#fff',
+            color: showBusca || termoBusca ? '#1F5C52' : '#5C5A4F',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.15s ease',
+            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+          }}
+        >
+          <Search size={13} color={showBusca || termoBusca ? '#1F5C52' : '#5C5A4F'} />
+          <span>{showBusca ? 'Fechar busca' : 'Buscar'}</span>
+        </button>
       </div>
+
+      {/* ── CAMPO DE BUSCA EXPANSÍVEL ── */}
+      {(showBusca || termoBusca) && (
+        <div style={{ marginBottom: 14 }}>
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Search size={15} color="#9C9A8F" style={{ position: 'absolute', left: 12 }} />
+            <input
+              type="text"
+              value={termoBusca}
+              onChange={e => setTermoBusca(e.target.value)}
+              placeholder="Buscar por descrição, pessoa, banco, pró-labore, pix..."
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '9px 36px 9px 34px',
+                borderRadius: 10,
+                border: '1.5px solid #1F5C52',
+                background: '#fff',
+                fontSize: 12.5,
+                color: '#1C2421',
+                outline: 'none',
+                boxShadow: '0 2px 6px rgba(31,92,82,0.08)'
+              }}
+            />
+            {termoBusca && (
+              <button
+                onClick={() => setTermoBusca('')}
+                style={{ position: 'absolute', right: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#9C9A8F', padding: 4 }}
+                title="Limpar busca"
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── PAINEL DE TOTALIZAÇÃO & ITENS DA BUSCA ── */}
+      {resultadoBusca && (
+        <div style={{ background: '#fff', borderRadius: 14, border: '1.5px solid #1F5C52', padding: 14, marginBottom: 16, boxShadow: '0 4px 12px rgba(31,92,82,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10, flexWrap: 'wrap', gap: 6 }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>
+                Totalização: "{termoBusca}"
+              </div>
+              <div style={{ fontSize: 11, color: '#6B7280' }}>
+                {resultadoBusca.qtd} lançamento(s) encontrado(s) no mês
+              </div>
+            </div>
+            <button
+              onClick={() => { setTermoBusca(''); setShowBusca(false); }}
+              style={{ background: 'none', border: 'none', color: '#9C9A8F', fontSize: 11.5, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+            >
+              Limpar filtro
+            </button>
+          </div>
+
+          {/* Cards de Totais da Busca */}
+          <div style={{ display: 'grid', gridTemplateColumns: resultadoBusca.totalReceita > 0 && resultadoBusca.totalDespesa > 0 ? '1fr 1fr 1fr' : '1fr', gap: 8, marginBottom: 12 }}>
+            {resultadoBusca.totalDespesa > 0 && (
+              <div style={{ background: '#FDF2EE', border: '1px solid #F5D5C6', borderRadius: 10, padding: '8px 12px' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: '#B05A2E' }}>Total Saídas (Despesas / Repasses)</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#B05A2E', marginTop: 2 }}>
+                  -{formatBRL(resultadoBusca.totalDespesa)}
+                </div>
+              </div>
+            )}
+            {resultadoBusca.totalReceita > 0 && (
+              <div style={{ background: '#EAF6EE', border: '1px solid #CFEAD9', borderRadius: 10, padding: '8px 12px' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: '#1F5C52' }}>Total Entradas (Receitas)</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: '#1F5C52', marginTop: 2 }}>
+                  +{formatBRL(resultadoBusca.totalReceita)}
+                </div>
+              </div>
+            )}
+            {resultadoBusca.totalReceita > 0 && resultadoBusca.totalDespesa > 0 && (
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '8px 12px' }}>
+                <div style={{ fontSize: 10.5, fontWeight: 600, color: '#475569' }}>Saldo Líquido do Termo</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: resultadoBusca.saldo >= 0 ? '#1F5C52' : '#B05A2E', marginTop: 2 }}>
+                  {formatBRL(resultadoBusca.saldo)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Lista dos Itens Encontrados */}
+          {resultadoBusca.qtd === 0 ? (
+            <div style={{ fontSize: 12, color: '#9C9A8F', textAlign: 'center', padding: '12px 0' }}>
+              Nenhum lançamento corresponde ao termo pesquisado neste mês.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#5C5A4F', marginBottom: 2 }}>
+                Lançamentos que compõem este total:
+              </div>
+              {resultadoBusca.itens.map(it => (
+                <LancamentoRow 
+                  key={it.id} 
+                  l={it} 
+                  onRemove={onRemove} 
+                  onEditar={onEditar} 
+                  onAbrirDanfse={handleAbrirDanfse}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {!diaSelecionado && (
         <>
