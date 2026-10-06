@@ -1,24 +1,51 @@
 <!doctype html>
-<html lang="pt-BR" class="scroll-smooth">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
-    <meta name="theme-color" content="#FFFFFF" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="FMA Advogados" />
-    <meta name="description" content="Ferreira & Mello Advogados — Estratégias e soluções processuais, consultivas e contenciosas. Santa Cruz das Palmeiras – SP. Fone/WhatsApp: (19) 3672-4554." />
-    <title>Ferreira &amp; Mello Advogados | FMA</title>
-    
-    <!-- Preconnect Fonts -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
+    <meta id="meta-theme-color" name="theme-color" content="#0F2B27" />
+    <link id="dynamic-favicon" rel="icon" type="image/svg+xml" href="/vite.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Castoro+Titling&family=Cormorant+Garamond:ital,wght@1,300;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Roboto:wght@300;400;500;700&family=Work+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- Favicon SVG (Monograma Oficial /// fma ///) -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%23FFFFFF' stroke='%23E5E0D8' stroke-width='4'/%3E%3Ctext x='50' y='60' font-family='serif' font-style='italic' font-size='32' fill='%2314233C' text-anchor='middle'%3Efma%3C/text%3E%3C/svg%3E" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>AMP Flow — Fluxo de Caixa e DRE sem Mistério</title>
+    <script>
+      (function() {
+        try {
+          var host = (window.location.hostname || '').toLowerCase();
+          var params = new URLSearchParams(window.location.search || '');
+          var isFma = host.includes('fmadv') || params.get('app') === 'fma';
+          var isPalmeirense = host.includes('palmeirense') || params.get('app') === 'palmeirense' || params.get('app') === 'ecp';
+          var isDrywall = host.includes('drywall') || host.includes('dibrunelli') || params.get('app') === 'drywall';
+          var isRadio = host.includes('amplificadora') || params.get('app') === 'radio';
+          var favEl = document.getElementById('dynamic-favicon');
+          var themeEl = document.getElementById('meta-theme-color');
+
+          if (isFma) {
+            document.title = 'Ferreira & Mello Advogados | FMA';
+            if (themeEl) themeEl.content = '#14233C';
+          } else if (isPalmeirense) {
+            document.title = 'Esporte Clube Palmeirense • Desde 1908 | Sta. C. das Palmeiras';
+            if (favEl) favEl.href = '/logo-ecp.png';
+            if (themeEl) themeEl.content = '#0B0B0E';
+          } else if (isDrywall) {
+            document.title = 'Drywall Distribuidora • Di Brunelli | Interior de SP';
+            if (favEl) favEl.href = '/vite.svg';
+            if (themeEl) themeEl.content = '#0052D9';
+          } else if (isRadio) {
+            document.title = 'Rádio Amplificadora • Ampliando sua onda musical';
+            if (favEl) favEl.href = '/favicon-amplificadora.jpg';
+            if (themeEl) themeEl.content = '#0A0910';
+          } else {
+            document.title = 'AMP Flow — Fluxo de Caixa e DRE sem Mistério';
+            if (favEl) favEl.href = '/vite.svg';
+            if (themeEl) themeEl.content = '#0F2B27';
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-white text-[#14233C] font-sans antialiased selection:bg-[#EAE5DF] selection:text-[#14233C]">
+  <body class="bg-white text-slate-900 font-sans antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
