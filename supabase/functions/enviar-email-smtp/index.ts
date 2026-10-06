@@ -2,7 +2,6 @@
 // Executa na nuvem global do Supabase (Deno Deploy)
 // Não consome nenhum recurso da VPS e isola 100% o envio de e-mails via SMTP com anexos.
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import nodemailer from "npm:nodemailer@6.9.13";
 
 const corsHeaders = {
@@ -10,7 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Trata preflight CORS do navegador
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
