@@ -1,8 +1,6 @@
 // Supabase Edge Function: enviar-email-smtp
-// Executa na nuvem global do Supabase (Deno Deploy)
-// Não consome nenhum recurso da VPS e isola 100% o envio de e-mails via SMTP com anexos.
-
-import nodemailer from "npm:nodemailer@6.9.13";
+// Disparo ultra-rápido e seguro via API Resend (HTTPS)
+// 100% isolado, sem consumo de VPS, com suporte nativo a PDF e XML anexados.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,77 +16,98 @@ Deno.serve(async (req) => {
   try {
     const { smtp, mensagem } = await req.json();
 
-    if (!smtp || !smtp.host || !smtp.usuario || !smtp.senha) {
-      return new Response(
-        JSON.stringify({ error: "Configurações de SMTP incompletas (host, usuário ou senha ausentes)." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     if (!mensagem || !mensagem.destinatario || !mensagem.assunto) {
       return new Response(
-        JSON.stringify({ error: "Destinatário ou assunto da mensagem ausentes." }),
+        JSON.stringify({ error: "Destinatário ou assunto ausentes." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Configura o transporte SMTP
-    const porta = parseInt(smtp.porta) || 587;
-    const ehSsl = smtp.seguranca === "ssl" || porta === 465;
+    const destinatario = mensagem.destinatario.trim();
+    const copia = mensagem.copia ? mensagem.copia.trim() : undefined;
+    const apiKey = (smtp && smtp.resendApiKey) ? smtp.resendApiKey.trim() : (Deno.env.get("RESEND_API_KEY") || "");
 
-    const transporter = nodemailer.createTransport({
-      host: smtp.host,
-      port: porta,
-      secure: ehSsl,
-      auth: smtp.autenticado !== false ? {
-        user: smtp.usuario,
-        pass: smtp.senha,
-      } : undefined,
-      tls: {
-        rejectUnauthorized: false, // Permite certificados auto-assinados de provedores locais
-      },
-    });
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ error: "Chave do Resend (API Key) não informada." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    // Mapeia anexos (se enviados em base64)
+    const nomeRemetente = smtp?.nomeRemetente || "MARCO ANTONIO PAVANI | AMP DO BRASIL";
+    const remetenteOficial = (smtp?.remetenteEmail && smtp.remetenteEmail.includes("@amp.adm.br")) 
+      ? smtp.remetenteEmail 
+      : "atendimento@amp.adm.br";
+
+    // Mapeia anexos (DANFSe e XML) para o formato do Resend
     const attachments = (mensagem.anexos || []).map((anexo: any) => ({
       filename: anexo.filename,
-      content: anexo.content,
-      encoding: anexo.encoding || "base64",
-      contentType: anexo.contentType,
+      content: anexo.content, // base64
     }));
 
-    const remetenteFormatado = smtp.nomeRemetente 
-      ? `"${smtp.nomeRemetente}" <${smtp.usuario}>`
-      : smtp.usuario;
+    // Tenta primeiro com o remetente oficial do domínio amp.adm.br
+    let res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: `${nomeRemetente} <${remetenteOficial}>`,
+        to: [destinatario],
+        cc: copia ? [copia] : undefined,
+        reply_to: "atendimento@amp.adm.br",
+        subject: mensagem.assunto,
+        text: mensagem.corpo,
+        html: mensagem.corpoHtml || mensagem.corpo?.replace(/\n/g, "<br>"),
+        attachments,
+      }),
+    });
 
-    const mailOptions = {
-      from: remetenteFormatado,
-      to: mensagem.destinatario,
-      cc: mensagem.copia || undefined,
-      replyTo: smtp.emailResposta || smtp.usuario,
-      subject: mensagem.assunto,
-      text: mensagem.corpo,
-      html: mensagem.corpoHtml || mensagem.corpo?.replace(/\n/g, "<br>"),
-      attachments,
-    };
+    let data = await res.json();
 
-    const info = await transporter.sendMail(mailOptions);
+    // Fallback inteligente: se o domínio amp.adm.br ainda estiver propagando o DNS no Resend,
+    // envia via canal homologado com Reply-To para atendimento@amp.adm.br para não travar a nota
+    if (!res.ok && data?.message && data.message.includes("domain")) {
+      res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: `${nomeRemetente} <onboarding@resend.dev>`,
+          to: [destinatario],
+          cc: copia ? [copia] : undefined,
+          reply_to: "atendimento@amp.adm.br",
+          subject: mensagem.assunto,
+          text: mensagem.corpo,
+          html: mensagem.corpoHtml || mensagem.corpo?.replace(/\n/g, "<br>"),
+          attachments,
+        }),
+      });
+      data = await res.json();
+    }
+
+    if (!res.ok) {
+      throw new Error(data?.message || "Erro no envio via Resend.");
+    }
 
     return new Response(
       JSON.stringify({ 
         sucesso: true, 
-        messageId: info.messageId,
-        destinatario: mensagem.destinatario,
-        copia: mensagem.copia 
+        messageId: data.id,
+        destinatario,
+        copia 
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err: any) {
-    console.error("Erro no envio de e-mail via Edge Function:", err);
+    console.error("Erro no envio via Edge Function Resend:", err);
     return new Response(
       JSON.stringify({ 
         sucesso: false, 
-        error: err.message || "Erro desconhecido ao conectar ao servidor SMTP." 
+        error: err.message || "Erro desconhecido ao processar e-mail." 
       }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

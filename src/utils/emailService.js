@@ -233,12 +233,15 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
     throw new Error('Configuração de SMTP incompleta. Acesse "E-mail / SMTP" e informe o servidor, e-mail e senha.');
   }
 
+  const resendApiKey = config.resendApiKey || '';
+
   // 1. Dispara diretamente pela nuvem Supabase (Edge Function independente da VPS)
   try {
     const { data, error } = await supabase.functions.invoke('enviar-email-smtp', {
       body: {
         empresaId,
         smtp: {
+          resendApiKey,
           host: config.host,
           porta: parseInt(config.porta) || 587,
           autenticado: config.autenticado !== false,
