@@ -22,12 +22,12 @@ export function FmaTeamLight() {
             </div>
 
             <p className="text-xl sm:text-2xl font-sans font-normal text-[#14233C] dark:text-white leading-[1.38] transition-colors">
-              <strong>{firmConfig.name || 'FMA Advogados'}</strong> é liderada pelo sócio-fundador <strong>{firmConfig.founder || 'Dr. Fernando Maeda'} ({firmConfig.oab || 'OAB/SP 210.374'})</strong>, e tem por premissa oferecer soluções com <strong>profundidade técnica</strong>, <strong>resultados concretos</strong> e <strong>excelência</strong> em cada caso.
+              <strong>{firmConfig.firmName || 'Ferreira & Mello Advogados'}</strong> tem por premissa oferecer soluções com <strong>profundidade técnica</strong>, <strong>resultados concretos</strong> e <strong>excelência</strong> em cada demanda de nossos clientes.
             </p>
 
             <div className="pt-2">
               <a
-                href={`https://wa.me/${firmConfig.contacts?.whatsapp || '5511948900900'}?text=${encodeURIComponent('Olá Dr. Fernando Maeda, gostaria de conversar sobre meu caso.')}`}
+                href={`https://wa.me/${firmConfig.contacts?.whatsapp || '551936724554'}?text=${encodeURIComponent('Olá, gostaria de conversar sobre um caso com a Ferreira & Mello Advogados.')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-3.5 group cursor-pointer"

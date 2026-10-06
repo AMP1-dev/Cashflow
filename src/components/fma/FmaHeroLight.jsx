@@ -1,7 +1,13 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
+import { useFma } from '../../context/FmaContext';
 
 export function FmaHeroLight() {
+  const { firmConfig } = useFma();
+
+  const heroTitle = firmConfig?.heroTitle || 'Estratégias e soluções processuais, consultivas e contenciosas.';
+  const heroSubtitle = firmConfig?.heroSubtitle || 'Atuação de alto impacto técnico para casos complexos nas esferas Cível, Bancária, Contratual e Direito à Saúde.';
+
   return (
     <section id="inicio" className="relative w-full bg-white dark:bg-[#06172B] pt-10 pb-20 sm:pt-16 sm:pb-28 overflow-hidden transition-colors duration-300">
       
@@ -16,14 +22,14 @@ export function FmaHeroLight() {
             
             {/* Main Title: Bold Uppercase Dark Navy / White in Dark Mode */}
             <h1 className="text-3xl sm:text-4xl lg:text-[46px] font-sans font-bold text-[#14233C] dark:text-white tracking-tight leading-[1.18] uppercase transition-colors">
-              Estratégias e soluções processuais, consultivas e contenciosas.
+              {heroTitle}
             </h1>
 
             {/* Sub-description with horizontal rule */}
             <div className="flex items-start gap-4 max-w-lg">
               <span className="w-12 h-[1px] bg-[#14233C] dark:bg-[#D9C8A6] mt-2.5 flex-shrink-0 transition-colors" />
               <p className="text-sm sm:text-base text-[#4A5568] dark:text-[#CFD4DB] leading-relaxed font-normal transition-colors">
-                Atuação de alto impacto técnico para casos complexos nas esferas Cível, Bancária, Contratual e Direito à Saúde.
+                {heroSubtitle}
               </p>
             </div>
 
@@ -67,3 +73,5 @@ export function FmaHeroLight() {
     </section>
   );
 }
+
+export default FmaHeroLight;

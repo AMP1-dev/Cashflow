@@ -1,6 +1,7 @@
 import React from 'react';
 import { Lock } from 'lucide-react';
 import { useFma } from '../../context/FmaContext';
+import { FmaLogo } from './FmaLogo';
 
 export function FmaFooterLight() {
   const { firmConfig, setIsAdminOpen } = useFma();
@@ -12,22 +13,15 @@ export function FmaFooterLight() {
       <div className="max-w-7xl mx-auto px-6 sm:px-12 py-10">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           
-          {/* Logo Monogram */}
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-center">
-              <span className="font-serif text-2xl font-light tracking-tight text-[#14233C] dark:text-white leading-none">
-                FM
-              </span>
-              <span className="text-[8px] font-sans font-semibold tracking-[0.2em] text-[#14233C] dark:text-zinc-300 uppercase">
-                ADVOGADOS
-              </span>
-            </div>
-            <div className="border-l border-zinc-200 dark:border-white/10 pl-3">
+          {/* Logo Oficial Ferreira & Mello Advogados */}
+          <div className="flex items-center gap-4">
+            <FmaLogo size="small" variant="full" />
+            <div className="border-l border-zinc-200 dark:border-white/10 pl-4 hidden sm:block">
               <span className="block text-[11px] font-semibold text-[#14233C] dark:text-white">
-                {firmConfig.founder || 'Dr. Fernando Maeda'}
+                {firmConfig.firmName || 'Ferreira & Mello Advogados'}
               </span>
-              <span className="block text-[10px] text-[#8E7A66] dark:text-[#D9C8A6] font-mono">
-                {firmConfig.oab || 'OAB/SP 210.374'}
+              <span className="block text-[10px] text-[#8E7A66] dark:text-[#D9C8A6]">
+                Santa Cruz das Palmeiras – SP • Fone: (19) 3672-4554
               </span>
             </div>
           </div>

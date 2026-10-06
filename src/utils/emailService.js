@@ -5,6 +5,7 @@
 
 import { formatBRL, somenteDigitos } from './formatters';
 import { supabase } from '../lib/supabase';
+import { gerarDanfsePdfBase64 } from './danfsePdfService';
 
 const STORAGE_SMTP_KEY = 'amp_flow_smtp_config_v1';
 
@@ -205,6 +206,185 @@ export function montarMensagemNfse(nota, empresa, configCustom = null) {
   };
 }
 
+export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {}) {
+  const cliente = nota?.tomador?.razaoSocial || nota?.tomador?.nomeFantasia || 'Prezado(a) Cliente';
+  const numero = nota?.numero || '';
+  const valor = formatBRL(nota?.servico?.valorTotal || nota?.valor || 0);
+  const chave = nota?.chaveAcesso || '';
+  const prestador = empresa?.razao_social || 'AMP DO BRASIL SOLUÇÕES ADMINISTRATIVAS E TECNOLÓGICAS LTDA';
+  const prestadorCnpj = empresa?.cnpj || '10.682.233/0001-75';
+  const ano = nota?.competenciaAno || new Date().getFullYear();
+  const mes = String(nota?.competenciaMes !== undefined ? Number(nota?.competenciaMes) + 1 : new Date().getMonth() + 1).padStart(2, '0');
+
+  // Parágrafos do texto do e-mail
+  const paragrafos = corpoTexto
+    ? corpoTexto.split('\n\n').map(p => `<p style="margin: 0 0 14px 0; line-height: 1.6; color: #334155; font-size: 14.5px;">${p.replace(/\n/g, '<br>')}</p>`).join('')
+    : `<p style="margin: 0 0 14px 0; line-height: 1.6; color: #334155; font-size: 14.5px;">Segue em anexo a Nota Fiscal de Serviços Eletrônica (NFS-e Nº <strong>${numero}</strong>) no valor de <strong>${valor}</strong> referente aos serviços prestados.</p>`;
+
+  return `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>NFS-e Nº ${numero} - AMP DO BRASIL</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #F1F5F9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1E293B;">
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F1F5F9; padding: 28px 12px;">
+    <tr>
+      <td align="center">
+        <!-- Container Principal -->
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.06); border: 1px solid #E2E8F0;">
+          
+          <!-- Cabeçalho Topo AMP -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0F2B27 0%, #173E37 100%); padding: 24px 30px; text-align: left;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td>
+                    <!-- Logotipo Oficial AMP -->
+                    <table border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td style="vertical-align: middle; padding-right: 14px;">
+                          <div style="width: 38px; height: 38px; border-radius: 50%; border: 2.5px solid #9FE0C8; display: inline-block; text-align: center; line-height: 38px;">
+                            <span style="color: #9FE0C8; font-size: 18px; font-weight: 800; font-family: Arial, sans-serif;">⊕</span>
+                          </div>
+                        </td>
+                        <td style="vertical-align: middle;">
+                          <div style="font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #FAF8F3; font-family: Arial, sans-serif; line-height: 1;">
+                            AMP <span style="font-size: 11px; font-weight: 400; color: #9FE0C8; letter-spacing: 1px;">DO BRASIL</span>
+                          </div>
+                          <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #A7F3D0; margin-top: 3px; font-family: Arial, sans-serif;">
+                            Soluções Administrativas e Tecnológicas
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                  <td align="right" style="vertical-align: middle;">
+                    <span style="background-color: rgba(159, 224, 200, 0.18); border: 1px solid #9FE0C8; color: #9FE0C8; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+                      NFS-e Nº ${numero}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Banner Informativo -->
+          <tr>
+            <td style="background-color: #F8FAFC; padding: 14px 30px; border-bottom: 1px solid #E2E8F0;">
+              <span style="font-size: 12px; color: #64748B; font-weight: 500;">
+                Documento Fiscal Oficial emitido via <strong>Padrão Nacional da Receita Federal</strong>
+              </span>
+            </td>
+          </tr>
+
+          <!-- Corpo da Mensagem -->
+          <tr>
+            <td style="padding: 28px 30px 18px 30px;">
+              ${paragrafos}
+
+              <!-- Card com Resumo da Nota -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; margin: 22px 0; overflow: hidden;">
+                <tr>
+                  <td style="padding: 14px 18px; border-bottom: 1px solid #E2E8F0; background-color: #F1F5F9;">
+                    <strong style="color: #0F2B27; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                      Resumo da Operação Fiscal
+                    </strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 16px 18px;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="font-size: 13.5px; color: #334155;">
+                      <tr>
+                        <td style="padding: 4px 0; color: #64748B; width: 35%;">Prestador:</td>
+                        <td style="padding: 4px 0; font-weight: 600; color: #0F172A;">${prestador}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 4px 0; color: #64748B;">CNPJ Prestador:</td>
+                        <td style="padding: 4px 0; font-family: monospace;">${prestadorCnpj}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 4px 0; color: #64748B;">Tomador / Cliente:</td>
+                        <td style="padding: 4px 0; font-weight: 600; color: #0F172A;">${cliente}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 4px 0; color: #64748B;">Competência:</td>
+                        <td style="padding: 4px 0;">${mes}/${ano}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 4px 0; color: #64748B;">Valor Total do Serviço:</td>
+                        <td style="padding: 4px 0; font-size: 16px; font-weight: 800; color: #0F5132;">${valor}</td>
+                      </tr>
+                      ${chave ? `
+                      <tr>
+                        <td style="padding: 6px 0 0 0; color: #64748B; vertical-align: top;">Chave de Acesso:</td>
+                        <td style="padding: 6px 0 0 0; font-family: monospace; font-size: 11px; word-break: break-all; color: #475569;">
+                          ${chave}
+                        </td>
+                      </tr>` : ''}
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- Box de Anexos -->
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; margin-bottom: 22px;">
+                <tr>
+                  <td style="padding: 14px 18px;">
+                    <div style="font-size: 12.5px; font-weight: 700; color: #065F46; margin-bottom: 6px;">
+                      📎 Arquivos anexados nesta mensagem:
+                    </div>
+                    <div style="font-size: 13px; color: #047857; margin-bottom: 4px;">
+                      • <strong>DANFSe_NFe_${numero}.pdf</strong> — Documento Auxiliar Oficial da NFS-e para impressão ou arquivo digital.
+                    </div>
+                    <div style="font-size: 13px; color: #047857;">
+                      • <strong>NFSe_${numero}.xml</strong> — Arquivo XML com assinatura digital da Receita Federal para contabilidade.
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Rodapé com Assinatura Executiva -->
+          <tr>
+            <td style="background-color: #F8FAFC; padding: 22px 30px; border-top: 1px solid #E2E8F0; text-align: left;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td>
+                    <div style="font-size: 14px; font-weight: 800; color: #0F2B27; letter-spacing: -0.2px;">
+                      MARCO ANTONIO PAVANI
+                    </div>
+                    <div style="font-size: 12px; color: #1F5C52; font-weight: 600; margin-top: 2px;">
+                      Diretor Executivo • AMP do Brasil
+                    </div>
+                    <div style="font-size: 11.5px; color: #64748B; margin-top: 6px; line-height: 1.5;">
+                      📧 <a href="mailto:atendimento@amp.adm.br" style="color: #1F5C52; text-decoration: none;">atendimento@amp.adm.br</a> | 
+                      🌐 <a href="https://www.amp.adm.br" target="_blank" style="color: #1F5C52; text-decoration: none;">www.amp.adm.br</a><br>
+                      📱 (19) 99448-7795 • Santa Cruz das Palmeiras - SP
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+        </table>
+        
+        <!-- Rodapé Legal Externo -->
+        <div style="max-width: 620px; text-align: center; margin-top: 16px; font-size: 11px; color: #94A3B8; line-height: 1.4;">
+          Esta mensagem e seus anexos contêm informações fiscais confidenciais geradas pelo <strong>AMP Flow</strong>.<br>
+          © ${ano} AMP DO BRASIL SOLUÇÕES ADMINISTRATIVAS E TECNOLÓGICAS LTDA. Todos os direitos reservados.
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
+
 export function gerarLinkMailto(destinatario, assunto, corpo, copia = '') {
   const d = encodeURIComponent(destinatario || '');
   const a = encodeURIComponent(assunto || '');
@@ -218,15 +398,34 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
 
   // Payload com anexos PDF (DANFSe) e XML
   const anexos = [];
+
+  // 1. Gera e anexa o DANFSe Oficial em PDF
+  try {
+    const pdfBase64 = gerarDanfsePdfBase64(nota, empresa);
+    if (pdfBase64) {
+      anexos.push({
+        filename: `DANFSe_NFe_${nota?.numero || '1'}.pdf`,
+        content: pdfBase64,
+        encoding: 'base64',
+        contentType: 'application/pdf'
+      });
+    }
+  } catch (ePdf) {
+    console.error('Falha ao gerar PDF DANFSe para anexo de e-mail:', ePdf);
+  }
+
+  // 2. Anexa o Arquivo Fiscal XML da Receita
   if (nota?.xmlGerado) {
     try {
       anexos.push({
-        filename: `NFSe_${nota.numero}_${empresa?.cnpj || 'AMP'}.xml`,
+        filename: `NFSe_${nota.numero}_${empresa?.cnpj?.replace(/\D/g, '') || 'AMP'}.xml`,
         content: btoa(unescape(encodeURIComponent(nota.xmlGerado))),
         encoding: 'base64',
         contentType: 'application/xml'
       });
-    } catch (eXml) {}
+    } catch (eXml) {
+      console.error('Falha ao codificar XML para anexo:', eXml);
+    }
   }
 
   if (!config.host || !config.usuario || !config.senha) {
@@ -234,8 +433,9 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
   }
 
   const resendApiKey = config.resendApiKey || '';
+  const corpoHtml = montarHtmlEmailNfse(nota, empresa, corpo, config);
 
-  // 1. Dispara diretamente pela nuvem Supabase (Edge Function independente da VPS)
+  // Dispara diretamente pela nuvem Supabase (Edge Function independente da VPS)
   try {
     const { data, error } = await supabase.functions.invoke('enviar-email-smtp', {
       body: {
@@ -248,8 +448,9 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
           seguranca: config.seguranca || 'tls',
           usuario: config.usuario,
           senha: config.senha,
-          nomeRemetente: config.nomeRemetente || 'MARCO ANTONIO PAVANI',
-          emailResposta: config.emailResposta || config.usuario,
+          nomeRemetente: config.nomeRemetente || 'MARCO ANTONIO PAVANI | AMP DO BRASIL',
+          remetenteEmail: config.usuario || 'atendimento@amp.adm.br',
+          emailResposta: config.emailResposta || config.usuario || 'atendimento@amp.adm.br',
           emailCopia: copia || config.emailCopia,
         },
         mensagem: {
@@ -257,6 +458,7 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
           copia: copia || config.emailCopia || '',
           assunto,
           corpo,
+          corpoHtml,
           anexos,
           numero: nota?.numero,
         }
@@ -268,8 +470,17 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
     }
 
     if (error || (data && !data.sucesso)) {
-      const detalheErro = data?.error || error?.message || 'Servidor SMTP recusou a conexão.';
-      throw new Error(detalheErro);
+      let detalheErro = data?.error;
+      if (!detalheErro && error) {
+        detalheErro = error.message;
+        try {
+          if (error.context && typeof error.context.json === 'function') {
+            const errBody = await error.context.json();
+            if (errBody?.error) detalheErro = errBody.error;
+          }
+        } catch (_) {}
+      }
+      throw new Error(detalheErro || 'Falha no disparo do e-mail.');
     }
   } catch (err) {
     console.error('Falha no envio direto via Edge Function:', err);

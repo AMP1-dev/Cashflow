@@ -13,11 +13,16 @@ import { SongRequestModal } from './components/SongRequestModal';
 import { ShowDetailModal } from './components/ShowDetailModal';
 import { ArticleModal } from './components/ArticleModal';
 import { IndoorPlayerModal } from './components/IndoorPlayerModal';
+import { IndoorStandaloneApp } from './components/IndoorStandaloneApp';
 import { RadioAdminPanel } from './admin/RadioAdminPanel';
 import { Toast } from './components/Toast';
 
 function MainRadioApp() {
   const { currentView, toast, isPlaying, currentSlot, activeChannel, config } = useRadio();
+
+  const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const isIndoorApp = urlParams ? urlParams.has('indoor') : false;
+  const indoorSlug = urlParams ? urlParams.get('indoor') : '';
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -41,6 +46,23 @@ function MainRadioApp() {
     return (
       <div className="min-h-screen bg-[#0A0910] font-sans antialiased text-slate-100 selection:bg-pink-600 selection:text-white">
         <RadioAdminPanel />
+        {toast && (
+          <div className="fixed bottom-6 right-6 z-50 animate-fadeIn">
+            <div className={`px-5 py-3.5 rounded-2xl shadow-2xl border text-xs font-black backdrop-blur-md ${
+              toast.type === 'error' ? 'bg-rose-950/90 border-rose-500/50 text-rose-200' : 'bg-pink-950/90 border-pink-500/50 text-pink-200'
+            }`}>
+              {toast.message}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  if (isIndoorApp) {
+    return (
+      <div className="min-h-screen bg-[#07060B] font-sans antialiased text-slate-100">
+        <IndoorStandaloneApp clientSlug={indoorSlug} />
         {toast && (
           <div className="fixed bottom-6 right-6 z-50 animate-fadeIn">
             <div className={`px-5 py-3.5 rounded-2xl shadow-2xl border text-xs font-black backdrop-blur-md ${

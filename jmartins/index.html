@@ -1,0 +1,2766 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JMartins Industrial | Bobinas de Aço e Telhas Galvanizadas - Sul de MG e SP</title>
+  <meta name="description" content="Comercialização direta de bobinas de aço galvalume e fabricação sob medida de telhas galvanizadas e termoacústicas para o Sul de Minas Gerais e São Paulo. Entrega rápida e garantia de usina.">
+  <meta property="og:title" content="JMartins Industrial | Aço e Telhas Galvanizadas">
+  <meta property="og:description" content="Soluções industriais em bobinas de aço galvalume, telhas trapezoidais e termoacústicas para obras no Sul de MG e SP.">
+  <meta property="og:image" content="assets/hero_steel.jpg">
+  
+  <!-- Favicon Oficial Jmartins do Brasil -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="assets/favicon-64.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png">
+  
+  <!-- Google Fonts: Inter & Barlow -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            barlow: ['Barlow', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#dc2626',
+              redHover: '#b91c1c',
+              redLight: '#fee2e2',
+              redDark: '#991b1b',
+              gray: {
+                950: '#0c0f14',
+                900: '#121824',
+                850: '#1a2233',
+                800: '#222b3e',
+                700: '#334155',
+                600: '#475569',
+                400: '#94a3b8',
+                300: '#cbd5e1',
+                200: '#e2e8f0',
+                100: '#f1f5f9',
+                50: '#f8fafc',
+              }
+            }
+          },
+          backgroundImage: {
+            'steel-pattern': "radial-gradient(circle at 50% 50%, rgba(220, 38, 38, 0.08) 0%, transparent 60%)",
+            'metal-gradient': "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Canvas Confetti -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    .glass-panel {
+      background: rgba(18, 24, 36, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .red-glow {
+      box-shadow: 0 0 35px -5px rgba(220, 38, 38, 0.45);
+    }
+    .text-metallic {
+      background: linear-gradient(180deg, #FFFFFF 20%, #CBD5E1 70%, #94A3B8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="bg-brand-gray-950 text-brand-gray-100 font-sans antialiased selection:bg-brand-red selection:text-white">
+
+  <!-- TOP BAR: Regiões de Atendimento & Contato Rápido -->
+  <div class="bg-brand-gray-900 border-b border-brand-gray-800 text-xs text-brand-gray-300 py-2">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-2">
+      <div class="flex items-center gap-2 font-medium flex-wrap justify-center sm:justify-start">
+        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-brand-red/20 text-brand-red border border-brand-red/30">
+          ENTREGAS EM TODO O BRASIL
+        </span>
+        <span id="topbarAddress" class="flex items-center gap-1.5 text-brand-gray-300">
+          <i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-red shrink-0"></i>
+          Polos: <strong>Sul de Minas</strong> • <strong>São Paulo</strong> • <strong>Litoral Norte de SC</strong>
+        </span>
+      </div>
+      <div class="flex items-center gap-4 text-xs flex-wrap justify-center sm:justify-end">
+        <span class="flex items-center gap-1.5 text-brand-gray-300">
+          <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-red"></i>
+          <a href="tel:1936722881" class="hover:text-white transition-colors">(19) 3672-2881</a>
+          <span class="text-brand-gray-600">/</span>
+          <a href="tel:1936721563" class="hover:text-white transition-colors">(19) 3672-1563</a>
+        </span>
+        <span class="text-brand-gray-600 hidden sm:inline">|</span>
+        <a id="topbarInstagram" href="https://instagram.com/jmartinsindustrial" target="_blank" rel="noopener noreferrer" class="hover:text-white flex items-center gap-1.5 transition-colors">
+          <i data-lucide="instagram" class="w-3.5 h-3.5 text-pink-500"></i>
+          <span id="topbarInstagramText">@jmartinsindustrial</span>
+        </a>
+        <span class="text-brand-gray-600">|</span>
+        <a id="topbarVideo" href="javascript:void(0)" onclick="openVideoModal()" class="hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer">
+          <i data-lucide="video" class="w-3.5 h-3.5 text-blue-400"></i>
+          <span>Vídeo da Fábrica</span>
+        </a>
+        <span class="text-brand-gray-600 hidden md:inline">|</span>
+        <button onclick="openAdminModal('company')" class="text-brand-gray-400 hover:text-brand-red flex items-center gap-1 text-[11px] transition-colors ml-1">
+          <i data-lucide="lock" class="w-3 h-3"></i>
+          <span class="hidden md:inline">Área Adm</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEADER / NAVBAR FIXA -->
+  <header class="sticky top-0 z-40 bg-brand-gray-950/90 backdrop-blur-md border-b border-brand-gray-800/80 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
+      
+      <!-- LOGO OFICIAL JMARTINS DO BRASIL -->
+      <a href="#" class="flex items-center group py-1 shrink-0" title="Jmartins do Brasil">
+        <img src="assets/logo_jmartins_white.png" alt="Jmartins do Brasil - Bobinas de Aço e Telhas" class="h-10 sm:h-12 w-auto object-contain transition-transform group-hover:scale-105 filter drop-shadow-md">
+      </a>
+
+      <!-- MENU DESKTOP CENTRALIZADO E HARMONIOSO -->
+      <nav class="hidden lg:flex items-center justify-center gap-8 xl:gap-12 text-sm font-medium text-brand-gray-300 flex-1">
+        <a href="#produtos" class="hover:text-white transition-colors">Produtos</a>
+        <a href="#simulador" class="hover:text-white transition-colors">Cotação</a>
+        <a href="#institucional" class="hover:text-white transition-colors">Fábrica</a>
+        <a href="#logistica" class="hover:text-white transition-colors">Entregas</a>
+        <a href="#posts" class="hover:text-white transition-colors">Informativo</a>
+      </nav>
+
+      <!-- BOTÕES DE AÇÃO -->
+      <div class="flex items-center gap-3 shrink-0">
+        <button onclick="openWhatsAppModal()" 
+           id="headerWhatsappBtn"
+           class="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-redHover text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all transform hover:-translate-y-0.5 red-glow shadow-lg shadow-brand-red/25 cursor-pointer">
+          <i data-lucide="message-circle" class="w-4 h-4"></i>
+          <span>Orçamento WhatsApp</span>
+        </button>
+
+        <!-- Botão Menu Mobile -->
+        <button id="mobileMenuBtn" class="lg:hidden p-2 rounded-lg bg-brand-gray-900 border border-brand-gray-800 text-brand-gray-300 hover:text-white" aria-label="Abrir Menu">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- MOBILE MENU DRAWER -->
+    <div id="mobileMenu" class="hidden lg:hidden bg-brand-gray-900 border-b border-brand-gray-800 px-6 py-4 space-y-3">
+      <a href="#produtos" class="block text-brand-gray-300 hover:text-white py-1">Produtos</a>
+      <a href="#simulador" class="block text-brand-gray-300 hover:text-white py-1">Cotação</a>
+      <a href="#institucional" class="block text-brand-gray-300 hover:text-white py-1">Fábrica</a>
+      <a href="#logistica" class="block text-brand-gray-300 hover:text-white py-1">Entregas</a>
+      <a href="#posts" class="block text-brand-gray-300 hover:text-white py-1">Informativo</a>
+      <div class="pt-3 border-t border-brand-gray-800 flex justify-between items-center">
+        <a href="https://instagram.com/jmartinsindustrial" target="_blank" class="text-xs text-brand-gray-400 flex items-center gap-1">
+          <i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i> @jmartinsindustrial
+        </a>
+        <button onclick="openAdminModal()" class="text-xs text-brand-red font-semibold">Painel Adm</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION FULL-WIDTH (Largura Total da Página) -->
+  <section class="relative w-full min-h-[92vh] flex items-center justify-center overflow-hidden border-b border-brand-gray-800">
+    
+    <!-- Hero Background Slider com Cross-fade suave -->
+    <div class="absolute inset-0 z-0 overflow-hidden" id="heroSliderContainer">
+      
+      <!-- Slide 1: Fábrica e Galpão de Aço -->
+      <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-100 scale-100 transform ease-out" data-slide="0">
+        <img src="assets/hero_steel.jpg" alt="Fábrica de bobinas de aço e telhas JMartins" class="w-full h-full object-cover object-center">
+      </div>
+
+      <!-- Slide 2: Telhas Trapezoidais e Sanduíche -->
+      <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0 scale-100 transform ease-out" data-slide="1">
+        <img src="assets/telhas_trapezoidais.jpg" alt="Telhas Trapezoidais e Sanduíche" class="w-full h-full object-cover object-center">
+      </div>
+
+      <!-- Slide 3: Bobinas de Aço Galvalume -->
+      <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0 scale-100 transform ease-out" data-slide="2">
+        <img src="assets/bobinas_aco.jpg" alt="Bobinas de Aço Galvalume de Usina" class="w-full h-full object-cover object-center">
+      </div>
+
+      <!-- Slide 4: Frota e Logística Rodoviária -->
+      <div class="hero-slide absolute inset-0 transition-opacity duration-1000 opacity-0 scale-100 transform ease-out" data-slide="3">
+        <img src="assets/logistica_sp_mg.jpg" alt="Logística Rodoviária Sul de MG e SP" class="w-full h-full object-cover object-center">
+      </div>
+
+      <!-- Gradiente Suavizado: 65% na esquerda para máxima visibilidade da fábrica e 15% na direita -->
+      <div class="absolute inset-0 bg-gradient-to-r from-brand-gray-950/75 via-brand-gray-950/45 to-brand-gray-950/15 pointer-events-none"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950/80 via-transparent to-brand-gray-950/20 pointer-events-none"></div>
+
+      <!-- Linhas decorativas técnicas industriais sutis -->
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#dc2626_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none"></div>
+    </div>
+
+    <!-- Controles Laterais do Slider (Setas) -->
+    <button onclick="prevHeroSlide()" class="absolute left-4 z-20 p-2.5 rounded-full bg-brand-gray-950/60 hover:bg-brand-red text-white/70 hover:text-white border border-white/10 backdrop-blur transition-all hidden md:flex items-center justify-center hover:scale-110" aria-label="Slide anterior">
+      <i data-lucide="chevron-left" class="w-5 h-5"></i>
+    </button>
+    <button onclick="nextHeroSlide()" class="absolute right-4 z-20 p-2.5 rounded-full bg-brand-gray-950/60 hover:bg-brand-red text-white/70 hover:text-white border border-white/10 backdrop-blur transition-all hidden md:flex items-center justify-center hover:scale-110" aria-label="Próximo slide">
+      <i data-lucide="chevron-right" class="w-5 h-5"></i>
+    </button>
+
+    <!-- Indicadores Inferiores do Slider -->
+    <div class="absolute bottom-16 right-8 sm:right-16 z-20 hidden sm:flex items-center gap-2 bg-brand-gray-950/70 backdrop-blur px-3 py-1.5 rounded-full border border-white/10">
+      <button onclick="goToHeroSlide(0)" class="hero-dot w-6 h-1.5 rounded-full bg-brand-red transition-all" data-index="0" aria-label="Ir para slide 1"></button>
+      <button onclick="goToHeroSlide(1)" class="hero-dot w-2 h-1.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" data-index="1" aria-label="Ir para slide 2"></button>
+      <button onclick="goToHeroSlide(2)" class="hero-dot w-2 h-1.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" data-index="2" aria-label="Ir para slide 3"></button>
+      <button onclick="goToHeroSlide(3)" class="hero-dot w-2 h-1.5 rounded-full bg-white/30 hover:bg-white/60 transition-all" data-index="3" aria-label="Ir para slide 4"></button>
+    </div>
+
+    <!-- Conteúdo do Hero -->
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32">
+      
+      <!-- Badges do Topo do Hero -->
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-gray-900/90 border border-brand-gray-700/80 mb-6 backdrop-blur shadow-lg">
+        <span class="w-2.5 h-2.5 rounded-full bg-brand-red animate-ping"></span>
+        <span id="cfgHeroBadge" class="text-xs font-semibold uppercase tracking-wider text-brand-gray-300">
+          Fornecimento Industrial Direto • Entregas em Todo o Brasil
+        </span>
+      </div>
+
+      <!-- Título de Grande Impacto -->
+      <div class="max-w-4xl">
+        <h1 class="font-barlow font-black text-4xl sm:text-6xl lg:text-7xl leading-tight uppercase tracking-tight text-white mb-6 drop-shadow-[0_4px_20px_rgba(0,0,0,0.95)]">
+          <span id="cfgHeroTitle1">POTÊNCIA E PRECISÃO EM</span> <br>
+          <span id="cfgHeroTitle2" class="text-metallic">AÇO PLANO E TELHAS</span> <br>
+          <span id="cfgHeroTitle3" class="text-brand-red">SOLUÇÕES SOB MEDIDA</span>
+        </h1>
+
+        <p id="cfgHeroSubtitle" class="text-base sm:text-xl text-brand-gray-200 max-w-2xl font-normal leading-relaxed mb-8 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]">
+          Corte e dobra, telhas galvalume e termoacústicas, bobinas, chapas, vigas, perfis, painéis, calhas, tubos e slitter. Polos estratégicos no <strong class="text-white font-semibold">Sul de Minas Gerais</strong>, <strong class="text-white font-semibold">São Paulo</strong> e <strong class="text-white font-semibold">Litoral Norte de Santa Catarina</strong> com atendimento e entregas em todo o Brasil.
+        </p>
+
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-12">
+          
+          <button onclick="openWhatsAppModal()" 
+             class="flex items-center justify-center gap-3 bg-brand-red hover:bg-brand-redHover text-white px-8 py-4 rounded-xl font-bold text-base transition-all transform hover:-translate-y-1 red-glow shadow-2xl shadow-brand-red/30 cursor-pointer">
+            <i data-lucide="message-square" class="w-5 h-5"></i>
+            <span id="cfgHeroCtaText">SOLICITAR COTAÇÃO RÁPIDA</span>
+          </button>
+
+          <button onclick="openVideoModal()" 
+             class="flex items-center justify-center gap-3 bg-brand-gray-900/90 hover:bg-brand-gray-800 text-brand-gray-100 hover:text-white px-7 py-4 rounded-xl font-semibold text-base border border-brand-gray-700/80 transition-all backdrop-blur group">
+            <div class="w-7 h-7 rounded-full bg-brand-red/20 group-hover:bg-brand-red flex items-center justify-center transition-colors">
+              <i data-lucide="play" class="w-4 h-4 text-brand-red group-hover:text-white fill-current"></i>
+            </div>
+            <span>VÍDEO DA FÁBRICA</span>
+          </button>
+
+          <a href="#simulador" 
+             class="flex items-center justify-center gap-2 text-brand-gray-400 hover:text-white px-4 py-4 text-sm font-medium transition-colors">
+            <i data-lucide="calculator" class="w-4 h-4 text-brand-red"></i>
+            <span>Simulador de Cotação</span>
+          </a>
+
+        </div>
+
+        <!-- 3 Pilares em Miniatura -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6 border-t border-brand-gray-800/80">
+          
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-brand-gray-900 border border-brand-gray-800 flex items-center justify-center text-brand-red shrink-0">
+              <i data-lucide="truck" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="text-xs uppercase font-bold tracking-wider text-white">Entregas Todo Brasil</div>
+              <div class="text-xs text-brand-gray-400">Frota ágil e logística integrada</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-brand-gray-900 border border-brand-gray-800 flex items-center justify-center text-brand-red shrink-0">
+              <i data-lucide="map-pin" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="text-xs uppercase font-bold tracking-wider text-white">3 Polos Estratégicos</div>
+              <div class="text-xs text-brand-gray-400">Sul de MG, SP e Litoral Norte SC</div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-brand-gray-900 border border-brand-gray-800 flex items-center justify-center text-brand-red shrink-0">
+              <i data-lucide="scissors" class="w-5 h-5"></i>
+            </div>
+            <div>
+              <div class="text-xs uppercase font-bold tracking-wider text-white">Corte Sob Medida</div>
+              <div class="text-xs text-brand-gray-400">Zero desperdício para seu projeto</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Indicador de Scroll Suave -->
+    <a href="#produtos" class="absolute bottom-4 left-1/2 -translate-x-1/2 text-brand-gray-400 hover:text-white flex flex-col items-center text-xs gap-1 animate-bounce">
+      <span>Conheça os Produtos</span>
+      <i data-lucide="chevron-down" class="w-4 h-4 text-brand-red"></i>
+    </a>
+  </section>
+
+    <!-- SEÇÃO DE PRODUTOS PRINCIPAIS (13 PRODUTOS OFICIAIS) -->
+  <section id="produtos" class="py-24 bg-brand-gray-900 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- Cabeçalho da Seção -->
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="text-brand-red font-bold text-xs uppercase tracking-widest bg-brand-red/10 px-3 py-1 rounded-full border border-brand-red/20">
+          Catálogo Industrial Completo
+        </span>
+        <h2 class="font-barlow font-black text-3xl sm:text-5xl uppercase tracking-tight text-white mt-3 mb-4">
+          Aço Plano, Telhas e Perfis Estruturais
+        </h2>
+        <p class="text-brand-gray-400 text-sm sm:text-base">
+          Fornecimento direto de fábrica com corte sob medida, rigoroso padrão de espessura e conformidade técnica para obras e indústrias em todo o Brasil.
+        </p>
+      </div>
+
+      <!-- Grid com os 13 Produtos Oficiais -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        
+        <!-- PRODUTO 1: CORTE E DOBRA -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/hero_steel.jpg" alt="Corte e Dobra sob Medida" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-75">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Sob Medida
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="scissors" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Conformação CNC</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Corte e Dobra
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Conformação precisa em guilhotinas e dobradeiras CNC de alta capacidade. Peças sob medida prontas para montagem sem perda de material.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Corte e dobra')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Corte e Dobra</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 2: TELHAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/telhas_trapezoidais.jpg" alt="Telhas Galvanizadas e Galvalume" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-gray-900 border border-brand-gray-700 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+              TP40 / TP25 / Ondulada
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="home" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Cobertura & Fechamento</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Telhas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Telhas trapezoidais e onduladas conformadas em aço Galvalume e galvanizado. Alta rigidez mecânica e máxima vazão de água para galpões e estruturas.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Telhas (TP40, TP25 e Onduladas)')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Telhas</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 3: TELHAS TERMOACÚSTICAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/telhas_trapezoidais.jpg" alt="Telhas Termoacústicas Sanduíche" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Sanduíche EPS / PIR
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="thermometer-snowflake" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Isolamento Térmico</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Telhas Termoacústicas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Duas camadas de aço com núcleo isolante em EPS antichama ou PIR. Reduz até 90% do calor e ruídos de chuva, proporcionando conforto e economia.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Telhas Termoacústicas (Sanduíche)')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Telha Sanduíche</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 4: BOBINAS GALVALUME -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/bobinas_aco.jpg" alt="Bobinas Galvalume JMARTINS" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Aluzinc AZ150
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="layers" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Liga 55% Al / 43,5% Zn</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Bobinas Galvalume
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Durabilidade até 4 vezes superior ao aço galvanizado tradicional em intempéries externas. Espessuras de 0,35 a 1,20 mm para pronta-entrega.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Bobinas Galvalume')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Bobina Galvalume</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 5: BOBINAS GALVANIZADAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/bobinas_aco.jpg" alt="Bobinas Galvanizadas JMARTINS" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-gray-900 border border-brand-gray-700 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+              Zinco Homogêneo
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="shield" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Proteção Anticorrosão</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Bobinas Galvanizadas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Revestimento uniforme de zinco com alta ductilidade. Excelente conformabilidade para fabricação contínua de calhas, dutos e telhados.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Bobinas Galvanizadas')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Bobina Galvanizada</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 6: BOBINAS PRÉ-PINTADAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/hero_steel.jpg" alt="Bobinas Pré-pintadas" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-75">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Cores Padrão
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="palette" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Pintura Poliéster</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Bobinas Pré-pintadas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Aço com primer epóxi e acabamento contínuo em poliéster. Alta resistência UV e estética sofisticada para fachadas e coberturas modernas.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Bobinas Pré-pintadas')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Bobina Pré-pintada</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 7: CHAPAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/bobinas_aco.jpg" alt="Chapas de Aço" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-70">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-gray-900 border border-brand-gray-700 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+              Laminadas & Xadrez
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="square" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Aço Plano</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Chapas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Chapas finas a quente, finas a frio, galvanizadas e chapas xadrez antiderrapantes para pisos industriais, mezaninos e caldeiraria.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Chapas de Aço')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Chapas</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 8: VIGAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/hero_steel.jpg" alt="Vigas Estruturais" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-75">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Padrões W, I e U
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="git-commit" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Estrutural Pesado</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Vigas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Vigas estruturais laminadas e soldadas para suporte de grandes vãos livres em galpões industriais, edifícios comerciais e pontes rolantes.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Vigas Estruturais')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Vigas</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 9: PERFIS DOBRADOS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/hero_steel.jpg" alt="Perfis Dobrados" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-70">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-gray-900 border border-brand-gray-700 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+              U Simples & Enrijecido
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="box" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Estruturas Metálicas</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Perfis Dobrados
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Perfis estruturais dobrados a frio com rigorosa padronização de abas e espessuras. Essenciais para terças, colunas e travamentos de coberturas.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Perfis Dobrados')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Perfis Dobrados</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 10: PAINÉIS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/telhas_trapezoidais.jpg" alt="Painéis Metálicos" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-75">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Fechamentos Ágeis
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Paredes & Fachadas</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Painéis
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Painéis metálicos e isotérmicos para fechamentos laterais industriais rápidos, divisórias internas limpas e fachadas arquitetônicas.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Painéis Metálicos')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Painéis</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 11: CALHAS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/hero_steel.jpg" alt="Calhas e Rufos" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-75">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-gray-900 border border-brand-gray-700 text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded">
+              Drenagem Pluvial
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="droplet" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Proteção de Cobertura</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Calhas
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Calhas, rufos e condutores moldados em aço para escoamento pluvial seguro, prevenindo infiltrações e assegurando estanqueidade total à cobertura.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Calhas e Rufos')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Calhas</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 12: TUBOS -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/hero_steel.jpg" alt="Tubos Industriais" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-75">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Metalons & Redondos
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="circle-dot" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Serralheria & Estrutura</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Tubos
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Tubos industriais de aço carbono com costura nos formatos redondo, quadrado e retangular (metalon) para serralherias e estruturas tubulares.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Tubos Industriais e Metalons')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Tubos</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- PRODUTO 13: SLITTER -->
+        <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1.5 shadow-xl flex flex-col md:col-span-2 lg:col-span-1">
+          <div class="relative h-44 overflow-hidden bg-brand-gray-900">
+            <img src="assets/bobinas_aco.jpg" alt="Slitter de Aço" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded shadow">
+              Fitas & Bobinetes
+            </span>
+          </div>
+          <div class="p-5 flex-1 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-brand-red mb-1">
+                <i data-lucide="disc" class="w-4 h-4"></i>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-brand-gray-400">Corte Longitudinal</span>
+              </div>
+              <h3 class="font-barlow font-bold text-xl text-white uppercase group-hover:text-brand-red transition-colors">
+                Slitter
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 leading-relaxed">
+                Fitas e tiras de aço cortadas longitudinalmente em bobinetes na largura exata do cliente, com tolerâncias milimétricas para maquinários e prensas.
+              </p>
+            </div>
+            <button onclick="openWhatsAppModal('Slitter de Aço')" class="mt-5 w-full py-2.5 px-3 rounded-lg bg-brand-gray-900 hover:bg-brand-red text-white text-xs font-bold uppercase tracking-wider transition-colors border border-brand-gray-800 hover:border-brand-red flex items-center justify-center gap-2">
+              <i data-lucide="message-circle" class="w-4 h-4"></i>
+              <span>Cotar Slitter</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SIMULADOR INTERATIVO DE COTAÇÃO (Calculadora Rápida para Clientes & Serralheiros) -->
+  <section id="simulador" class="py-20 bg-brand-gray-950 border-y border-brand-gray-800 relative">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="bg-gradient-to-b from-brand-gray-900 to-brand-gray-950 border border-brand-gray-800 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+        
+        <!-- Faixa vermelha superior -->
+        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-red via-brand-redLight to-brand-red"></div>
+
+        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 mb-8 pb-6 border-b border-brand-gray-800">
+          <div>
+            <div class="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-brand-red mb-1">
+              <i data-lucide="cpu" class="w-4 h-4"></i> Ferramenta Expressa
+            </div>
+            <h3 class="font-barlow font-black text-2xl sm:text-3xl text-white uppercase">
+              Simulador de Cotação de Telhas & Bobinas
+            </h3>
+            <p class="text-xs sm:text-sm text-brand-gray-400">
+              Calcule sua metragem e envie os dados organizados direto para a equipe de vendas da JMartins.
+            </p>
+          </div>
+          <div class="flex items-center gap-2 bg-brand-gray-950 border border-brand-gray-800 px-3 py-1.5 rounded-lg text-xs text-brand-gray-300">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Vendedores online para todo o Brasil
+          </div>
+        </div>
+
+        <!-- Formulário do Simulador -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          
+          <!-- Seleção de Produto -->
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1.5 uppercase">Produto</label>
+            <select id="simProduct" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red" onchange="calculateQuote()">
+              <option value="Corte e dobra">Corte e dobra</option>
+              <option value="Telhas" selected>Telhas (TP40, TP25 e Onduladas)</option>
+              <option value="Telhas termoacústicas">Telhas termoacústicas (Sanduíche EPS/PIR)</option>
+              <option value="Bobinas Galvalume">Bobinas Galvalume</option>
+              <option value="Bobinas galvanizadas">Bobinas galvanizadas</option>
+              <option value="Bobinas pré-pintadas">Bobinas pré-pintadas</option>
+              <option value="Chapas">Chapas</option>
+              <option value="Vigas">Vigas</option>
+              <option value="Perfis dobrados">Perfis dobrados</option>
+              <option value="Painéis">Painéis</option>
+              <option value="Calhas">Calhas</option>
+              <option value="Tubos">Tubos</option>
+              <option value="Slitter">Slitter</option>
+            </select>
+          </div>
+
+          <!-- Comprimento das Peças -->
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1.5 uppercase">Comprimento por Telha</label>
+            <div class="relative">
+              <input type="number" id="simLength" value="6" min="1" max="14" step="0.5" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red pr-10" oninput="calculateQuote()">
+              <span class="absolute right-3 top-2.5 text-xs text-brand-gray-500 font-semibold">metros</span>
+            </div>
+          </div>
+
+          <!-- Quantidade de Peças -->
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1.5 uppercase">Quantidade de Peças</label>
+            <div class="relative">
+              <input type="number" id="simQuantity" value="12" min="1" max="500" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red pr-10" oninput="calculateQuote()">
+              <span class="absolute right-3 top-2.5 text-xs text-brand-gray-500 font-semibold">unid</span>
+            </div>
+          </div>
+
+          <!-- Cidade / Região -->
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1.5 uppercase">Destino da Entrega</label>
+            <select id="simLocation" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red" onchange="calculateQuote()">
+              <optgroup label="Polos Estratégicos JMARTINS">
+                <option value="Polo Sul de Minas (MG)">Polo Sul de Minas (MG)</option>
+                <option value="Polo São Paulo (SP)">Polo São Paulo (SP)</option>
+                <option value="Polo Litoral Norte de Santa Catarina (SC)">Polo Litoral Norte de Santa Catarina (SC)</option>
+              </optgroup>
+              <optgroup label="Entregas em Todo o Brasil">
+                <option value="Demais Cidades e Regiões do Brasil">Demais Regiões do Brasil (Atendimento Nacional)</option>
+              </optgroup>
+            </select>
+          </div>
+
+        </div>
+
+        <!-- Resultado do Cálculo e Botão WhatsApp -->
+        <div class="bg-brand-gray-950/80 border border-brand-gray-800 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-6">
+            <div>
+              <span class="text-[11px] text-brand-gray-500 uppercase tracking-wider block">Metragem Linear Total</span>
+              <span id="resLinear" class="text-xl sm:text-2xl font-black text-white font-barlow">72 metros</span>
+            </div>
+            <div class="h-8 w-px bg-brand-gray-800"></div>
+            <div>
+              <span class="text-[11px] text-brand-gray-500 uppercase tracking-wider block">Área Estimada Coberta</span>
+              <span id="resArea" class="text-xl sm:text-2xl font-black text-brand-red font-barlow">~ 70 m²</span>
+            </div>
+          </div>
+
+          <button onclick="sendSimulatedQuoteWhatsApp()" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-6 py-3 rounded-lg font-bold text-sm transition-all shadow-lg shadow-emerald-900/30">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>ENVIAR COTAÇÃO NO WHATSAPP</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SEÇÃO VÍDEO INSTITUCIONAL & ESTRUTURA J MARTINS -->
+  <section id="institucional" class="py-24 bg-brand-gray-900 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Texto Institucional -->
+        <div class="lg:col-span-6 space-y-6">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-red/10 border border-brand-red/30 text-brand-red text-xs font-bold uppercase tracking-wider">
+            <i data-lucide="play-circle" class="w-4 h-4"></i> Vídeo Oficial
+          </div>
+          
+          <h2 class="font-barlow font-black text-3xl sm:text-5xl uppercase tracking-tight text-white">
+            Conheça a Força da <br>
+            <span class="text-brand-red">JMartins Industrial</span>
+          </h2>
+
+          <p class="text-brand-gray-300 text-sm sm:text-base leading-relaxed">
+            Uma empresa moderna com foco em inovação, produtividade e compromisso inegociável com a qualidade do aço. 
+            Nossas linhas contínuas de perfilação garantem tolerância dimensional rigorosa, resistência mecânica superior e telhas com acabamento impecável.
+          </p>
+
+          <div class="space-y-4 pt-2">
+            <div class="flex items-start gap-4">
+              <div class="w-9 h-9 rounded-lg bg-brand-gray-950 border border-brand-gray-800 flex items-center justify-center text-brand-red shrink-0 mt-1">
+                <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-white text-sm">Equipamentos de Conformação de Última Geração</h4>
+                <p class="text-xs text-brand-gray-400">Perfiladeiras automáticas com corte a frio que evitam oxidação nas pontas das telhas.</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-9 h-9 rounded-lg bg-brand-gray-950 border border-brand-gray-800 flex items-center justify-center text-brand-red shrink-0 mt-1">
+                <i data-lucide="clock" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-white text-sm">Agilidade para Obras Não Pararem</h4>
+                <p class="text-xs text-brand-gray-400">Entendemos o custo do atraso no canteiro: carregamento planejado e pontualidade máxima.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-4 flex flex-wrap items-center gap-4">
+            <button onclick="openVideoModal()" class="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-redHover text-white px-5 py-3 rounded-lg font-semibold text-xs transition-colors shadow-lg red-glow cursor-pointer">
+              <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+              <span>Assistir Vídeo da Fábrica</span>
+            </button>
+            <a href="https://instagram.com/jmartinsindustrial" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-brand-gray-300 hover:text-white text-xs font-semibold">
+              <i data-lucide="instagram" class="w-4 h-4 text-pink-500"></i>
+              <span>Acompanhe nosso Instagram</span>
+            </a>
+          </div>
+
+        </div>
+
+        <!-- Player Teaser / Card Visual do Vídeo -->
+        <div class="lg:col-span-6">
+          <div class="relative bg-brand-gray-950 border-2 border-brand-gray-800 rounded-3xl overflow-hidden shadow-2xl group cursor-pointer" onclick="openVideoModal()">
+            <img src="assets/hero_steel.jpg" alt="Vídeo Institucional JMartins" class="w-full h-80 sm:h-96 object-cover group-hover:scale-105 transition-transform duration-700 opacity-80">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-brand-gray-950/40 to-transparent"></div>
+            
+            <!-- Botão Play Central Pulsante -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <div class="w-20 h-20 rounded-full bg-brand-red/90 group-hover:bg-brand-red flex items-center justify-center text-white shadow-2xl shadow-brand-red/50 group-hover:scale-110 transition-transform">
+                <i data-lucide="play" class="w-8 h-8 fill-current ml-1"></i>
+              </div>
+              <span class="mt-4 px-3 py-1 rounded-md bg-brand-gray-950/90 text-white text-xs font-bold uppercase tracking-wider border border-brand-gray-800 backdrop-blur">
+                Clique para Assistir
+              </span>
+            </div>
+
+            <!-- Legenda inferior do player -->
+            <div class="absolute bottom-4 left-4 right-4 bg-brand-gray-900/90 backdrop-blur p-4 rounded-xl border border-brand-gray-800 flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold text-white block">Apresentação Institucional JMartins</span>
+                <span class="text-[11px] text-brand-gray-400">Estrutura de estoque e fabricação de telhas</span>
+              </div>
+              <span class="text-xs font-semibold text-brand-red flex items-center gap-1">
+                <i data-lucide="tv" class="w-3.5 h-3.5"></i> Assistir
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- LOGÍSTICA & POLOS: SUL DE MINAS, SÃO PAULO E LITORAL NORTE DE SC (ENTREGAS TODO BRASIL) -->
+  <section id="logistica" class="py-24 bg-brand-gray-950 border-t border-brand-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        <!-- Imagem da Logística com Caminhão na Rodovia -->
+        <div class="lg:col-span-6 order-2 lg:order-1">
+          <div class="relative rounded-2xl overflow-hidden border border-brand-gray-800 shadow-2xl">
+            <img src="assets/logistica_sp_mg.jpg" alt="Logística Rodoviária JMartins no Sul de Minas, São Paulo e Santa Catarina" class="w-full h-auto object-cover">
+            <div class="absolute bottom-4 left-4 right-4 bg-brand-gray-950/90 backdrop-blur p-4 rounded-xl border border-brand-gray-800">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-white flex items-center gap-1.5">
+                  <i data-lucide="navigation" class="w-4 h-4 text-brand-red"></i> Rotas Integradas • Rodovias Nacionais & Frota Ágil
+                </span>
+                <span class="text-emerald-400 font-semibold">Entregas Todo Brasil</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conteúdo Logístico -->
+        <div class="lg:col-span-6 order-1 lg:order-2 space-y-6">
+          <span class="text-brand-red font-bold text-xs uppercase tracking-widest bg-brand-red/10 px-3 py-1 rounded-full border border-brand-red/20">
+            Atendimento Nacional
+          </span>
+          <h2 class="font-barlow font-black text-3xl sm:text-5xl uppercase tracking-tight text-white">
+            Logística Ágil com <br>
+            <span class="text-brand-red">Entregas em Todo o Brasil</span>
+          </h2>
+          <p class="text-brand-gray-300 text-sm sm:text-base leading-relaxed">
+            Estamos estrategicamente posicionados com polos dedicados para atender com rapidez récorde e segurança de carga serralherias, revendas de ferro e aço, construtoras e galpões industriais de ponta a ponta do país.
+          </p>
+
+          <!-- 3 Polos Estratégicos -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            
+            <div class="bg-brand-gray-900 border border-brand-gray-800 p-4 rounded-xl">
+              <div class="text-xs font-bold text-brand-red uppercase mb-1">Polo Sul de Minas</div>
+              <p class="text-[11px] text-brand-gray-300 leading-relaxed">
+                Pouso Alegre, Varginha, Poços de Caldas, Itajubá, Extrema e região com saídas diárias pela Rod. Fernão Dias.
+              </p>
+            </div>
+
+            <div class="bg-brand-gray-900 border border-brand-gray-800 p-4 rounded-xl">
+              <div class="text-xs font-bold text-white uppercase mb-1">Polo São Paulo</div>
+              <p class="text-[11px] text-brand-gray-300 leading-relaxed">
+                Grande SP, Campinas, Vale do Paraíba, Circuito das Águas, Bragança Paulista e todo o Interior Paulista.
+              </p>
+            </div>
+
+            <div class="bg-brand-gray-900 border border-brand-gray-800 p-4 rounded-xl">
+              <div class="text-xs font-bold text-emerald-400 uppercase mb-1">Polo Litoral Norte SC</div>
+              <p class="text-[11px] text-brand-gray-300 leading-relaxed">
+                Joinville, Jaraguá do Sul, Itajaí, Balneário Camboriú, Navegantes e polo metalmecânico catarinense.
+              </p>
+            </div>
+
+          </div>
+
+          <div class="p-3 bg-brand-gray-900/60 border border-brand-gray-800/80 rounded-xl flex items-center gap-3">
+            <i data-lucide="truck" class="w-5 h-5 text-brand-red shrink-0"></i>
+            <span class="text-xs text-brand-gray-300">
+              <strong class="text-white">Demais Regiões do Brasil:</strong> Cargas fracionadas ou carretas fechadas despachadas com rastreamento e pontualidade.
+            </span>
+          </div>
+
+          <div class="pt-2">
+            <button onclick="openWhatsAppModal('Consulta de Entrega e Frete')" class="inline-flex items-center gap-2 bg-brand-red hover:bg-brand-redHover text-white px-6 py-3 rounded-lg font-bold text-xs uppercase tracking-wider transition-colors shadow-lg cursor-pointer">
+              <i data-lucide="map" class="w-4 h-4"></i>
+              <span>Consultar Prazo para Minha Cidade</span>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SEÇÃO DE POSTS COMPARTILHÁVEIS (Feed com Ferramenta de Compartilhar no WhatsApp/Redes) -->
+  <section id="posts" class="py-24 bg-brand-gray-900 border-t border-brand-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+        <div>
+          <span class="text-brand-red font-bold text-xs uppercase tracking-widest bg-brand-red/10 px-3 py-1 rounded-full border border-brand-red/20">
+            Conteúdo & Dicas Técnicas
+          </span>
+          <h2 class="font-barlow font-black text-3xl sm:text-5xl uppercase tracking-tight text-white mt-3">
+            Informativos e Posts Compartilháveis
+          </h2>
+          <p class="text-brand-gray-400 text-xs sm:text-sm mt-1 max-w-xl">
+            Técnicas de montagem, tabelas de cálculo, normas ABNT e novidades da JMartins prontas para você compartilhar com clientes e parceiros de obra.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button onclick="openAdminModal('new-post')" class="inline-flex items-center gap-2 bg-brand-gray-950 hover:bg-brand-gray-800 text-brand-red border border-brand-red/40 hover:border-brand-red px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Inserir Post (Admin)</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid de Posts -->
+      <div id="postsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Inseridos via JavaScript / LocalStorage -->
+      </div>
+
+    </div>
+  </section>
+
+  <!-- MODAL: LOGIN ADMINISTRATIVO & RECUPERAÇÃO DE SENHA -->
+  <div id="adminLoginModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-brand-gray-950/85 backdrop-blur-md">
+    <div class="bg-brand-gray-900 border border-brand-gray-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl relative">
+      
+      <!-- Topo Modal Login -->
+      <div class="bg-brand-gray-950 px-6 py-4 border-b border-brand-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-brand-red/20 text-brand-red flex items-center justify-center font-bold">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-white font-barlow font-black text-base uppercase">Acesso Administrativo</h3>
+            <span class="text-[11px] text-brand-gray-400">Banco de Dados SQLite JMartins</span>
+          </div>
+        </div>
+        <button onclick="closeAdminLoginModal()" class="text-brand-gray-400 hover:text-white p-1.5">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Formulário de Login -->
+      <div id="loginFormContainer" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Usuário ou E-mail</label>
+          <input type="text" id="loginUsername" placeholder="Ex: admin" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red">
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="text-xs font-semibold text-brand-gray-300">Senha</label>
+            <button type="button" onclick="showForgotPasswordForm()" class="text-[11px] text-brand-red hover:underline">
+              Esqueci minha senha
+            </button>
+          </div>
+          <input type="password" id="loginPassword" placeholder="••••••••" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red" onkeydown="if(event.key==='Enter') handleAdminLogin()">
+        </div>
+
+        <div id="loginAlert" class="hidden p-3 rounded-lg text-xs font-medium"></div>
+
+        <button onclick="handleAdminLogin()" class="w-full bg-brand-red hover:bg-brand-redHover text-white py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2 shadow-lg red-glow">
+          <i data-lucide="log-in" class="w-4 h-4"></i> Entrar no Painel
+        </button>
+
+        <p class="text-[11px] text-brand-gray-500 text-center pt-2">
+          Autenticação criptografada com PBKDF2 e persistência em banco SQLite.
+        </p>
+      </div>
+
+      <!-- Formulário de Recuperação de Senha -->
+      <div id="forgotFormContainer" class="hidden p-6 space-y-4">
+        <div class="text-xs text-brand-gray-300 leading-relaxed">
+          Informe seu usuário ou e-mail para gerar um <strong>código de verificação</strong> e definir sua nova senha.
+        </div>
+
+        <div id="recoveryStep1">
+          <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Usuário ou E-mail Cadastrado</label>
+          <input type="text" id="recoveryIdentifier" value="admin" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-red mb-3">
+          
+          <button onclick="handleGenerateRecoveryCode()" class="w-full bg-brand-gray-800 hover:bg-brand-gray-700 text-white py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors">
+            Gerar Código de Recuperação
+          </button>
+        </div>
+
+        <div id="recoveryStep2" class="hidden space-y-3 pt-2 border-t border-brand-gray-800">
+          <div id="recoveryCodeNotice" class="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-xs text-emerald-300 font-medium"></div>
+
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Código de Recuperação (6 dígitos)</label>
+            <input type="text" id="recoveryCodeInput" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white text-center font-mono tracking-widest focus:outline-none focus:border-brand-red" placeholder="000000">
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Nova Senha (mínimo 6 caracteres)</label>
+            <input type="password" id="recoveryNewPassword" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="••••••••">
+          </div>
+
+          <button onclick="handleResetPasswordSubmit()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2">
+            <i data-lucide="check" class="w-4 h-4"></i> Redefinir Senha e Salvar
+          </button>
+        </div>
+
+        <div id="recoveryAlert" class="hidden p-3 rounded-lg text-xs font-medium"></div>
+
+        <div class="pt-2 text-center">
+          <button type="button" onclick="showLoginForm()" class="text-xs text-brand-gray-400 hover:text-white underline">
+            ← Voltar para a tela de Login
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL: ÁREA ADMINISTRATIVA (Gerenciador e Gerador de Posts Compartilháveis) -->
+  <div id="adminModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-brand-gray-950/80 backdrop-blur-md overflow-y-auto">
+    <div class="bg-brand-gray-900 border border-brand-gray-800 rounded-2xl w-full max-w-4xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+      
+      <!-- Topo do Modal -->
+      <div class="bg-brand-gray-950 px-6 py-4 border-b border-brand-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded bg-brand-red/20 text-brand-red flex items-center justify-center font-bold">
+            <i data-lucide="shield" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="text-white font-barlow font-black text-lg tracking-wide uppercase">Painel Administrativo JMartins</h3>
+            <span class="text-xs text-brand-gray-400">Gerenciador de Conteúdo e Card Studio integrado ao Banco SQLite</span>
+          </div>
+        </div>
+        <button onclick="closeAdminModal()" class="text-brand-gray-400 hover:text-white p-2">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Abas do Admin -->
+      <div class="flex border-b border-brand-gray-800 bg-brand-gray-950/60 px-6 overflow-x-auto">
+        <button id="tabBtnCompany" onclick="switchAdminTab('company')" class="py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-red border-b-2 border-brand-red transition-all shrink-0">
+          <i data-lucide="building-2" class="w-3.5 h-3.5 inline mr-1"></i> Dados da Empresa & Hero
+        </button>
+        <button id="tabBtnNewPost" onclick="switchAdminTab('new')" class="py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-gray-400 hover:text-white border-b-2 border-transparent transition-all shrink-0">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5 inline mr-1"></i> Criar Novo Post
+        </button>
+        <button id="tabBtnStudio" onclick="switchAdminTab('studio')" class="py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-gray-400 hover:text-white border-b-2 border-transparent transition-all shrink-0">
+          <i data-lucide="image" class="w-3.5 h-3.5 inline mr-1"></i> Card Studio (WhatsApp)
+        </button>
+        <button id="tabBtnList" onclick="switchAdminTab('list')" class="py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-gray-400 hover:text-white border-b-2 border-transparent transition-all shrink-0">
+          <i data-lucide="list" class="w-3.5 h-3.5 inline mr-1"></i> Posts Publicados (<span id="postCountBadge">3</span>)
+        </button>
+        <button id="tabBtnSecurity" onclick="switchAdminTab('security')" class="py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-gray-400 hover:text-white border-b-2 border-transparent transition-all shrink-0">
+          <i data-lucide="key" class="w-3.5 h-3.5 inline mr-1"></i> Segurança & Senha
+        </button>
+      </div>
+
+      <!-- Corpo do Modal com Scroll -->
+      <div class="p-6 overflow-y-auto flex-1 space-y-6">
+
+        <!-- ABA DE CONFIGURAÇÕES: DADOS DA EMPRESA & HERO -->
+        <div id="tabCompany" class="space-y-6">
+          
+          <!-- Seção Contato -->
+          <div class="bg-brand-gray-950 p-5 rounded-xl border border-brand-gray-800">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-4 text-brand-red">
+              <i data-lucide="phone-call" class="w-4 h-4"></i> 1. Canais de Atendimento & Contatos Oficiais
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">WhatsApp de Vendas (Apenas números com DDD)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2.5 text-xs text-brand-gray-500 font-bold">+</span>
+                  <input type="text" id="cfgInputWhatsapp" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg pl-7 pr-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="5535999999999">
+                </div>
+                <span class="text-[11px] text-brand-gray-500">Ex: 5535999999999 (controla todos os botões de cotação e flutuante)</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Telefone Fixo / Televendas</label>
+                <input type="text" id="cfgInputPhone" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="(35) 3421-0000">
+                <span class="text-[11px] text-brand-gray-500">Exibido no rodapé e no topo</span>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">E-mail Comercial</label>
+                <input type="email" id="cfgInputEmail" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="contato@jmartins.ind.br">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Usuário do Instagram</label>
+                <input type="text" id="cfgInputInstagram" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="@jmartinsindustrial">
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Endereço da Empresa / Região de Atendimento</label>
+              <input type="text" id="cfgInputAddress" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="Sul de Minas Gerais & Estado de São Paulo">
+            </div>
+          </div>
+
+          <!-- Seção Hero Texts -->
+          <div class="bg-brand-gray-950 p-5 rounded-xl border border-brand-gray-800">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-4 text-brand-red">
+              <i data-lucide="layout" class="w-4 h-4"></i> 2. Textos e Mensagens da Seção Hero (Largura Total)
+            </h4>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Badge do Topo do Hero</label>
+                <input type="text" id="cfgInputHeroBadge" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="Fornecimento Industrial Direto • Galvalume & Galvanizado">
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Título Linha 1</label>
+                  <input type="text" id="cfgInputHeroTitle1" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="POTÊNCIA E PRECISÃO EM">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Título Linha 2 (Destaque Metálico)</label>
+                  <input type="text" id="cfgInputHeroTitle2" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="BOBINAS DE AÇO">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Título Linha 3 (Destaque Vermelho)</label>
+                  <input type="text" id="cfgInputHeroTitle3" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="TELHAS GALVANIZADAS">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Subtítulo / Descrição Completa do Hero</label>
+                <textarea id="cfgInputHeroSubtitle" rows="2" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-red"></textarea>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Texto do Botão CTA Principal</label>
+                <input type="text" id="cfgInputHeroCta" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="SOLICITAR COTAÇÃO RÁPIDA">
+              </div>
+            </div>
+          </div>
+
+          <!-- Seção Vídeo -->
+          <div class="bg-brand-gray-950 p-5 rounded-xl border border-brand-gray-800">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 mb-4 text-brand-red">
+              <i data-lucide="video" class="w-4 h-4"></i> 3. Vídeo Institucional
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Tipo de Vídeo</label>
+                <select id="cfgInputVideoType" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                  <option value="mp4">Vídeo MP4 Nativo (assets/video_institucional.mp4)</option>
+                  <option value="external">Link Externo (Facebook / YouTube / Vimeo)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Arquivo ou URL do Vídeo</label>
+                <input type="text" id="cfgInputVideoUrl" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="assets/video_institucional.mp4">
+              </div>
+            </div>
+            <div class="mt-3 p-3 rounded-lg bg-brand-gray-900 border border-brand-gray-800 text-xs text-brand-gray-400">
+              💡 <strong>Upload do Vídeo MP4:</strong> Você pode enviar o arquivo .mp4 para ser gravado em <code>assets/video_institucional.mp4</code>. O site detecta automaticamente e reproduz no player de alta definição.
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <button onclick="resetCompanyConfig()" class="text-xs text-brand-gray-400 hover:text-white underline">
+              Restaurar Padrões Originais
+            </button>
+            <button onclick="saveCompanyConfig()" class="bg-brand-red hover:bg-brand-redHover text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg red-glow">
+              <i data-lucide="save" class="w-4 h-4"></i> Salvar Alterações do Site
+            </button>
+          </div>
+        </div>
+
+        <!-- ABA 1: NOVO POST -->
+        <div id="tabNewPost" class="hidden space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-2">
+              <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Título do Post *</label>
+              <input type="text" id="postTitle" placeholder="Ex: Bobinas Galvalume: Vantagens da liga Al-Zn em ambientes úmidos" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Categoria</label>
+              <select id="postCategory" class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                <option value="Dica Técnica">Dica Técnica</option>
+                <option value="Bobinas & Aço">Bobinas & Aço</option>
+                <option value="Telhas Galvanizadas">Telhas Galvanizadas</option>
+                <option value="Obras & Projetos">Obras & Projetos</option>
+                <option value="Oferta da Semana">Oferta da Semana</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Imagem de Capa</label>
+            <div class="flex gap-2">
+              <select id="postImageSelect" class="flex-1 bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" onchange="previewSelectedImage()">
+                <option value="assets/bobinas_aco.jpg">Bobinas de Aço Galvalume (Estoque de Usina)</option>
+                <option value="assets/telhas_trapezoidais.jpg">Telhas Trapezoidais e Sanduíche</option>
+                <option value="assets/logistica_sp_mg.jpg">Logística Sul de MG e São Paulo</option>
+                <option value="assets/hero_steel.jpg">Fábrica e Galpão Industrial</option>
+              </select>
+              <input type="text" id="postImageCustom" placeholder="Ou URL externa..." class="w-1/3 bg-brand-gray-950 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Resumo Curto (Para o Card) *</label>
+            <textarea id="postExcerpt" rows="2" placeholder="Resumo de 1 a 2 linhas para pré-visualização rápida..." class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-red"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Conteúdo Completo (Mensagem para WhatsApp ou Leitura Completa) *</label>
+            <textarea id="postContent" rows="4" placeholder="Escreva o texto completo do artigo ou mensagem institucional..." class="w-full bg-brand-gray-950 border border-brand-gray-800 rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-red"></textarea>
+          </div>
+
+          <div class="flex items-center justify-between pt-2">
+            <span class="text-xs text-brand-gray-500">
+              * Posts salvos são gravados automaticamente e ficam disponíveis no site.
+            </span>
+            <button onclick="savePost()" class="bg-brand-red hover:bg-brand-redHover text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2">
+              <i data-lucide="check" class="w-4 h-4"></i> Publicar Post
+            </button>
+          </div>
+        </div>
+
+        <!-- ABA 2: CARD STUDIO (Gerador de Imagem para WhatsApp/Redes) -->
+        <div id="tabStudio" class="hidden space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+            
+            <!-- Controles do Card -->
+            <div class="md:col-span-5 space-y-4">
+              <div class="bg-brand-gray-950 p-4 rounded-xl border border-brand-gray-800 space-y-3">
+                <span class="text-xs font-bold text-white uppercase block">1. Personalize o Card</span>
+                
+                <div>
+                  <label class="block text-[11px] text-brand-gray-400 mb-1">Manchete do Card</label>
+                  <input type="text" id="studioTitle" value="LOTE DE BOBINAS GALVALUME E TELHAS TRAPEZOIDAIS TP40" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded px-2.5 py-1.5 text-xs text-white" oninput="drawStudioCard()">
+                </div>
+
+                <div>
+                  <label class="block text-[11px] text-brand-gray-400 mb-1">Subtítulo / Chamada</label>
+                  <input type="text" id="studioSubtitle" value="Entregas Rápidas no Sul de MG e Estado de São Paulo" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded px-2.5 py-1.5 text-xs text-white" oninput="drawStudioCard()">
+                </div>
+
+                <div>
+                  <label class="block text-[11px] text-brand-gray-400 mb-1">Destaque de Preço ou Condição</label>
+                  <input type="text" id="studioBadge" value="PREÇO DIRETO DE FÁBRICA" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded px-2.5 py-1.5 text-xs text-white" oninput="drawStudioCard()">
+                </div>
+
+                <div>
+                  <label class="block text-[11px] text-brand-gray-400 mb-1">Imagem de Fundo</label>
+                  <select id="studioImg" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded px-2.5 py-1.5 text-xs text-white" onchange="drawStudioCard()">
+                    <option value="assets/bobinas_aco.jpg">Bobinas de Aço</option>
+                    <option value="assets/telhas_trapezoidais.jpg">Telhas Trapezoidais</option>
+                    <option value="assets/logistica_sp_mg.jpg">Logística e Frota</option>
+                    <option value="assets/hero_steel.jpg">Fábrica Industrial</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex gap-2">
+                <button onclick="downloadStudioCard()" class="flex-1 bg-brand-red hover:bg-brand-redHover text-white py-2.5 px-3 rounded-lg text-xs font-bold uppercase transition-colors flex items-center justify-center gap-1.5">
+                  <i data-lucide="download" class="w-4 h-4"></i> Baixar Imagem (PNG)
+                </button>
+                <button onclick="shareStudioToWhatsApp()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-3 rounded-lg text-xs font-bold uppercase transition-colors flex items-center justify-center gap-1.5">
+                  <i data-lucide="share-2" class="w-4 h-4"></i> Disparar Zap
+                </button>
+              </div>
+            </div>
+
+            <!-- Preview do Canvas -->
+            <div class="md:col-span-7 flex flex-col items-center">
+              <span class="text-xs text-brand-gray-400 mb-2 font-semibold">Pré-visualização do Card em Tempo Real (Canvas 1200x1200)</span>
+              <div class="border-2 border-brand-gray-800 rounded-xl overflow-hidden shadow-2xl bg-black max-w-[340px] sm:max-w-[400px]">
+                <canvas id="studioCanvas" width="1080" height="1080" class="w-full h-auto block"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ABA 3: LISTAGEM DE POSTS PUBLICADOS -->
+        <div id="tabListPosts" class="hidden space-y-3">
+          <div id="adminPostList" class="space-y-3">
+            <!-- Inseridos via JS -->
+          </div>
+        </div>
+
+        <!-- ABA 5: SEGURANÇA & SENHA -->
+        <div id="tabSecurity" class="hidden space-y-6">
+          <div class="bg-brand-gray-950 p-6 rounded-xl border border-brand-gray-800 space-y-5">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-brand-gray-800">
+              <div>
+                <span class="text-xs text-brand-gray-400 block mb-1">Conta Conectada ao SQLite</span>
+                <span id="secLoggedUser" class="text-base font-bold text-white font-barlow flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  admin (contato@jmartins.ind.br)
+                </span>
+              </div>
+              <button onclick="adminLogout()" class="self-start sm:self-auto px-4 py-2 rounded-lg bg-rose-600/20 text-rose-400 hover:bg-rose-600 hover:text-white border border-rose-500/30 text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-1.5">
+                <i data-lucide="log-out" class="w-4 h-4"></i> Sair do Painel
+              </button>
+            </div>
+
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2 text-brand-red">
+              <i data-lucide="lock" class="w-4 h-4"></i> Alterar Senha de Acesso ao Banco de Dados
+            </h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Senha Atual *</label>
+                <input type="password" id="secCurrentPassword" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="Digite sua senha atual">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-brand-gray-300 mb-1">Nova Senha * (mínimo 6 caracteres)</label>
+                <input type="password" id="secNewPassword" class="w-full bg-brand-gray-900 border border-brand-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red" placeholder="Digite a nova senha">
+              </div>
+            </div>
+
+            <div id="changePasswordAlert" class="hidden p-3 rounded-lg text-xs font-medium"></div>
+
+            <div class="pt-2 flex justify-end">
+              <button onclick="changeAdminPassword()" class="bg-brand-red hover:bg-brand-redHover text-white px-6 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-colors flex items-center gap-2 shadow-lg red-glow">
+                <i data-lucide="check" class="w-4 h-4"></i> Salvar Nova Senha no Banco
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE LEITURA DO POST COMPLETO -->
+  <div id="postReadModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-brand-gray-950/80 backdrop-blur-md">
+    <div class="bg-brand-gray-900 border border-brand-gray-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl">
+      <div class="relative h-56">
+        <img id="readPostImg" src="" alt="Capa" class="w-full h-full object-cover">
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-900 via-brand-gray-900/40 to-transparent"></div>
+        <button onclick="closeReadPostModal()" class="absolute top-3 right-3 bg-brand-gray-950/80 text-white p-2 rounded-full hover:bg-brand-red transition-colors">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+        <span id="readPostCategory" class="absolute bottom-4 left-6 bg-brand-red text-white text-xs font-bold uppercase tracking-wider px-3 py-1 rounded"></span>
+      </div>
+      <div class="p-6 space-y-4">
+        <h3 id="readPostTitle" class="font-barlow font-black text-2xl text-white"></h3>
+        <p id="readPostContent" class="text-sm text-brand-gray-300 leading-relaxed whitespace-pre-line"></p>
+        
+        <div class="pt-4 border-t border-brand-gray-800 flex items-center justify-between">
+          <span class="text-xs text-brand-gray-500">JMartins Industrial • Sul de MG e SP</span>
+          <button id="readPostShareBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase flex items-center gap-2">
+            <i data-lucide="share-2" class="w-4 h-4"></i> Compartilhar no WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: VÍDEO INSTITUCIONAL -->
+  <div id="videoModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-brand-gray-950/85 backdrop-blur-md">
+    <div class="bg-brand-gray-900 border border-brand-gray-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl">
+      <div class="p-4 bg-brand-gray-950 border-b border-brand-gray-800 flex items-center justify-between">
+        <div class="flex items-center gap-2 text-white font-barlow font-bold text-base">
+          <i data-lucide="film" class="w-5 h-5 text-brand-red"></i>
+          <span>Vídeo Institucional JMartins Industrial</span>
+        </div>
+        <button onclick="closeVideoModal()" class="text-brand-gray-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      <div class="p-6 space-y-6 text-center">
+        
+        <div class="relative bg-black rounded-xl overflow-hidden aspect-video flex flex-col items-center justify-center border border-brand-gray-800 shadow-2xl">
+          <!-- Player HTML5 MP4 Nativo de Alta Definição -->
+          <video id="instVideoPlayer" controls playsinline class="w-full h-full object-contain" poster="assets/hero_steel.jpg">
+            <source id="instVideoSource" src="assets/video_institucional.mp4" type="video/mp4">
+            Seu navegador não suporta reprodução de vídeo MP4.
+          </video>
+        </div>
+
+        <div class="flex items-center justify-center gap-4 text-xs text-brand-gray-400 flex-wrap">
+          <span class="flex items-center gap-1"><i data-lucide="check" class="w-4 h-4 text-brand-red"></i> Aço Certificado</span>
+          <span class="flex items-center gap-1"><i data-lucide="check" class="w-4 h-4 text-brand-red"></i> Bobinas Pronta-Entrega</span>
+          <span class="flex items-center gap-1"><i data-lucide="check" class="w-4 h-4 text-brand-red"></i> Polos: MG, SP e SC</span>
+          <span class="flex items-center gap-1"><i data-lucide="check" class="w-4 h-4 text-brand-red"></i> Entregas Todo o Brasil</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- WHATSAPP FLOATING BUTTON COM PULSO -->
+  <aside aria-label="Atendimento Rápido" class="fixed bottom-6 right-6 z-40 flex items-center gap-3">
+    <!-- Tooltip chamativo -->
+    <div class="hidden md:flex bg-brand-gray-900/95 border border-brand-gray-700/80 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-2xl backdrop-blur animate-fade-in">
+      <span class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        Cotar Bobinas ou Telhas agora
+      </span>
+    </div>
+
+    <!-- Botão Circular Verde -->
+    <button id="floatingWhatsappBtn" onclick="openWhatsAppModal()" 
+       class="relative w-14 h-14 rounded-full bg-emerald-500 hover:bg-emerald-400 text-white flex items-center justify-center shadow-2xl shadow-emerald-500/40 hover:scale-110 transition-transform cursor-pointer"
+       title="Falar no WhatsApp com nossa Equipe (8 Consultores)">
+      <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
+        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/>
+      </svg>
+      <span class="absolute -top-1 -right-1 flex h-4 w-4">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-600 border border-white"></span>
+      </span>
+    </button>
+  </aside>
+
+  <!-- FOOTER INDUSTRIAL -->
+  <footer class="bg-brand-gray-950 border-t border-brand-gray-800 text-brand-gray-400 text-xs py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        
+        <!-- Col 1: Marca -->
+        <div class="space-y-4">
+          <div class="flex items-center">
+            <img src="assets/logo_jmartins_white.png" alt="Jmartins do Brasil" class="h-10 w-auto object-contain">
+          </div>
+          <p class="text-brand-gray-400 text-xs leading-relaxed">
+            Especialista no fornecimento direto de bobinas Galvalume, galvanizadas, pré-pintadas, corte e dobra e telhas termoacústicas sob medida. Entregas em todo o Brasil.
+          </p>
+          <div class="flex items-center gap-3 pt-2">
+            <a id="footerSocialInstagram" href="https://instagram.com/jmartinsindustrial" target="_blank" class="w-8 h-8 rounded bg-brand-gray-900 border border-brand-gray-800 hover:text-brand-red flex items-center justify-center transition-colors">
+              <i data-lucide="instagram" class="w-4 h-4"></i>
+            </a>
+            <a href="javascript:void(0)" onclick="openVideoModal()" class="w-8 h-8 rounded bg-brand-gray-900 border border-brand-gray-800 hover:text-brand-red flex items-center justify-center transition-colors cursor-pointer" title="Vídeo da Fábrica">
+              <i data-lucide="film" class="w-4 h-4"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Col 2: Linha de Produtos (Apenas os 13 oficiais, SEM fixadores) -->
+        <div>
+          <h4 class="font-bold text-white uppercase text-xs tracking-wider mb-4">Linha de Produtos</h4>
+          <ul class="space-y-2">
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Corte e Dobra</a></li>
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Telhas & Telhas Termoacústicas</a></li>
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Bobinas Galvalume & Galvanizadas</a></li>
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Bobinas Pré-pintadas</a></li>
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Chapas & Vigas Estruturais</a></li>
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Perfis Dobrados & Painéis</a></li>
+            <li><a href="#produtos" class="hover:text-brand-red transition-colors">Calhas, Tubos & Slitter</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Região de Atendimento & Polos -->
+        <div>
+          <h4 class="font-bold text-white uppercase text-xs tracking-wider mb-4">Polos & Entregas Brasil</h4>
+          <p id="footerAddressText" class="text-xs text-brand-gray-300 leading-relaxed mb-3 font-semibold">
+            Polos: Sul de Minas, São Paulo e Litoral Norte de SC • Entregas em todo o Brasil
+          </p>
+          <ul class="space-y-1.5 text-brand-gray-400">
+            <li class="text-white font-medium">Polo Sul de Minas (MG):</li>
+            <li class="pl-2">• Pouso Alegre, Varginha, Poços de Caldas, Extrema</li>
+            <li class="text-white font-medium pt-1">Polo São Paulo (SP):</li>
+            <li class="pl-2">• Vale do Paraíba, Campinas, Capital e Interior</li>
+            <li class="text-white font-medium pt-1">Polo Litoral Norte de Santa Catarina (SC):</li>
+            <li class="pl-2">• Joinville, Itajaí, Balneário Camboriú e Região</li>
+            <li class="text-brand-red font-medium pt-1">• Atendimento Nacional em Todo o Brasil</li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Contato & Cotações -->
+        <div>
+          <h4 class="font-bold text-white uppercase text-xs tracking-wider mb-4">Canais de Atendimento</h4>
+          <div class="space-y-3">
+            
+            <!-- WhatsApp (8 Consultores) -->
+            <div class="flex items-start gap-2">
+              <i data-lucide="message-square" class="w-4 h-4 text-emerald-400 shrink-0 mt-0.5"></i>
+              <div>
+                <span class="block text-white font-semibold">WhatsApp Vendas (8 Linhas)</span>
+                <button onclick="openWhatsAppModal()" class="text-brand-gray-300 hover:text-emerald-400 transition-colors block text-left font-medium">
+                  Ver Todos os 8 Consultores
+                </button>
+                <div class="text-[11px] text-brand-gray-400 mt-0.5">
+                  (19) 99816-7195 / (19) 99773-1046...
+                </div>
+              </div>
+            </div>
+
+            <!-- Telefones Fixos -->
+            <div id="footerPhoneContainer" class="flex items-start gap-2">
+              <i data-lucide="phone" class="w-4 h-4 text-brand-red shrink-0 mt-0.5"></i>
+              <div>
+                <span class="block text-white font-semibold">Telefones Fixos</span>
+                <div class="flex flex-col gap-0.5">
+                  <a href="tel:1936722881" class="text-brand-gray-300 hover:text-white transition-colors">
+                    (19) 3672-2881
+                  </a>
+                  <a href="tel:1936721563" class="text-brand-gray-300 hover:text-white transition-colors">
+                    (19) 3672-1563
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <!-- E-mail -->
+            <div id="footerEmailContainer" class="flex items-start gap-2">
+              <i data-lucide="mail" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
+              <div>
+                <span class="block text-white font-semibold">E-mail Comercial</span>
+                <a id="footerEmailLink" href="mailto:contato@jmartins.ind.br" class="text-brand-gray-400 hover:text-white transition-colors block">
+                  <span id="footerEmailText">contato@jmartins.ind.br</span>
+                </a>
+              </div>
+            </div>
+
+            <!-- Instagram -->
+            <div class="flex items-start gap-2">
+              <i data-lucide="instagram" class="w-4 h-4 text-pink-400 shrink-0 mt-0.5"></i>
+              <div>
+                <span class="block text-white font-semibold">Instagram Oficial</span>
+                <a id="footerInstagramLink" href="https://instagram.com/jmartinsindustrial" target="_blank" class="text-brand-gray-400 hover:text-white transition-colors">
+                  <span id="footerInstagramText">@jmartinsindustrial</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="pt-2">
+              <button onclick="openAdminModal('company')" class="inline-flex items-center gap-1.5 text-brand-gray-500 hover:text-brand-red transition-colors text-[11px]">
+                <i data-lucide="shield" class="w-3.5 h-3.5"></i> Editar Dados no Painel Adm
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Copyright e Assinatura Técnica -->
+      <div class="pt-8 border-t border-brand-gray-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-brand-gray-500">
+        <div>
+          © 2026 JMartins Industrial. Todos os direitos reservados. Entregas em todo o Brasil.
+        </div>
+        <div class="text-[11px]">
+          Qualidade, Robustez e Pontualidade em Soluções Metálicas.
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC JAVASCRIPT -->
+  <script>
+    // Inicializar ícones Lucide
+    lucide.createIcons();
+
+    // Toggle Mobile Menu
+    const mobileBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // AUTENTICAÇÃO & SESSÃO (SQLite no Servidor VPS)
+    let pendingAdminTab = 'company';
+
+    function getAuthToken() {
+      return localStorage.getItem('jmartins_admin_token') || '';
+    }
+
+    function setAuthToken(token) {
+      localStorage.setItem('jmartins_admin_token', token);
+    }
+
+    function removeAuthToken() {
+      localStorage.removeItem('jmartins_admin_token');
+    }
+
+    function openAdminLoginModal() {
+      document.getElementById('adminLoginModal').classList.remove('hidden');
+      showLoginForm();
+      lucide.createIcons();
+    }
+
+    function closeAdminLoginModal() {
+      document.getElementById('adminLoginModal').classList.add('hidden');
+    }
+
+    function showForgotPasswordForm() {
+      document.getElementById('loginFormContainer').classList.add('hidden');
+      document.getElementById('forgotFormContainer').classList.remove('hidden');
+      document.getElementById('recoveryStep1').classList.remove('hidden');
+      document.getElementById('recoveryStep2').classList.add('hidden');
+      document.getElementById('recoveryAlert').classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    function showLoginForm() {
+      document.getElementById('loginFormContainer').classList.remove('hidden');
+      document.getElementById('forgotFormContainer').classList.add('hidden');
+      document.getElementById('loginAlert').classList.add('hidden');
+      lucide.createIcons();
+    }
+
+    async function handleAdminLogin() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const alertBox = document.getElementById('loginAlert');
+      alertBox.classList.add('hidden');
+
+      if (!username || !password) {
+        alertBox.textContent = 'Por favor, preencha o usuário e a senha.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) {
+          alertBox.textContent = data.error || 'Credenciais inválidas.';
+          alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+          return;
+        }
+
+        setAuthToken(data.token);
+        if (data.user) {
+          const userLabel = document.getElementById('secLoggedUser');
+          if (userLabel) userLabel.textContent = `${data.user.username} (${data.user.email})`;
+        }
+
+        closeAdminLoginModal();
+        openAdminModalDirect(pendingAdminTab);
+      } catch (err) {
+        alertBox.textContent = 'Erro ao conectar ao servidor. Tente novamente.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+      }
+    }
+
+    async function handleGenerateRecoveryCode() {
+      const identifier = document.getElementById('recoveryIdentifier').value.trim();
+      const alertBox = document.getElementById('recoveryAlert');
+      alertBox.classList.add('hidden');
+
+      if (!identifier) {
+        alertBox.textContent = 'Informe seu usuário ou e-mail.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/forgot-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) {
+          alertBox.textContent = data.error || 'Usuário não encontrado.';
+          alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+          return;
+        }
+
+        document.getElementById('recoveryStep2').classList.remove('hidden');
+        document.getElementById('recoveryCodeNotice').innerHTML = `Código de verificação gerado no SQLite: <strong class="text-white font-mono text-base tracking-widest">${data.recovery_code}</strong> (Válido por 1 hora)`;
+        document.getElementById('recoveryCodeInput').value = data.recovery_code;
+        lucide.createIcons();
+      } catch (err) {
+        alertBox.textContent = 'Erro ao processar recuperação. Tente novamente.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+      }
+    }
+
+    async function handleResetPasswordSubmit() {
+      const recovery_code = document.getElementById('recoveryCodeInput').value.trim();
+      const new_password = document.getElementById('recoveryNewPassword').value;
+      const alertBox = document.getElementById('recoveryAlert');
+      alertBox.classList.add('hidden');
+
+      if (!recovery_code || !new_password || new_password.length < 6) {
+        alertBox.textContent = 'Preencha o código de 6 dígitos e a nova senha com pelo menos 6 caracteres.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recovery_code, new_password })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) {
+          alertBox.textContent = data.error || 'Código inválido ou expirado.';
+          alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+          return;
+        }
+
+        alertBox.textContent = 'Senha redefinida com sucesso no banco de dados! Redirecionando para login...';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 block';
+
+        setTimeout(() => {
+          showLoginForm();
+          document.getElementById('loginPassword').value = new_password;
+        }, 1500);
+      } catch (err) {
+        alertBox.textContent = 'Erro ao redefinir senha.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+      }
+    }
+
+    async function changeAdminPassword() {
+      const current_password = document.getElementById('secCurrentPassword').value;
+      const new_password = document.getElementById('secNewPassword').value;
+      const alertBox = document.getElementById('changePasswordAlert');
+      alertBox.classList.add('hidden');
+
+      if (!current_password || !new_password || new_password.length < 6) {
+        alertBox.textContent = 'Informe a senha atual e uma nova senha com no mínimo 6 caracteres.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+        return;
+      }
+
+      const token = getAuthToken();
+      if (!token) {
+        alert('Sessão expirada. Faça login novamente.');
+        closeAdminModal();
+        openAdminLoginModal();
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ current_password, new_password })
+        });
+        const data = await resp.json();
+
+        if (!resp.ok || !data.ok) {
+          alertBox.textContent = data.error || 'Erro ao alterar senha.';
+          alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+          return;
+        }
+
+        alertBox.textContent = 'Senha alterada com sucesso no Banco SQLite!';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 block';
+        document.getElementById('secCurrentPassword').value = '';
+        document.getElementById('secNewPassword').value = '';
+      } catch (err) {
+        alertBox.textContent = 'Erro de conexão com a API.';
+        alertBox.className = 'p-3 rounded-lg text-xs font-semibold bg-rose-500/10 border border-rose-500/30 text-rose-300 block';
+      }
+    }
+
+    async function adminLogout() {
+      const token = getAuthToken();
+      if (token) {
+        try {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token }
+          });
+        } catch (e) {}
+      }
+      removeAuthToken();
+      closeAdminModal();
+      alert('Você saiu do Painel Administrativo.');
+    }
+
+    async function checkAuthAndOpenAdmin(tab = 'company') {
+      pendingAdminTab = tab;
+      const token = getAuthToken();
+      if (!token) {
+        openAdminLoginModal();
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/auth/me', {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.user) {
+            const userLabel = document.getElementById('secLoggedUser');
+            if (userLabel) userLabel.textContent = `${data.user.username} (${data.user.email})`;
+          }
+          openAdminModalDirect(tab);
+        } else {
+          removeAuthToken();
+          openAdminLoginModal();
+        }
+      } catch (err) {
+        openAdminModalDirect(tab);
+      }
+    }
+
+    function openAdminModal(tab = 'company') {
+      checkAuthAndOpenAdmin(tab);
+    }
+
+    function openAdminModalDirect(tab = 'company') {
+      document.getElementById('adminModal').classList.remove('hidden');
+      switchAdminTab(tab === 'new-post' ? 'new' : tab);
+      renderAdminPostList();
+      drawStudioCard();
+      populateCompanyForm();
+    }
+
+    // EQUIPE COMERCIAL WHATSAPP (8 LINHAS OFICIAIS)
+    const WHATSAPP_TEAM = [
+      { name: "Consultor Comercial 01", phone: "(19) 99816-7195", raw: "5519998167195", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 02", phone: "(19) 99773-1046", raw: "5519997731046", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 03", phone: "(19) 99364-8463", raw: "5519993648463", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 04", phone: "(19) 98217-0196", raw: "5519982170196", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 05", phone: "(19) 99674-9915", raw: "5519996749915", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 06", phone: "(19) 98303-0302", raw: "5519983030302", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 07", phone: "(19) 99177-0861", raw: "5519991770861", role: "Vendas Diretas & Cotações" },
+      { name: "Consultor Comercial 08", phone: "(19) 99972-1997", raw: "5519999721997", role: "Vendas Diretas & Cotações" }
+    ];
+
+    let currentWhatsAppSubject = '';
+
+    function openWhatsAppModal(subject = '') {
+      currentWhatsAppSubject = subject;
+      const modal = document.getElementById('whatsappModal');
+      const subjEl = document.getElementById('whatsappModalSubject');
+      if (subjEl) {
+        subjEl.textContent = subject 
+          ? `Cotação expressa: ${subject}. Selecione um dos 8 consultores abaixo:` 
+          : 'Selecione um dos 8 consultores comerciais da JMartins para atendimento imediato:';
+      }
+
+      const grid = document.getElementById('whatsappConsultantsGrid');
+      if (grid) {
+        grid.innerHTML = WHATSAPP_TEAM.map((c, i) => `
+          <div class="bg-brand-gray-950 border border-brand-gray-800 rounded-xl p-3.5 hover:border-emerald-500/50 transition-all flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-white group-hover:text-emerald-400 transition-colors">${c.name}</span>
+                <span class="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Online
+                </span>
+              </div>
+              <div class="text-xs font-mono font-bold text-brand-gray-200 mt-1">${c.phone}</div>
+              <div class="text-[11px] text-brand-gray-500">${c.role}</div>
+            </div>
+            <button onclick="startConsultantWhatsApp(${i})" class="mt-3 w-full py-1.5 px-3 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors border border-emerald-500/30 cursor-pointer">
+              <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+              <span>Iniciar Conversa</span>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      if (modal) modal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeWhatsAppModal() {
+      const modal = document.getElementById('whatsappModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function startConsultantWhatsApp(index) {
+      const c = WHATSAPP_TEAM[index] || WHATSAPP_TEAM[0];
+      const message = currentWhatsAppSubject 
+        ? `Olá ${c.name}! Vim pelo site da JMartins Industrial e gostaria de cotação de: *${currentWhatsAppSubject}*. Poderia me passar preços e prazos?`
+        : `Olá ${c.name}! Vim pelo site oficial da JMartins Industrial e gostaria de falar com você para uma cotação sob medida.`;
+      window.open(`https://wa.me/${c.raw}?text=${encodeURIComponent(message)}`, '_blank');
+      closeWhatsAppModal();
+    }
+
+    function startQuickWhatsApp() {
+      const randomIdx = Math.floor(Math.random() * WHATSAPP_TEAM.length);
+      startConsultantWhatsApp(randomIdx);
+    }
+
+    // CONFIGURAÇÕES GLOBAIS DA EMPRESA & HERO
+    const defaultSiteConfig = {
+      whatsappNumber: '5519998167195',
+      phone: '(19) 3672-2881 / (19) 3672-1563',
+      email: 'contato@jmartins.ind.br',
+      instagram: '@jmartinsindustrial',
+      address: 'Sul de Minas, São Paulo e Litoral Norte de SC • Entregas em todo o Brasil',
+      heroBadge: 'Fornecimento Industrial Direto • Entregas em Todo o Brasil',
+      heroTitle1: 'POTÊNCIA E PRECISÃO EM',
+      heroTitle2: 'AÇO PLANO E TELHAS',
+      heroTitle3: 'SOLUÇÕES SOB MEDIDA',
+      heroSubtitle: 'Corte e dobra, telhas galvalume e termoacústicas, bobinas, chapas, vigas, perfis, painéis, calhas, tubos e slitter. Polos no Sul de Minas, São Paulo e Litoral Norte de Santa Catarina com atendimento em todo o Brasil.',
+      heroCta: 'SOLICITAR COTAÇÃO RÁPIDA',
+      videoType: 'mp4',
+      videoUrl: 'assets/video_institucional.mp4'
+    };
+
+    function getSiteConfig() {
+      const stored = localStorage.getItem('jmartins_site_config');
+      if (stored) {
+        try {
+          return { ...defaultSiteConfig, ...JSON.parse(stored) };
+        } catch(e) {
+          return defaultSiteConfig;
+        }
+      }
+      return defaultSiteConfig;
+    }
+
+    async function loadSiteConfigFromAPI() {
+      try {
+        const resp = await fetch('/api/config');
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.config && Object.keys(data.config).length > 0) {
+            localStorage.setItem('jmartins_site_config', JSON.stringify(data.config));
+            applySiteConfig(data.config);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn('API config fetch failed:', err);
+      }
+      applySiteConfig();
+    }
+
+    function applySiteConfig(cfg) {
+      if (!cfg) cfg = getSiteConfig();
+
+      const rawWa = (cfg.whatsappNumber || '5519998167195').replace(/\D/g, '');
+      const igClean = (cfg.instagram || '@jmartinsindustrial').replace(/^@/, '').trim();
+
+      // 1. WhatsApp nos botões
+      const headerWa = document.getElementById('headerWhatsappBtn');
+      if (headerWa) {
+        headerWa.onclick = () => openWhatsAppModal();
+      }
+      const floatWa = document.getElementById('floatingWhatsappBtn');
+      if (floatWa) {
+        floatWa.onclick = () => openWhatsAppModal();
+      }
+      const footerWa = document.getElementById('footerWhatsappLink');
+      const footerWaText = document.getElementById('footerWhatsappText');
+      if (footerWa) footerWa.href = `https://wa.me/${rawWa}`;
+      if (footerWaText) footerWaText.textContent = cfg.phone ? `${cfg.phone} (WhatsApp: ${cfg.whatsappNumber})` : cfg.whatsappNumber;
+
+      // 2. Telefones fixos
+      const footerPhone = document.getElementById('footerPhoneLink');
+      const footerPhoneText = document.getElementById('footerPhoneText');
+      if (footerPhone) footerPhone.href = `tel:1936722881`;
+      if (footerPhoneText) footerPhoneText.textContent = '(19) 3672-2881 / (19) 3672-1563';
+
+      // 3. E-mail
+      const footerEmail = document.getElementById('footerEmailLink');
+      const footerEmailText = document.getElementById('footerEmailText');
+      if (footerEmail) footerEmail.href = `mailto:${cfg.email || 'contato@jmartins.ind.br'}`;
+      if (footerEmailText) footerEmailText.textContent = cfg.email || 'contato@jmartins.ind.br';
+
+      // 4. Instagram
+      const topIg = document.getElementById('topbarInstagram');
+      const topIgText = document.getElementById('topbarInstagramText');
+      if (topIg) topIg.href = `https://instagram.com/${igClean}`;
+      if (topIgText) topIgText.textContent = `@${igClean}`;
+
+      const footIg = document.getElementById('footerInstagramLink');
+      const footIgText = document.getElementById('footerInstagramText');
+      const footSocialIg = document.getElementById('footerSocialInstagram');
+      if (footIg) footIg.href = `https://instagram.com/${igClean}`;
+      if (footIgText) footIgText.textContent = `@${igClean}`;
+      if (footSocialIg) footSocialIg.href = `https://instagram.com/${igClean}`;
+
+      // 5. Endereço / Regiões
+      const topAddr = document.getElementById('topbarAddress');
+      if (topAddr) {
+        topAddr.innerHTML = `<i data-lucide="map-pin" class="w-3.5 h-3.5 text-brand-red shrink-0"></i> Polos: <strong>Sul de Minas</strong> • <strong>São Paulo</strong> • <strong>Litoral Norte de SC</strong>`;
+      }
+      const footAddr = document.getElementById('footerAddressText');
+      if (footAddr) footAddr.textContent = cfg.address;
+
+      // 6. Textos do Hero
+      const heroBadge = document.getElementById('cfgHeroBadge');
+      if (heroBadge) heroBadge.textContent = cfg.heroBadge;
+
+      const heroT1 = document.getElementById('cfgHeroTitle1');
+      if (heroT1) heroT1.textContent = cfg.heroTitle1;
+
+      const heroT2 = document.getElementById('cfgHeroTitle2');
+      if (heroT2) heroT2.textContent = cfg.heroTitle2;
+
+      const heroT3 = document.getElementById('cfgHeroTitle3');
+      if (heroT3) heroT3.textContent = cfg.heroTitle3;
+
+      const heroSub = document.getElementById('cfgHeroSubtitle');
+      if (heroSub) heroSub.textContent = cfg.heroSubtitle;
+
+      const heroCta = document.getElementById('cfgHeroCtaText');
+      if (heroCta) heroCta.textContent = cfg.heroCta;
+
+      lucide.createIcons();
+    }
+
+    function populateCompanyForm() {
+      const cfg = getSiteConfig();
+      if (document.getElementById('cfgInputWhatsapp')) document.getElementById('cfgInputWhatsapp').value = cfg.whatsappNumber || '';
+      if (document.getElementById('cfgInputPhone')) document.getElementById('cfgInputPhone').value = cfg.phone || '';
+      if (document.getElementById('cfgInputEmail')) document.getElementById('cfgInputEmail').value = cfg.email || '';
+      if (document.getElementById('cfgInputInstagram')) document.getElementById('cfgInputInstagram').value = cfg.instagram || '';
+      if (document.getElementById('cfgInputAddress')) document.getElementById('cfgInputAddress').value = cfg.address || '';
+      if (document.getElementById('cfgInputHeroBadge')) document.getElementById('cfgInputHeroBadge').value = cfg.heroBadge || '';
+      if (document.getElementById('cfgInputHeroTitle1')) document.getElementById('cfgInputHeroTitle1').value = cfg.heroTitle1 || '';
+      if (document.getElementById('cfgInputHeroTitle2')) document.getElementById('cfgInputHeroTitle2').value = cfg.heroTitle2 || '';
+      if (document.getElementById('cfgInputHeroTitle3')) document.getElementById('cfgInputHeroTitle3').value = cfg.heroTitle3 || '';
+      if (document.getElementById('cfgInputHeroSubtitle')) document.getElementById('cfgInputHeroSubtitle').value = cfg.heroSubtitle || '';
+      if (document.getElementById('cfgInputHeroCta')) document.getElementById('cfgInputHeroCta').value = cfg.heroCta || '';
+      if (document.getElementById('cfgInputVideoType')) document.getElementById('cfgInputVideoType').value = cfg.videoType || 'mp4';
+      if (document.getElementById('cfgInputVideoUrl')) document.getElementById('cfgInputVideoUrl').value = cfg.videoUrl || 'assets/video_institucional.mp4';
+    }
+
+    async function saveCompanyConfig() {
+      const cfg = {
+        whatsappNumber: (document.getElementById('cfgInputWhatsapp').value || '5519998167195').trim(),
+        phone: (document.getElementById('cfgInputPhone').value || '(19) 3672-2881 / (19) 3672-1563').trim(),
+        email: (document.getElementById('cfgInputEmail').value || 'contato@jmartins.ind.br').trim(),
+        instagram: (document.getElementById('cfgInputInstagram').value || '@jmartinsindustrial').trim(),
+        address: (document.getElementById('cfgInputAddress').value || 'Sul de Minas, São Paulo e Litoral Norte de SC • Entregas em todo o Brasil').trim(),
+        heroBadge: (document.getElementById('cfgInputHeroBadge').value || 'Fornecimento Industrial Direto • Entregas em Todo o Brasil').trim(),
+        heroTitle1: (document.getElementById('cfgInputHeroTitle1').value || 'POTÊNCIA E PRECISÃO EM').trim(),
+        heroTitle2: (document.getElementById('cfgInputHeroTitle2').value || 'AÇO PLANO E TELHAS').trim(),
+        heroTitle3: (document.getElementById('cfgInputHeroTitle3').value || 'SOLUÇÕES SOB MEDIDA').trim(),
+        heroSubtitle: (document.getElementById('cfgInputHeroSubtitle').value || '').trim(),
+        heroCta: (document.getElementById('cfgInputHeroCta').value || 'SOLICITAR COTAÇÃO RÁPIDA').trim(),
+        videoType: document.getElementById('cfgInputVideoType').value,
+        videoUrl: (document.getElementById('cfgInputVideoUrl').value || 'assets/video_institucional.mp4').trim()
+      };
+
+      const token = getAuthToken();
+      if (!token) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        closeAdminModal();
+        openAdminLoginModal();
+        return;
+      }
+
+      try {
+        const resp = await fetch('/api/config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ config: cfg })
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.ok) {
+          localStorage.setItem('jmartins_site_config', JSON.stringify(cfg));
+          applySiteConfig(cfg);
+          alert('Configurações salvas no Banco de Dados SQLite com sucesso! As alterações já estão públicas para todos os visitantes.');
+          drawStudioCard();
+          return;
+        } else {
+          alert('Erro ao salvar no banco: ' + (data.error || 'Acesso negado'));
+        }
+      } catch (err) {
+        localStorage.setItem('jmartins_site_config', JSON.stringify(cfg));
+        applySiteConfig(cfg);
+        alert('Salvo no cache do navegador. Servidor indisponível.');
+        drawStudioCard();
+      }
+    }
+
+    function resetCompanyConfig() {
+      if (!confirm('Deseja realmente restaurar todos os dados e textos originais da empresa e da seção hero?')) return;
+      localStorage.removeItem('jmartins_site_config');
+      populateCompanyForm();
+      applySiteConfig(defaultSiteConfig);
+      alert('Configurações restauradas para os padrões originais com sucesso.');
+      drawStudioCard();
+    }
+
+    function openWhatsAppDirect(e) {
+      if (e) e.preventDefault();
+      openWhatsAppModal();
+    }
+
+    // SIMULADOR DE COTAÇÃO
+    function calculateQuote() {
+      const length = parseFloat(document.getElementById('simLength').value) || 0;
+      const qty = parseInt(document.getElementById('simQuantity').value) || 0;
+      
+      const totalLinear = (length * qty).toFixed(1);
+      // Largura útil típica de telha TP40 é ~0.98m a 1.0m
+      const totalArea = Math.round(length * qty * 0.98);
+
+      document.getElementById('resLinear').textContent = `${totalLinear} metros`;
+      document.getElementById('resArea').textContent = `~ ${totalArea} m²`;
+    }
+
+    function sendSimulatedQuoteWhatsApp() {
+      const product = document.getElementById('simProduct').value;
+      const length = document.getElementById('simLength').value;
+      const qty = document.getElementById('simQuantity').value;
+      const location = document.getElementById('simLocation').value;
+      const totalLinear = document.getElementById('resLinear').textContent;
+      const totalArea = document.getElementById('resArea').textContent;
+
+      const summary = `${product} (${qty} unid x ${length}m = ${totalLinear}, Destino: ${location})`;
+      openWhatsAppModal(summary);
+      
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.8 }
+      });
+    }
+
+    function quoteProduct(productName) {
+      openWhatsAppModal(productName);
+    }
+
+    // MODAL VÍDEO
+    function openVideoModal() {
+      const player = document.getElementById('instVideoPlayer');
+      const videoModal = document.getElementById('videoModal');
+
+      if (player) {
+        player.src = 'assets/video_institucional.mp4';
+        player.load();
+        player.play().catch(e => console.log('Autoplay status:', e));
+      }
+
+      if (videoModal) videoModal.classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeVideoModal() {
+      const player = document.getElementById('instVideoPlayer');
+      if (player) player.pause();
+      const videoModal = document.getElementById('videoModal');
+      if (videoModal) videoModal.classList.add('hidden');
+    }
+
+    // GESTÃO DE POSTS & ADMIN
+    const defaultPosts = [
+      {
+        id: 'post-1',
+        title: 'Bobinas Galvalume vs Galvanizado: Qual a Melhor Escolha para Sua Cobertura?',
+        category: 'Dica Técnica',
+        image: 'assets/bobinas_aco.jpg',
+        excerpt: 'Descubra por que a liga Aluzinc (55% Alumínio, 43,5% Zinco e 1,5% Silício) dura até 4 vezes mais em regiões com variações de umidade.',
+        content: `A escolha entre Galvalume e Galvanizado é crucial para o custo-benefício de um galpão industrial ou comercial.
+
+Principais Diferenças:
+1. Galvalume: Combina a barreira física do alumínio com a proteção galvânica do zinco. É imbatível em coberturas expostas a chuva e sol.
+2. Galvanizado tradicional: Camada 100% de zinco, excelente para ambientes internos ou estruturas que receberão pintura automotiva/industrial posterior.
+3. Resistência Térmica: O Galvalume reflete o calor solar melhor, mantendo o ambiente interno até 5°C mais ameno.
+
+Na JMartins Industrial, trabalhamos com bobinas certificadas com garantia total de espessura e teor de revestimento.`,
+        date: '28/09/2026'
+      },
+      {
+        id: 'post-2',
+        title: 'Telhas Sanduíche (EPS): Como Reduzir em até 90% o Calor e Barulho na Sua Empresa',
+        category: 'Telhas Galvanizadas',
+        image: 'assets/telhas_trapezoidais.jpg',
+        excerpt: 'Conheça o sistema termoacústico que está substituindo o fibrocimento e garantindo conforto térmico absoluto no Sul de MG e SP.',
+        content: `As telhas termoacústicas, popularmente conhecidas como 'telhas sanduíche', são compostas por duas telhas de aço galvalume coladas a um núcleo isolante de EPS ou PIR.
+
+Vantagens Imediatas:
+• Redução de temperatura no interior do galpão de até 10°C;
+• Eliminação quase total do barulho de chuva torrencial;
+• Economia de até 40% na conta de energia elétrica com ar condicionado;
+• Núcleo antichama com retardante, homologado conforme normas de segurança.
+
+Peça seu orçamento sob medida na JMartins Industrial com frete direto para sua obra.`,
+        date: '25/09/2026'
+      },
+      {
+        id: 'post-3',
+        title: 'Logística Inteligente no Sul de Minas e São Paulo: Entregas Sem Atrasar Seu Cronograma',
+        category: 'Logística & Região',
+        image: 'assets/logistica_sp_mg.jpg',
+        excerpt: 'Como estruturamos nossa frota e rotas para atender serralheiros e construtoras com rapidez recorde nas principais rodovias.',
+        content: `O atraso na chegada das telhas ou bobinas trava serralherias e montagens de galpões. Pensando nisso, a JMartins Industrial possui logística dedicada interligando:
+
+• Sul de Minas: Pouso Alegre, Varginha, Poços de Caldas, Extrema, Santa Rita do Sapucaí e Itajubá.
+• Estado de São Paulo: Vale do Paraíba, Campinas, Capital, Circuito das Águas e Região de Bragança.
+
+Nossos caminhões contam com amarrações especiais que protegem as abas e o acabamento das telhas contra amassados durante o transporte.`,
+        date: '22/09/2026'
+      }
+    ];
+
+    function getStoredPosts() {
+      const stored = localStorage.getItem('jmartins_posts');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch(e) {
+          return defaultPosts;
+        }
+      }
+      localStorage.setItem('jmartins_posts', JSON.stringify(defaultPosts));
+      return defaultPosts;
+    }
+
+    async function renderPublicPosts() {
+      let posts = getStoredPosts();
+      try {
+        const resp = await fetch('/api/posts');
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data.posts && Array.isArray(data.posts)) {
+            posts = data.posts;
+            localStorage.setItem('jmartins_posts', JSON.stringify(posts));
+          }
+        }
+      } catch (err) {
+        console.warn('API posts fetch failed, using local posts:', err);
+      }
+
+      const container = document.getElementById('postsGrid');
+      if (!container) return;
+      container.innerHTML = '';
+
+      posts.forEach(post => {
+        const card = document.createElement('div');
+        card.className = "bg-brand-gray-950 border border-brand-gray-800 rounded-2xl overflow-hidden hover:border-brand-red/50 transition-all duration-300 group hover:-translate-y-1 shadow-xl flex flex-col";
+        
+        card.innerHTML = `
+          <div class="relative h-48 overflow-hidden">
+            <img src="${post.image}" alt="${post.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-gray-950 via-transparent to-transparent"></div>
+            <span class="absolute top-3 left-3 bg-brand-red text-white text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+              ${post.category}
+            </span>
+            <span class="absolute bottom-2 right-3 text-[11px] text-brand-gray-400">
+              ${post.date || 'Recente'}
+            </span>
+          </div>
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <h3 class="font-barlow font-bold text-lg text-white group-hover:text-brand-red transition-colors line-clamp-2">
+                ${post.title}
+              </h3>
+              <p class="text-brand-gray-400 text-xs sm:text-sm mt-2 line-clamp-3 leading-relaxed">
+                ${post.excerpt}
+              </p>
+            </div>
+            
+            <div class="pt-6 border-t border-brand-gray-800/80 flex items-center justify-between gap-2 mt-4">
+              <button onclick="openReadPostModal('${post.id}')" class="text-xs font-bold text-white hover:text-brand-red flex items-center gap-1 transition-colors">
+                <span>Ler Artigo</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+
+              <button onclick="sharePostWhatsApp('${post.id}')" class="bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors border border-emerald-500/30">
+                <i data-lucide="share-2" class="w-3.5 h-3.5"></i>
+                <span>Compartilhar</span>
+              </button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      const countBadge = document.getElementById('postCountBadge');
+      if (countBadge) countBadge.textContent = posts.length;
+      lucide.createIcons();
+    }
+
+    function sharePostWhatsApp(postId) {
+      const posts = getStoredPosts();
+      const p = posts.find(item => item.id === postId);
+      if (!p) return;
+
+      const message = `*${p.title}* - JMartins Industrial\n\n` +
+        `${p.excerpt}\n\n` +
+        `Confira a matéria completa e faça cotação de bobinas de aço e telhas galvanizadas para Sul de MG e SP:\n` +
+        `Instagram: https://instagram.com/jmartinsindustrial`;
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    function openReadPostModal(postId) {
+      const posts = getStoredPosts();
+      const p = posts.find(item => item.id === postId);
+      if (!p) return;
+
+      document.getElementById('readPostImg').src = p.image;
+      document.getElementById('readPostTitle').textContent = p.title;
+      document.getElementById('readPostCategory').textContent = p.category;
+      document.getElementById('readPostContent').textContent = p.content;
+      
+      const shareBtn = document.getElementById('readPostShareBtn');
+      shareBtn.onclick = () => sharePostWhatsApp(p.id);
+
+      document.getElementById('postReadModal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeReadPostModal() {
+      document.getElementById('postReadModal').classList.add('hidden');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+    }
+
+    function switchAdminTab(tab) {
+      const tCompany = document.getElementById('tabCompany');
+      const tNew = document.getElementById('tabNewPost');
+      const tStudio = document.getElementById('tabStudio');
+      const tList = document.getElementById('tabListPosts');
+      const tSecurity = document.getElementById('tabSecurity');
+
+      const bCompany = document.getElementById('tabBtnCompany');
+      const bNew = document.getElementById('tabBtnNewPost');
+      const bStudio = document.getElementById('tabBtnStudio');
+      const bList = document.getElementById('tabBtnList');
+      const bSecurity = document.getElementById('tabBtnSecurity');
+
+      [tCompany, tNew, tStudio, tList, tSecurity].forEach(el => el && el.classList.add('hidden'));
+      [bCompany, bNew, bStudio, bList, bSecurity].forEach(el => {
+        if (el) el.className = "py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-gray-400 hover:text-white border-b-2 border-transparent transition-all shrink-0";
+      });
+
+      if (tab === 'company') {
+        if (tCompany) tCompany.classList.remove('hidden');
+        if (bCompany) bCompany.className = "py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-red border-b-2 border-brand-red transition-all shrink-0";
+        populateCompanyForm();
+      } else if (tab === 'new') {
+        if (tNew) tNew.classList.remove('hidden');
+        if (bNew) bNew.className = "py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-red border-b-2 border-brand-red transition-all shrink-0";
+      } else if (tab === 'studio') {
+        if (tStudio) tStudio.classList.remove('hidden');
+        if (bStudio) bStudio.className = "py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-red border-b-2 border-brand-red transition-all shrink-0";
+        drawStudioCard();
+      } else if (tab === 'security') {
+        if (tSecurity) tSecurity.classList.remove('hidden');
+        if (bSecurity) bSecurity.className = "py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-red border-b-2 border-brand-red transition-all shrink-0";
+      } else {
+        if (tList) tList.classList.remove('hidden');
+        if (bList) bList.className = "py-3 px-4 text-xs font-bold uppercase tracking-wider text-brand-red border-b-2 border-brand-red transition-all shrink-0";
+        renderAdminPostList();
+      }
+      lucide.createIcons();
+    }
+
+    async function savePost() {
+      const title = document.getElementById('postTitle').value.trim();
+      const category = document.getElementById('postCategory').value;
+      const customImg = document.getElementById('postImageCustom').value.trim();
+      const selectImg = document.getElementById('postImageSelect').value;
+      const excerpt = document.getElementById('postExcerpt').value.trim();
+      const content = document.getElementById('postContent').value.trim();
+
+      if (!title || !excerpt || !content) {
+        alert('Por favor, preencha o título, o resumo e o conteúdo do post.');
+        return;
+      }
+
+      const token = getAuthToken();
+      if (!token) {
+        alert('Sua sessão expirou. Faça login novamente.');
+        closeAdminModal();
+        openAdminLoginModal();
+        return;
+      }
+
+      const newPostPayload = {
+        title,
+        category,
+        image: customImg || selectImg,
+        excerpt,
+        content,
+        date: new Date().toLocaleDateString('pt-BR')
+      };
+
+      try {
+        const resp = await fetch('/api/posts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify(newPostPayload)
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.ok) {
+          alert('Post publicado e salvo com sucesso no Banco de Dados SQLite!');
+          document.getElementById('postTitle').value = '';
+          document.getElementById('postExcerpt').value = '';
+          document.getElementById('postContent').value = '';
+          document.getElementById('postImageCustom').value = '';
+
+          await renderPublicPosts();
+          renderAdminPostList();
+          switchAdminTab('list');
+          return;
+        } else {
+          alert('Erro ao salvar post no banco: ' + (data.error || 'Acesso negado'));
+        }
+      } catch (err) {
+        alert('Erro ao conectar ao servidor para salvar o post.');
+      }
+    }
+
+    function renderAdminPostList() {
+      const posts = getStoredPosts();
+      const listContainer = document.getElementById('adminPostList');
+      listContainer.innerHTML = '';
+
+      posts.forEach(p => {
+        const item = document.createElement('div');
+        item.className = "bg-brand-gray-950 border border-brand-gray-800 rounded-xl p-4 flex items-center justify-between gap-4";
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <img src="${p.image}" class="w-12 h-12 object-cover rounded-lg">
+            <div>
+              <span class="text-xs font-bold text-brand-red uppercase">${p.category}</span>
+              <h4 class="text-sm font-semibold text-white">${p.title}</h4>
+              <span class="text-[11px] text-brand-gray-500">${p.date || 'Recente'}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="sharePostWhatsApp('${p.id}')" class="p-2 text-emerald-400 hover:text-white hover:bg-emerald-600 rounded-lg transition-colors" title="Compartilhar no WhatsApp">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+            </button>
+            <button onclick="deletePost('${p.id}')" class="p-2 text-rose-500 hover:text-white hover:bg-rose-600 rounded-lg transition-colors" title="Excluir">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Deseja realmente remover este post do banco de dados?')) return;
+      const token = getAuthToken();
+      if (!token) {
+        alert('Faça login para remover posts.');
+        closeAdminModal();
+        openAdminLoginModal();
+        return;
+      }
+
+      try {
+        const resp = await fetch(`/api/posts/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await resp.json();
+
+        if (resp.ok && data.ok) {
+          await renderPublicPosts();
+          renderAdminPostList();
+          return;
+        } else {
+          alert('Erro ao excluir: ' + (data.error || 'Acesso negado'));
+        }
+      } catch (err) {
+        alert('Erro ao comunicar com o servidor.');
+      }
+    }
+
+    // POST STUDIO (Desenho do Card em Canvas com Logo Oficial)
+    function drawStudioCard() {
+      const canvas = document.getElementById('studioCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+
+      const title = document.getElementById('studioTitle').value || 'JMARTINS DO BRASIL';
+      const subtitle = document.getElementById('studioSubtitle').value || 'Bobinas de Aço e Telhas Galvanizadas';
+      const badge = document.getElementById('studioBadge').value || 'PREÇO DIRETO DE FÁBRICA';
+      const imgSrc = document.getElementById('studioImg').value;
+
+      const bgImg = new Image();
+      const logoImg = new Image();
+      let loaded = 0;
+      const onBothLoaded = () => {
+        loaded++;
+        if (loaded < 2) return;
+
+        // Fundo com a foto
+        ctx.drawImage(bgImg, 0, 0, 1080, 1080);
+
+        // Degradê escuro sobre a imagem
+        const grad = ctx.createLinearGradient(0, 0, 0, 1080);
+        grad.addColorStop(0, 'rgba(12, 15, 20, 0.7)');
+        grad.addColorStop(0.4, 'rgba(12, 15, 20, 0.4)');
+        grad.addColorStop(0.8, 'rgba(12, 15, 20, 0.95)');
+        grad.addColorStop(1, 'rgba(12, 15, 20, 1.0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1080, 1080);
+
+        // Borda decorativa
+        ctx.strokeStyle = '#dc2626';
+        ctx.lineWidth = 14;
+        ctx.strokeRect(30, 30, 1020, 1020);
+
+        // Logo oficial Jmartins do Brasil no cabeçalho do card
+        ctx.drawImage(logoImg, 60, 60, 340, 75);
+
+        // Badge em Destaque
+        ctx.fillStyle = '#fee2e2';
+        ctx.fillRect(60, 560, 380, 48);
+        ctx.fillStyle = '#991b1b';
+        ctx.font = 'bold 22px Inter, sans-serif';
+        ctx.fillText(badge.toUpperCase(), 75, 592);
+
+        // Título Principal
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '900 52px Barlow, sans-serif';
+        wrapText(ctx, title.toUpperCase(), 60, 670, 960, 62);
+
+        // Subtítulo
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 28px Inter, sans-serif';
+        ctx.fillText(subtitle, 60, 870);
+
+        // Barra Inferior de Contato & Região
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(60, 920, 960, 90);
+
+        const cfg = getSiteConfig();
+        const displayContact = cfg.phone || cfg.whatsappNumber;
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 24px Inter, sans-serif';
+        ctx.fillText(`📍 ${cfg.address} | WhatsApp: ${displayContact}`, 90, 975);
+      };
+
+      bgImg.onload = onBothLoaded;
+      logoImg.onload = onBothLoaded;
+      bgImg.src = imgSrc;
+      logoImg.src = 'assets/logo_jmartins_white.png';
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '';
+      for(let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, x, y);
+          line = words[n] + ' ';
+          y += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, y);
+    }
+
+    function downloadStudioCard() {
+      const canvas = document.getElementById('studioCanvas');
+      const link = document.createElement('a');
+      link.download = 'jmartins-card-post.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function shareStudioToWhatsApp() {
+      const cfg = getSiteConfig();
+      const rawWa = (cfg.whatsappNumber || '5535999999999').replace(/\D/g, '');
+      const title = document.getElementById('studioTitle').value;
+      const subtitle = document.getElementById('studioSubtitle').value;
+      const message = `🚨 *${title}*\n\n${subtitle}\n\n` +
+        `🏭 *JMartins Industrial:* Comercialização direta de Bobinas de Aço e Telhas Galvanizadas.\n` +
+        `🚚 Entregas: ${cfg.address}.\n` +
+        `📲 Solicite cotação agora: https://wa.me/${rawWa}`;
+
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    }
+
+    // HERO SLIDER LOGIC
+    let currentHeroSlide = 0;
+    let heroSlideInterval = null;
+
+    function showHeroSlide(index) {
+      const slides = document.querySelectorAll('.hero-slide');
+      const dots = document.querySelectorAll('.hero-dot');
+      if (!slides.length) return;
+      currentHeroSlide = (index + slides.length) % slides.length;
+      
+      slides.forEach((slide, idx) => {
+        if (idx === currentHeroSlide) {
+          slide.classList.remove('opacity-0', 'pointer-events-none');
+          slide.classList.add('opacity-100');
+        } else {
+          slide.classList.remove('opacity-100');
+          slide.classList.add('opacity-0', 'pointer-events-none');
+        }
+      });
+
+      dots.forEach((dot, idx) => {
+        if (idx === currentHeroSlide) {
+          dot.className = "hero-dot w-6 h-1.5 rounded-full bg-brand-red transition-all";
+        } else {
+          dot.className = "hero-dot w-2 h-1.5 rounded-full bg-white/30 hover:bg-white/60 transition-all";
+        }
+      });
+    }
+
+    function nextHeroSlide() {
+      showHeroSlide(currentHeroSlide + 1);
+      resetHeroAutoplay();
+    }
+
+    function prevHeroSlide() {
+      showHeroSlide(currentHeroSlide - 1);
+      resetHeroAutoplay();
+    }
+
+    function goToHeroSlide(idx) {
+      showHeroSlide(idx);
+      resetHeroAutoplay();
+    }
+
+    function startHeroAutoplay() {
+      if (heroSlideInterval) clearInterval(heroSlideInterval);
+      heroSlideInterval = setInterval(() => {
+        showHeroSlide(currentHeroSlide + 1);
+      }, 5000);
+    }
+
+    function resetHeroAutoplay() {
+      startHeroAutoplay();
+    }
+
+    // Inicializar carregamento de posts, simulador, slider e configurações
+    window.addEventListener('DOMContentLoaded', () => {
+      loadSiteConfigFromAPI();
+      renderPublicPosts();
+      calculateQuote();
+      startHeroAutoplay();
+    });
+  </script>
+</body>
+</html>

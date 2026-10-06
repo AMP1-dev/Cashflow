@@ -30,7 +30,7 @@ export function FmaContactLight({ onOpenTriage }) {
         {/* Circular Action Button */}
         <div className="flex flex-wrap items-center justify-center gap-6 pt-2">
           <a
-            href={`https://wa.me/${firmConfig.contacts?.whatsapp || '5511948900900'}?text=${encodeURIComponent('Olá Dr. Fernando Maeda, gostaria de conversar sobre meu caso.')}`}
+            href={`https://wa.me/${firmConfig.contacts?.whatsapp || '551936724554'}?text=${encodeURIComponent('Olá, gostaria de falar com a Ferreira & Mello Advogados.')}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-3.5 group cursor-pointer"

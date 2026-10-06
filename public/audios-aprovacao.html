@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amplificadora • Aprovação de Identidade Sonora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #08070D; }
+    audio::-webkit-media-controls-panel { background-color: #171526; color: #fff; }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen p-4 sm:p-8 selection:bg-pink-600 selection:text-white">
+  <div class="max-w-3xl mx-auto space-y-8">
+    
+    <!-- Header -->
+    <header class="text-center space-y-3 pt-4">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-500/20 text-pink-400 border border-pink-500/30 text-xs font-black uppercase tracking-wider">
+        <span>Texto Oficial Solicitado</span>
+      </div>
+      <h1 class="text-3xl sm:text-4xl font-black text-white tracking-tight">
+        "Ampliando sua onda musical,<br class="hidden sm:inline" /> <span class="bg-gradient-to-r from-pink-400 via-rose-300 to-amber-300 bg-clip-text text-transparent">a música nos acompanha.</span>"
+      </h1>
+      <p class="text-sm text-slate-300 max-w-xl mx-auto leading-relaxed">
+        Texto contínuo sem soletração, com prosódia fluida e natural em português do Brasil. Ouça cada voz abaixo na versão <strong>Master Lounge (com trilha suave)</strong> e na versão <strong>Voz Pura</strong>.
+      </p>
+    </header>
+
+    <!-- Versões com o Texto Exato -->
+    <section class="bg-[#12101E] border border-pink-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6">
+      <div class="flex items-center justify-between border-b border-white/10 pb-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>🎙️</span>
+            <span>Comparativo das Vozes Selecionadas</span>
+          </h2>
+          <span class="text-xs text-slate-400">Texto único: <em>"Ampliando sua onda musical, a música nos acompanha."</em></span>
+        </div>
+        <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-white/10 text-emerald-300">
+          320 kbps HD
+        </span>
+      </div>
+
+      <div class="space-y-6">
+        
+        <!-- 1. Vivienne -->
+        <div class="bg-black/40 border border-emerald-500/30 rounded-2xl p-5 space-y-3 hover:border-emerald-500/60 transition-all">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                <span>🌸</span> Opção 1: Vivienne (Suave & Sedutora • Fluxo Natural)
+              </span>
+              <span class="text-[11px] text-slate-400">Mesma base do Caribu, agora sem cortar sílabas. Dicção contínua e aveludada.</span>
+            </div>
+            <span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">Favorita</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-emerald-300 tracking-wider">🎵 Com Trilha Lounge (Master):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_vivienne_lounge.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">🗣️ Voz Pura (Sem Trilha):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_vivienne_natural.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Emma -->
+        <div class="bg-black/40 border border-amber-500/30 rounded-2xl p-5 space-y-3 hover:border-amber-500/60 transition-all">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-bold text-amber-400 flex items-center gap-1.5">
+                <span>🎷</span> Opção 2: Emma (Íntima • Estilo Vintage Café)
+              </span>
+              <span class="text-[11px] text-slate-400">Tom acústico calmo, estilo rádio boutique europeia.</span>
+            </div>
+            <span class="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">Acústico</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-amber-300 tracking-wider">🎵 Com Trilha Lounge (Master):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_emma_lounge.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">🗣️ Voz Pura (Sem Trilha):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_emma_natural.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Thalita (Brasileira Nativa Multilingual) -->
+        <div class="bg-black/40 border border-pink-500/30 rounded-2xl p-5 space-y-3 hover:border-pink-500/60 transition-all">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-bold text-pink-400 flex items-center gap-1.5">
+                <span>🇧🇷</span> Opção 3: Thalita (Brasileira Nativa • Aveludada)
+              </span>
+              <span class="text-[11px] text-slate-400">100% sotaque e fonética brasileira nativa, ajustada para cadência calma e suave.</span>
+            </div>
+            <span class="text-[10px] bg-pink-500/20 text-pink-300 border border-pink-500/30 px-2 py-0.5 rounded-full font-bold">Nativa BR</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-pink-300 tracking-wider">🎵 Com Trilha Lounge (Master):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_thalita_lounge.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">🗣️ Voz Pura (Sem Trilha):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_thalita_br.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Francisca (Brasileira Suave) -->
+        <div class="bg-black/40 border border-cyan-500/30 rounded-2xl p-5 space-y-3 hover:border-cyan-500/60 transition-all">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-sm font-bold text-cyan-400 flex items-center gap-1.5">
+                <span>✨</span> Opção 4: Francisca (Brasileira Nativa • Cadência Calma)
+              </span>
+              <span class="text-[11px] text-slate-400">Locução serena com prosódia limpa e clareza total.</span>
+            </div>
+            <span class="text-[10px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-bold">Serena BR</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-cyan-300 tracking-wider">🎵 Com Trilha Lounge (Master):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_francisca_lounge.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">🗣️ Voz Pura (Sem Trilha):</span>
+              <audio controls class="w-full" preload="metadata">
+                <source src="/audio_demos/onda_francisca_suave.mp3" type="audio/mpeg">
+              </audio>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center pt-2 pb-8 text-xs text-slate-500">
+      Rádio Amplificadora • Sistema de Engenharia de Áudio 24h
+    </footer>
+
+  </div>
+</body>
+</html>

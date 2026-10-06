@@ -1,0 +1,40 @@
+name: Supabase Keep-Alive Ping
+
+on:
+  schedule:
+    # Executa todos os dias às 06:00 UTC (03:00 Horário de Brasília)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Permite disparar manualmente pelo painel do GitHub Actions
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Databases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping AMP Flow Financeiro (eornunjxcmtyrdrihiqk)
+        run: |
+          echo "Pingando AMP Flow Financeiro..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${{ secrets.AMP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcm51bmp4Y210eXJkcmloaXFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njg5NDYsImV4cCI6MjA5NzQ0NDk0Nn0.fGBiJI_Mx0qFd0lLhvC_FKDkH4To56FMFTvkhwKviV0' }}" \
+            -H "Authorization: Bearer ${{ secrets.AMP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvcm51bmp4Y210eXJkcmloaXFrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4Njg5NDYsImV4cCI6MjA5NzQ0NDk0Nn0.fGBiJI_Mx0qFd0lLhvC_FKDkH4To56FMFTvkhwKviV0' }}" \
+            "https://eornunjxcmtyrdrihiqk.supabase.co/rest/v1/lancamentos?select=id&limit=1")
+          echo "Status retornado: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ AMP Flow: Atividade registrada com sucesso!"
+          else
+            echo "⚠️ AMP Flow retornou HTTP $HTTP_STATUS"
+          fi
+
+      - name: Ping Fixos / Drywall (ogqahhmxsmjoyjdikafm)
+        run: |
+          echo "Pingando Fixos / Drywall..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "apikey: ${{ secrets.DRYWALL_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncWFoaG14c21qb3lqZGlrYWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzUwMDIsImV4cCI6MjEwNDY1MTAwMn0.mzImAieq-IkJL5eVumhW5QxK5u70yN_cnW2H48B-0bs' }}" \
+            -H "Authorization: Bearer ${{ secrets.DRYWALL_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncWFoaG14c21qb3lqZGlrYWZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNzUwMDIsImV4cCI6MjEwNDY1MTAwMn0.mzImAieq-IkJL5eVumhW5QxK5u70yN_cnW2H48B-0bs' }}" \
+            "https://ogqahhmxsmjoyjdikafm.supabase.co/rest/v1/drywall_cotacoes?select=id&limit=1")
+          echo "Status retornado: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ Fixos/Drywall: Atividade registrada com sucesso!"
+          else
+            echo "⚠️ Fixos/Drywall retornou HTTP $HTTP_STATUS"
+          fi

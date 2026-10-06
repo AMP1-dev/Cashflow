@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Banner LinkedIn - Marco Antonio Pavani (1584x396)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0B0F19;
+      color: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 1600px;
+      width: 100%;
+    }
+    .header {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 500;
+      margin: 0;
+      color: #E2E8F0;
+    }
+    .btn {
+      padding: 10px 20px;
+      background: #0052D9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+    .btn:hover {
+      background: #003B99;
+    }
+    .banner-preview {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 1px solid #1E293B;
+    }
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>Banner Oficial LinkedIn — Marco Antonio Pavani</h1>
+        <p style="margin: 4px 0 0 0; font-size: 13px; color: #94A3B8;">Resolução Exata: 1584 x 396 pixels (Proporção 4:1 recomendada pelo LinkedIn)</p>
+      </div>
+      <button class="btn" id="downloadBtn">📥 Baixar Imagem em Alta Resolução (PNG)</button>
+    </div>
+
+    <div class="banner-preview">
+      <canvas id="bannerCanvas" width="1584" height="396"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('bannerCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 1. Background Gradient (Deep Petroleum Blue to Slate Dark)
+    const bgGrad = ctx.createLinearGradient(0, 0, 1584, 396);
+    bgGrad.addColorStop(0, '#001A40');
+    bgGrad.addColorStop(0.35, '#002B66');
+    bgGrad.addColorStop(0.75, '#003B99');
+    bgGrad.addColorStop(1, '#0A192F');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 1584, 396);
+
+    // 2. Subtle Glow behind text
+    const glowGrad = ctx.createRadialGradient(900, 200, 50, 900, 200, 500);
+    glowGrad.addColorStop(0, 'rgba(0, 122, 255, 0.25)');
+    glowGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(0, 0, 1584, 396);
+
+    // 3. Architectural Wireframe Globe on the Right
+    ctx.save();
+    ctx.translate(1360, 198);
+    ctx.rotate((15 * Math.PI) / 180);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+    ctx.lineWidth = 1.8;
+
+    // Outer circle
+    ctx.beginPath();
+    ctx.arc(0, 0, 160, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Equator
+    ctx.beginPath();
+    ctx.moveTo(-160, 0);
+    ctx.lineTo(160, 0);
+    ctx.stroke();
+
+    // Latitudes
+    ctx.beginPath();
+    ctx.ellipse(0, -65, 145, 65, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(0, 65, 145, 65, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Meridians
+    ctx.beginPath();
+    ctx.moveTo(0, -160);
+    ctx.lineTo(0, 160);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 85, 160, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 130, 160, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+
+    // 4. Subtle Financial Growth Bars / Chart in Background
+    const barX = 1080;
+    const barHeights = [40, 65, 90, 120, 155, 200, 240];
+    barHeights.forEach((h, i) => {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      ctx.fillRect(barX + (i * 38), 350 - h, 24, h);
+      
+      // Top indicator dot
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.beginPath();
+      ctx.arc(barX + (i * 38) + 12, 350 - h, 3, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 5. Sweeping 3D Fluid Wave Ribbon across the lower portion
+    ctx.save();
+    const waveGrad = ctx.createLinearGradient(300, 396, 1584, 150);
+    waveGrad.addColorStop(0, 'rgba(196, 181, 253, 0.05)');
+    waveGrad.addColorStop(0.3, 'rgba(221, 214, 254, 0.35)');
+    waveGrad.addColorStop(0.6, 'rgba(186, 230, 253, 0.6)');
+    waveGrad.addColorStop(0.85, 'rgba(255, 255, 255, 0.85)');
+    waveGrad.addColorStop(1, 'rgba(125, 211, 252, 0.1)');
+
+    ctx.beginPath();
+    ctx.moveTo(350, 396);
+    ctx.bezierCurveTo(600, 396, 750, 280, 1050, 310);
+    ctx.bezierCurveTo(1300, 330, 1420, 210, 1584, 140);
+    ctx.lineTo(1584, 396);
+    ctx.closePath();
+    ctx.fillStyle = waveGrad;
+    ctx.fill();
+
+    // Wave glowing line
+    ctx.beginPath();
+    ctx.moveTo(350, 396);
+    ctx.bezierCurveTo(600, 396, 750, 280, 1050, 310);
+    ctx.bezierCurveTo(1300, 330, 1420, 210, 1584, 140);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.restore();
+
+    // 6. Typography (Marco Antonio Pavani)
+    // Subtitle Pill Badge: 40+ Anos de Trajetória
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.roundRect(380, 75, 225, 32, 16);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '500 12px Inter, sans-serif';
+    ctx.fillStyle = '#BAE6FD';
+    ctx.letterSpacing = '1px';
+    ctx.fillText('✦  40+ ANOS DE TRAJETÓRIA', 398, 96);
+    ctx.restore();
+
+    // Name
+    ctx.save();
+    ctx.font = '300 44px Inter, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.letterSpacing = '-0.5px';
+    ctx.fillText('MARCO ANTONIO PAVANI', 380, 158);
+
+    // Expertise Headline
+    ctx.font = '400 18px Inter, sans-serif';
+    ctx.fillStyle = '#93C5FD';
+    ctx.fillText('Gestão Financeira Estratégica  •  Inteligência Fiscal  •  Governança de TI', 380, 196);
+
+    // Value Proposition Subtitle
+    ctx.font = '300 14px Inter, sans-serif';
+    ctx.fillStyle = '#CBD5E1';
+    ctx.fillText('BPO de Tesouraria  |  DRE Gerencial  |  Holdings  |  Infraestrutura & NOC 24/7', 380, 230);
+
+    // Ecosystem Badges
+    ctx.font = '400 11px Inter, sans-serif';
+    ctx.fillStyle = '#64748B';
+    ctx.fillText('GRUPO AMP  •  ALIANÇA EMPRESARIAL  •  MESHCENTRAL NOC 24/7  •  PROJETO JOÃO DE BARRO ESG', 380, 310);
+    ctx.restore();
+
+    // Download functionality
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const link = document.createElement('a');
+      link.download = 'banner_linkedin_marco_antonio_pavani_1584x396.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  </script>
+</body>
+</html>

@@ -90,7 +90,19 @@ Deno.serve(async (req) => {
     }
 
     if (!res.ok) {
-      throw new Error(data?.message || "Erro no envio via Resend.");
+      const errMsg = data?.message || "Erro no envio via Resend.";
+      let userFriendlyMsg = errMsg;
+      if (errMsg.includes("only send testing emails") || errMsg.includes("not verified")) {
+        userFriendlyMsg = "O domínio amp.adm.br precisa ser validado no Resend. Enquanto estiver 'Not Started', o Resend só permite disparos para o e-mail da sua conta (amps4.mobile@gmail.com). Para enviar para clientes, conclua a validação do domínio amp.adm.br no DNS.";
+      }
+      return new Response(
+        JSON.stringify({ 
+          sucesso: false, 
+          error: userFriendlyMsg,
+          detalheTecnico: data 
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(
@@ -109,7 +121,7 @@ Deno.serve(async (req) => {
         sucesso: false, 
         error: err.message || "Erro desconhecido ao processar e-mail." 
       }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

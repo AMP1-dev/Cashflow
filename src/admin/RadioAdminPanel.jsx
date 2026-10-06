@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useRadio } from '../context/RadioContext';
-import { Radio, Music, Calendar, Newspaper, MessageSquare, Settings, Database, ExternalLink, LogOut, Lock, Plus, Edit, Trash2, Check, X, Upload, Save, Disc, Flame, Clock, Sparkles, Volume2, Play, Building2, Store, ShoppingBag, Shirt, Tv, Copy, BarChart3, Activity, ShieldCheck, Car, Signal, Headphones, Globe2, Wifi, WifiOff, RefreshCw, Share2, MessageCircle } from 'lucide-react';
+import { Radio, Music, Calendar, Newspaper, MessageSquare, Settings, Database, ExternalLink, LogOut, Lock, Plus, Edit, Trash2, Check, X, Upload, Save, Disc, Flame, Clock, Sparkles, Volume2, Play, Building2, Store, ShoppingBag, Shirt, Tv, Copy, BarChart3, Activity, ShieldCheck, Car, Signal, Headphones, Globe2, Wifi, WifiOff, RefreshCw, Share2, MessageCircle, Palette, Smartphone } from 'lucide-react';
 import { formatYouTubeEmbed } from '../data/radioData';
 
 export function RadioAdminPanel() {
@@ -121,6 +121,7 @@ export function RadioAdminPanel() {
   const [isCreatingB2B, setIsCreatingB2B] = useState(false);
   const [b2bForm, setB2BForm] = useState({
     name: '',
+    slug: '',
     segment: 'Restaurante & Cafeteria',
     location: '',
     streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3',
@@ -128,7 +129,11 @@ export function RadioAdminPanel() {
     slogan: '',
     logo: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=400&q=80',
     spotsCount: 4,
-    plan: 'Plano Pro (2 Ambientes + Locução IA)',
+    plan: 'Taxa de Habilitação + Gravação de Spots',
+    pricingModel: 'setup_spots',
+    setupFee: 'R$ 350,00',
+    spotFee: 'R$ 49,00 / spot',
+    themeColor: 'emerald',
     status: 'Ativo'
   });
 
@@ -238,12 +243,28 @@ export function RadioAdminPanel() {
 
   const handleSaveB2B = (e) => {
     e.preventDefault();
+    const generatedSlug = (b2bForm.slug || b2bForm.name || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-');
+
+    const clientData = {
+      ...b2bForm,
+      slug: generatedSlug || `cliente-${Date.now()}`
+    };
+
     if (isCreatingB2B) {
-      addB2BClient(b2bForm);
+      addB2BClient(clientData);
       setIsCreatingB2B(false);
+      showToast('Nova Estação B2B criada com sucesso!');
     } else if (editingB2BId) {
-      updateB2BClient(editingB2BId, b2bForm);
+      updateB2BClient(editingB2BId, clientData);
       setEditingB2BId(null);
+      showToast('Estação B2B atualizada com sucesso!');
     }
   };
 
@@ -1551,14 +1572,20 @@ export function RadioAdminPanel() {
                 onClick={() => {
                   setB2BForm({
                     name: '',
+                    slug: '',
                     segment: 'Restaurante & Cafeteria',
                     location: '',
                     streamUrl: 'https://ice1.somafm.com/groovesalad-128-mp3',
-                    genre: 'Jazz, Bossa & Acoustic Lounge',
+                    genre: 'Vintage Chic • Jazz, Bossa & Acoustic Lounge',
                     slogan: '',
                     logo: 'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=400&q=80',
                     spotsCount: 4,
-                    plan: 'Plano Pro (2 Ambientes + Locução IA)',
+                    plan: 'Habilitação Única + Spots sob Demanda',
+                    pricingModel: 'setup_spots',
+                    setupFee: 'R$ 350,00',
+                    spotFee: 'R$ 49,00 / spot',
+                    themeColor: 'emerald',
+                    spotifyUrl: '',
                     status: 'Ativo'
                   });
                   setIsCreatingB2B(true);
@@ -1573,25 +1600,58 @@ export function RadioAdminPanel() {
 
             {/* B2B Creation / Edit Form */}
             {(isCreatingB2B || editingB2BId) && (
-              <form onSubmit={handleSaveB2B} className="bg-[#131120] border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 space-y-4 animate-fadeIn shadow-2xl">
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-emerald-400" />
-                  <span>{isCreatingB2B ? 'Cadastrar Nova Rádio Corporativa' : 'Editar Estação B2B'}</span>
-                </h3>
+              <form onSubmit={handleSaveB2B} className="bg-[#131120] border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 space-y-5 animate-fadeIn shadow-2xl">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-emerald-400" />
+                    <span>{isCreatingB2B ? 'Cadastrar Nova Rádio Corporativa' : 'Editar Estação B2B'}</span>
+                  </h3>
+                  <span className="text-[10px] font-black uppercase px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    App Standalone PWA
+                  </span>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Nome da Empresa / Estabelecimento *</label>
+                {/* Nome & Slug */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Nome do Estabelecimento *</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ex: Bistrô & Café Vintage, Academia Pulse..."
+                      placeholder="Ex: Le Bistrô Vintage, Hamburgueria Grill..."
                       value={b2bForm.name}
-                      onChange={(e) => setB2BForm({ ...b2bForm, name: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const slugified = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
+                        setB2BForm({
+                          ...b2bForm,
+                          name: val,
+                          slug: editingB2BId ? b2bForm.slug : slugified
+                        });
+                      }}
                       className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
                     />
                   </div>
 
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      Identificador URL Único (Slug do App)
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-mono">/?indoor=</span>
+                      <input
+                        type="text"
+                        placeholder="ex: le-bistro-vintage"
+                        value={b2bForm.slug || ''}
+                        onChange={(e) => setB2BForm({ ...b2bForm, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-emerald-400 font-mono"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Segmento, Cidade & Estilo */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 mb-1">Segmento de Atuação</label>
                     <select
@@ -1600,15 +1660,14 @@ export function RadioAdminPanel() {
                       className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
                     >
                       <option value="Restaurante & Cafeteria">Restaurante & Cafeteria</option>
+                      <option value="Hamburgueria & Pub">Hamburgueria & Pub</option>
                       <option value="Academia & CrossFit">Academia & CrossFit</option>
                       <option value="Varejo & Boutique">Varejo & Boutique</option>
                       <option value="Clínica & Consultório">Clínica & Consultório</option>
                       <option value="Escritório & Coworking">Escritório & Coworking</option>
                     </select>
                   </div>
-                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 mb-1">Cidade / Estado</label>
                     <input
@@ -1621,22 +1680,10 @@ export function RadioAdminPanel() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-emerald-400 mb-1">URL do Streaming (Icecast/MP3)</label>
-                    <input
-                      type="url"
-                      required
-                      placeholder="https://..."
-                      value={b2bForm.streamUrl}
-                      onChange={(e) => setB2BForm({ ...b2bForm, streamUrl: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-emerald-500/40 text-xs text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Estilo Musical</label>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Estilo Musical Curado</label>
                     <input
                       type="text"
-                      placeholder="Ex: Jazz, Bossa, Pop..."
+                      placeholder="Ex: Vintage Café, Bossa & Acoustic Lounge"
                       value={b2bForm.genre}
                       onChange={(e) => setB2BForm({ ...b2bForm, genre: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
@@ -1644,12 +1691,149 @@ export function RadioAdminPanel() {
                   </div>
                 </div>
 
+                {/* Streaming URL & Spotify Import */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Slogan da Empresa</label>
+                    <label className="block text-xs font-bold text-emerald-400 mb-1">URL do Streaming (Icecast / AzuraCast)</label>
+                    <input
+                      type="url"
+                      required
+                      placeholder="https://..."
+                      value={b2bForm.streamUrl}
+                      onChange={(e) => setB2BForm({ ...b2bForm, streamUrl: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-emerald-500/40 text-xs text-white font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Playlist Spotify do Cliente (Referência)</label>
+                    <input
+                      type="url"
+                      placeholder="https://open.spotify.com/playlist/... ou track/..."
+                      value={b2bForm.spotifyUrl || ''}
+                      onChange={(e) => setB2BForm({ ...b2bForm, spotifyUrl: e.target.value })}
+                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Color Palette Selector */}
+                <div className="p-4 rounded-2xl bg-black/40 border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Palette className="w-3.5 h-3.5 text-pink-400" />
+                      <span>Paleta de Cores do App do Cliente</span>
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      Personaliza o brilho, botões e visualizador do app da loja
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 pt-1">
+                    {[
+                      { id: 'emerald', label: 'Esmeralda Luxo', hex: '#10B981', border: 'border-emerald-500' },
+                      { id: 'amber', label: 'Dourado Gourmet', hex: '#F59E0B', border: 'border-amber-500' },
+                      { id: 'cyan', label: 'Azul Petróleo', hex: '#06B6D4', border: 'border-cyan-500' },
+                      { id: 'rose', label: 'Rose Gold', hex: '#F43F5E', border: 'border-rose-500' },
+                      { id: 'violet', label: 'Ultra Violeta', hex: '#A855F7', border: 'border-purple-500' },
+                      { id: 'red', label: 'Bistrô Rubro', hex: '#EF4444', border: 'border-red-500' }
+                    ].map((pal) => (
+                      <button
+                        key={pal.id}
+                        type="button"
+                        onClick={() => setB2BForm({ ...b2bForm, themeColor: pal.id })}
+                        className={`p-2 rounded-xl flex items-center gap-2 border transition-all text-left cursor-pointer ${
+                          (b2bForm.themeColor || 'emerald') === pal.id
+                            ? `${pal.border} bg-white/10 ring-2 ring-white/30 font-bold text-white`
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <span className="w-3.5 h-3.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: pal.hex }} />
+                        <span className="text-[11px] truncate">{pal.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Modelo Comercial & Monetização */}
+                <div className="p-4 rounded-2xl bg-black/40 border border-emerald-500/20 space-y-3">
+                  <label className="text-xs font-bold text-emerald-400 block">
+                    Modelo Comercial & Monetização
+                  </label>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setB2BForm({ ...b2bForm, pricingModel: 'setup_spots', plan: 'Habilitação Única + Spots sob Demanda' })}
+                      className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                        (b2bForm.pricingModel || 'setup_spots') === 'setup_spots'
+                          ? 'border-emerald-500 bg-emerald-950/40 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-emerald-300">✨ Streaming Grátis • Habilitação + Spots</div>
+                      <div className="text-[11px] text-slate-400 mt-1">Cobrança única de Setup do App + valor avulso por vinheta/spot gravado. Fácil conversão!</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setB2BForm({ ...b2bForm, pricingModel: 'monthly', plan: 'Assinatura Mensal Recorrente' })}
+                      className={`p-3 rounded-xl border text-left cursor-pointer transition-all ${
+                        b2bForm.pricingModel === 'monthly'
+                          ? 'border-emerald-500 bg-emerald-950/40 text-white'
+                          : 'border-white/10 bg-white/5 text-slate-400'
+                      }`}
+                    >
+                      <div className="text-xs font-bold text-slate-200">📅 Mensalidade Recorrente</div>
+                      <div className="text-[11px] text-slate-400 mt-1">Cobrança mensal fixa de assinatura pelo serviço contínuo de streaming.</div>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Taxa de Habilitação / Setup</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: R$ 350,00"
+                        value={b2bForm.setupFee || ''}
+                        onChange={(e) => setB2BForm({ ...b2bForm, setupFee: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Custo por Spot Gravado</label>
+                      <input
+                        type="text"
+                        placeholder="Ex: R$ 49,00 / spot"
+                        value={b2bForm.spotFee || ''}
+                        onChange={(e) => setB2BForm({ ...b2bForm, spotFee: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-300 mb-1">Status da Estação</label>
+                      <select
+                        value={b2bForm.status}
+                        onChange={(e) => setB2BForm({ ...b2bForm, status: e.target.value })}
+                        className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
+                      >
+                        <option value="Ativo">Ativo</option>
+                        <option value="Em Teste">Em Teste</option>
+                        <option value="Pausado">Pausado</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Slogan & Logotipo */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">Slogan do Estabelecimento</label>
                     <input
                       type="text"
-                      placeholder="Ex: Sabor e sofisticação para os seus momentos..."
+                      placeholder="Ex: Café passado na hora e ambiente acolhedor..."
                       value={b2bForm.slogan}
                       onChange={(e) => setB2BForm({ ...b2bForm, slogan: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
@@ -1667,41 +1851,6 @@ export function RadioAdminPanel() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Plano Contratado</label>
-                    <input
-                      type="text"
-                      value={b2bForm.plan}
-                      onChange={(e) => setB2BForm({ ...b2bForm, plan: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Spots / Vinhetas por Mês</label>
-                    <input
-                      type="number"
-                      value={b2bForm.spotsCount}
-                      onChange={(e) => setB2BForm({ ...b2bForm, spotsCount: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">Status</label>
-                    <select
-                      value={b2bForm.status}
-                      onChange={(e) => setB2BForm({ ...b2bForm, status: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white"
-                    >
-                      <option value="Ativo">Ativo</option>
-                      <option value="Em Teste">Em Teste</option>
-                      <option value="Pausado">Pausado</option>
-                    </select>
-                  </div>
-                </div>
-
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
@@ -1712,7 +1861,7 @@ export function RadioAdminPanel() {
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer shadow-lg"
+                    className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer shadow-lg shadow-emerald-600/30"
                   >
                     Salvar Estação B2B
                   </button>
@@ -1722,95 +1871,154 @@ export function RadioAdminPanel() {
 
             {/* List of B2B Stations */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {b2bClients && b2bClients.map((client) => (
-                <div key={client.id} className="p-6 rounded-3xl bg-[#131120] border border-white/10 hover:border-emerald-500/40 transition-all flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <img src={client.logo} alt={client.name} className="w-12 h-12 rounded-xl object-cover border border-emerald-500/30" />
-                        <div>
-                          <h4 className="text-base font-bold text-white leading-snug">{client.name}</h4>
-                          <span className="text-[11px] font-semibold text-emerald-400">{client.segment}</span>
+              {b2bClients && b2bClients.map((client) => {
+                const clientAppUrl = `${window.location.origin}/?indoor=${client.slug || client.id}&play=1`;
+                const themeNames = {
+                  emerald: 'Esmeralda',
+                  amber: 'Dourado Gourmet',
+                  cyan: 'Azul Petróleo',
+                  rose: 'Rose Gold',
+                  violet: 'Ultra Violeta',
+                  red: 'Bistrô Rubro'
+                };
+                const themeColors = {
+                  emerald: 'bg-emerald-500',
+                  amber: 'bg-amber-500',
+                  cyan: 'bg-cyan-500',
+                  rose: 'bg-rose-500',
+                  violet: 'bg-purple-500',
+                  red: 'bg-red-500'
+                };
+
+                return (
+                  <div key={client.id} className="p-6 rounded-3xl bg-[#131120] border border-white/10 hover:border-emerald-500/40 transition-all flex flex-col justify-between space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img src={client.logo} alt={client.name} className="w-12 h-12 rounded-xl object-cover border border-emerald-500/30" />
+                          <div>
+                            <h4 className="text-base font-bold text-white leading-snug">{client.name}</h4>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-[11px] font-semibold text-emerald-400">{client.segment}</span>
+                              <span className="inline-flex items-center gap-1 text-[10px] text-slate-400 bg-white/5 px-2 py-0.5 rounded-full border border-white/10">
+                                <span className={`w-2 h-2 rounded-full ${themeColors[client.themeColor || 'emerald'] || 'bg-emerald-500'}`} />
+                                {themeNames[client.themeColor || 'emerald'] || 'Esmeralda'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                          client.status === 'Ativo' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {client.status}
+                        </span>
                       </div>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
-                        client.status === 'Ativo' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      }`}>
-                        {client.status}
-                      </span>
+
+                      <p className="text-xs text-slate-400 italic">"{client.slogan || 'Rádio exclusiva da loja'}"</p>
+
+                      <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-xs">
+                        <div className="text-slate-300 flex justify-between">
+                          <span>Estilo:</span>
+                          <strong className="text-white font-semibold">{client.genre}</strong>
+                        </div>
+                        <div className="text-slate-300 flex justify-between">
+                          <span>Local:</span>
+                          <span>{client.location}</span>
+                        </div>
+                        <div className="text-slate-300 flex justify-between items-center pt-1 border-t border-white/5">
+                          <span>Modelo:</span>
+                          <span className="text-emerald-400 font-bold text-[11px]">
+                            {client.pricingModel === 'monthly' ? 'Mensalidade Fixa' : 'Habilitação + Spots sob Demanda'}
+                          </span>
+                        </div>
+                        {client.setupFee && (
+                          <div className="text-slate-400 flex justify-between text-[11px]">
+                            <span>Setup/Spot:</span>
+                            <span className="text-slate-200">{client.setupFee} • {client.spotFee || 'R$ 49/spot'}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
-                    <p className="text-xs text-slate-400 italic">"{client.slogan || 'Rádio exclusiva da loja'}"</p>
+                    <div className="space-y-2 pt-2 border-t border-white/10">
+                      {/* Primary Open Standalone App CTA */}
+                      <button
+                        type="button"
+                        onClick={() => window.open(clientAppUrl, '_blank')}
+                        className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white font-black text-xs flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-600/30 transition-transform active:scale-95"
+                      >
+                        <Smartphone className="w-4 h-4" />
+                        <span>Abrir App do Estabelecimento</span>
+                        <ExternalLink className="w-3 h-3 opacity-70" />
+                      </button>
 
-                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1 text-xs">
-                      <div className="text-slate-300 flex justify-between">
-                        <span>Estilo:</span>
-                        <strong className="text-white font-semibold">{client.genre}</strong>
-                      </div>
-                      <div className="text-slate-300 flex justify-between">
-                        <span>Local:</span>
-                        <span>{client.location}</span>
-                      </div>
-                      <div className="text-slate-300 flex justify-between">
-                        <span>Plano:</span>
-                        <span className="text-emerald-300">{client.plan}</span>
+                      <div className="flex items-center justify-between gap-1 text-xs">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedB2BClient(client);
+                            setIsIndoorModalOpen(true);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                        >
+                          <Play className="w-3 h-3 fill-current" />
+                          <span>Testar</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(clientAppUrl);
+                            showToast(`Link do App de ${client.name} copiado com sucesso!`);
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 font-semibold text-[11px] flex items-center gap-1 cursor-pointer"
+                          title="Copiar Link Direto do App"
+                        >
+                          <Copy className="w-3 h-3" />
+                          <span>Copiar Link</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const msg = `Olá! A rádio exclusiva de ${client.name} está pronta. Acesse pelo App oficial: ${clientAppUrl} (Dica: Deixe tocando em tela cheia no computador do balcão ou tablet!)`;
+                            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+                          }}
+                          className="px-2.5 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 font-semibold text-[11px] flex items-center gap-1 cursor-pointer border border-emerald-500/30"
+                          title="Compartilhar no WhatsApp do Cliente"
+                        >
+                          <MessageCircle className="w-3 h-3" />
+                          <span>WhatsApp</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setB2BForm(client);
+                            setEditingB2BId(client.id);
+                            setIsCreatingB2B(false);
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
+                          title="Editar"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`Excluir a estação de ${client.name}?`)) deleteB2BClient(client.id);
+                          }}
+                          className="p-1.5 rounded-lg text-rose-400 hover:bg-rose-500/20 cursor-pointer"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
                   </div>
-
-                  <div className="pt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedB2BClient(client);
-                        setIsIndoorModalOpen(true);
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-600/80 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-white" />
-                      <span>Testar Player</span>
-                    </button>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(`${window.location.origin}/#indoor - Rádio Oficial ${client.name}`);
-                          showToast('Link do player copiado com sucesso!');
-                        }}
-                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
-                        title="Copiar Link do Player"
-                      >
-                        <Copy className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setB2BForm(client);
-                          setEditingB2BId(client.id);
-                          setIsCreatingB2B(false);
-                        }}
-                        className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 cursor-pointer"
-                        title="Editar"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm(`Excluir a estação de ${client.name}?`)) deleteB2BClient(client.id);
-                        }}
-                        className="p-2 rounded-lg text-rose-400 hover:bg-rose-500/20 cursor-pointer"
-                        title="Excluir"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

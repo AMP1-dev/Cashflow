@@ -5,13 +5,17 @@
 
 export const FMA_CONFIG = {
   name: "FMA Advogados",
-  firmName: "Fernando Maeda Advogados Associados",
-  founder: "Dr. Fernando Maeda",
-  oab: "OAB/SP 210.374",
+  firmName: "Ferreira & Mello Advogados",
+  founder: "Ferreira & Mello Advogados",
+  oab: "OAB/SP",
   aasp: "Inscrito na Associação dos Advogados de São Paulo (AASP)",
   yearsOfExperience: "20+ Anos",
-  experienceSince: "Desde 2003",
-  specialtiesHeadline: "Advocacia Estratégica Cível, Bancária, Contratual e Direito à Saúde",
+  experienceSince: "Tradição & Rigor",
+  specialtiesHeadline: "Advocacia Estratégica Cível, Família, Bancária, Contratual e Saúde",
+  heroTitle: "Estratégias e soluções processuais, consultivas e contenciosas.",
+  heroSubtitle: "Atuação de alto impacto técnico para casos complexos nas esferas Cível, Bancária, Contratual e Direito à Saúde.",
+  purposeTitle: "tem um propósito claro: oferecer soluções jurídicas com excelência técnica na construção de estratégias sólidas, no contencioso e no consultivo.",
+  purposeSubtitle: "Nossa atuação também é definida: contencioso estratégico, pareceres e opiniões legais, direito bancário, direito à saúde com plantão de liminares urgentes e assessoria técnica de parceiros.",
   philosophicalQuote: {
     text: "A justiça é a vontade constante e perpétua de dar a cada um o que é seu.",
     author: "Ulpiano",
@@ -19,16 +23,17 @@ export const FMA_CONFIG = {
     theme: "Equilíbrio, Rigor e Dignidade"
   },
   contacts: {
-    whatsapp: "5511948900900",
-    whatsappFormatted: "(11) 94890-0900",
+    whatsapp: "551936724554",
+    whatsappFormatted: "(19) 3672-4554",
     email: "contato@fmadv.net",
-    phone: "(11) 94890-0900",
-    address: "São Paulo — SP | Atendimento Nacional Digital & Presencial",
-    serviceHours: "Plantão Digital: Segunda a Sábado | Urgências de Saúde 24h",
+    phone: "(19) 3672-4554",
+    address: "Rua Coronel Penteado, nº 449, Centro, CEP 13650-009, Santa Cruz das Palmeiras – SP",
+    website: "www.fmadv.net",
+    serviceHours: "Atendimento Presencial e Digital | Segunda a Sexta",
     googleRating: "5.0",
-    googleReviewsCount: "48 avaliações verificadas"
+    googleReviewsCount: "Avaliações verificadas"
   },
-  disclaimerCriminal: "Atuação exclusiva nas esferas Cível, Empresarial, Bancária, Consumidor e Direito à Saúde. Não atuamos na área criminal.",
+  disclaimerCriminal: "Atuação nas esferas Cível, Família, Empresarial, Bancária, Contratos e Imobiliário.",
   badges: [
     { label: "20+ Anos de Atuação", desc: "Desde 2003 no mercado jurídico" },
     { label: "OAB/SP 210.374", desc: "Registro profissional ativo e regular" },

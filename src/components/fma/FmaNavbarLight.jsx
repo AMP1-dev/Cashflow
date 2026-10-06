@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, Menu, X, Lock, Moon, Sun } from 'lucide-react';
 import { useFma } from '../../context/FmaContext';
+import { FmaLogo } from './FmaLogo';
 
 export function FmaNavbarLight() {
   const { firmConfig, setIsAdminOpen, theme, toggleTheme } = useFma();
@@ -28,21 +29,14 @@ export function FmaNavbarLight() {
   return (
     <header className={`sticky top-0 z-40 transition-all duration-300 ${
       scrolled 
-        ? 'bg-white/95 dark:bg-[#06172B]/95 backdrop-blur-md shadow-sm py-4 border-b border-zinc-100 dark:border-white/10' 
-        : 'bg-white dark:bg-[#06172B] py-6 border-b border-transparent'
+        ? 'bg-white/95 dark:bg-[#06172B]/95 backdrop-blur-md shadow-sm py-3.5 border-b border-zinc-100 dark:border-white/10' 
+        : 'bg-white dark:bg-[#06172B] py-5 border-b border-transparent'
     }`}>
       <div className="max-w-7xl mx-auto px-6 sm:px-12 flex items-center justify-between">
         
-        {/* Brand Monogram Logo */}
-        <a href="#inicio" className="flex items-center gap-3 group">
-          <div className="flex flex-col items-center justify-center">
-            <span className="font-serif text-3xl font-light tracking-tight text-[#14233C] dark:text-white leading-none group-hover:text-[#8E7A66] transition-colors">
-              FM
-            </span>
-            <span className="text-[9px] font-sans font-semibold tracking-[0.25em] text-[#14233C] dark:text-zinc-300 uppercase mt-1">
-              ADVOGADOS
-            </span>
-          </div>
+        {/* Brand Logo Oficial: /// fma /// FERREIRA & MELLO ADVOGADOS */}
+        <a href="#inicio" className="group py-1 flex items-center">
+          <FmaLogo size="normal" variant="full" />
         </a>
 
         {/* Desktop Menu com os marcadores quadrados */}

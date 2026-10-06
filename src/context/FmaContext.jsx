@@ -41,8 +41,8 @@ export function FmaProvider({ children }) {
   // 3. Firm Settings State
   const [firmConfig, setFirmConfig] = useState(() => {
     try {
-      const saved = localStorage.getItem('fma_config');
-      return saved ? JSON.parse(saved) : FMA_CONFIG;
+      const saved = localStorage.getItem('fma_config_v5') || localStorage.getItem('fma_config_v4');
+      return saved ? { ...FMA_CONFIG, ...JSON.parse(saved) } : FMA_CONFIG;
     } catch {
       return FMA_CONFIG;
     }
@@ -103,7 +103,8 @@ export function FmaProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem('fma_config', JSON.stringify(firmConfig));
+      localStorage.setItem('fma_config_v5', JSON.stringify(firmConfig));
+      localStorage.setItem('fma_config_v4', JSON.stringify(firmConfig));
     } catch (e) {
       console.error(e);
     }

@@ -17,6 +17,15 @@ function FmaPortalLight() {
   const [selectedArea, setSelectedArea] = useState(null);
   const [isTriageOpen, setIsTriageOpen] = useState(false);
 
+  // Abertura automática ao acessar /?admin ou /#admin
+  React.useEffect(() => {
+    try {
+      if (window.location.search.includes('admin') || window.location.hash === '#admin') {
+        setIsAdminOpen(true);
+      }
+    } catch {}
+  }, [setIsAdminOpen]);
+
   return (
     <div className="min-h-screen bg-white dark:bg-[#06172B] text-[#14233C] dark:text-[#CFD4DB] font-sans antialiased selection:bg-[#EAE5DF] selection:text-[#14233C] transition-colors duration-300">
       
@@ -48,7 +57,7 @@ function FmaPortalLight() {
 
       {/* Botão Flutuante Discreto de WhatsApp */}
       <a
-        href={`https://wa.me/${firmConfig.contacts?.whatsapp || '5511948900900'}?text=${encodeURIComponent('Olá Dr. Fernando Maeda, gostaria de uma consulta jurídica.')}`}
+        href={`https://wa.me/${firmConfig.contacts?.whatsapp || '551936724554'}?text=${encodeURIComponent('Olá, gostaria de falar com a Ferreira & Mello Advogados.')}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-40 w-12 h-12 rounded-full bg-[#14233C] hover:bg-[#8E7A66] dark:bg-[#0E2238] dark:hover:bg-[#152E4B] dark:border dark:border-white/15 text-white flex items-center justify-center shadow-2xl transition-all hover:scale-105"
