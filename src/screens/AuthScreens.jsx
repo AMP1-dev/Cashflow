@@ -20,46 +20,46 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#E8A33D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontFamily: 'Georgia, serif', fontSize: 26, color: '#0F2B27', fontWeight: 700 }}>R$</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#FAF8F3', letterSpacing: 0.2 }}>AMP flow</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Fluxo de caixa e DRE sem mistério</div>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#E8A33D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontFamily: 'Georgia, serif', fontSize: 26, color: '#111827', fontWeight: 700, boxShadow: '0 8px 24px rgba(232, 163, 61, 0.25)' }}>R$</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#F9FAFB', letterSpacing: 0.2 }}>AMP flow</div>
+          <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Fluxo de caixa e DRE sem mistério</div>
         </div>
 
-        <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
+        <div style={{ background: '#1F2937', borderRadius: 16, padding: 24, border: '1px solid #374151', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
           <AuthLabel>E-mail</AuthLabel>
           <AuthInput value={email} onChange={(v) => { setEmail(v); setErro(''); }} placeholder="seu@email.com.br" inputMode="email" type="email" autoCapitalize="none" />
 
           <AuthLabel>Senha</AuthLabel>
           <AuthInput type="password" value={senha} onChange={(v) => { setSenha(v); setErro(''); }} placeholder="••••••••" onKeyDown={(e) => e.key === 'Enter' && tentarEntrar()} last />
 
-          <button onClick={onIrParaRecuperar} style={{ background: 'none', border: 'none', color: '#9FBDB5', fontSize: 12, cursor: 'pointer', padding: 0, marginBottom: 14, textDecoration: 'underline' }}>
+          <button onClick={onIrParaRecuperar} style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: 12, cursor: 'pointer', padding: 0, marginBottom: 14, textDecoration: 'underline' }}>
             Esqueci minha senha
           </button>
 
-          {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
+          {erro && <div style={{ fontSize: 12, color: '#F87171', marginBottom: 12 }}>{erro}</div>}
 
-          <button onClick={tentarEntrar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}>
+          <button onClick={tentarEntrar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#374151' : '#E8A33D', color: loading ? '#9CA3AF' : '#111827', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer', transition: 'all 0.2s' }}>
             {loading ? 'Entrando...' : 'Entrar'}
           </button>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 18 }}>
-          <span style={{ fontSize: 13, color: '#9FBDB5' }}>Ainda não é assinante? </span>
+          <span style={{ fontSize: 13, color: '#9CA3AF' }}>Ainda não é assinante? </span>
           <button onClick={onIrParaAssinatura} style={{ background: 'none', border: 'none', color: '#E8A33D', fontSize: 13, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
             Criar conta
           </button>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 20 }}>
-          <button onClick={onIrParaAdmin} style={{ background: 'none', border: 'none', color: '#4A655E', fontSize: 11.5, cursor: 'pointer' }}>
+          <button onClick={onIrParaAdmin} style={{ background: 'none', border: 'none', color: '#6B7280', fontSize: 11.5, cursor: 'pointer' }}>
             Acesso administrativo
           </button>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 28, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+        <div style={{ textAlign: 'center', marginTop: 28, fontSize: 11.5, color: '#6B7280', fontWeight: 600, letterSpacing: 0.5 }}>
           AMP Flow • Versão 2.5
         </div>
 
@@ -110,18 +110,18 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
   );
 
   return (
-    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
-        <button onClick={onVoltarLogin} style={{ background: 'none', border: 'none', color: '#9FBDB5', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 18 }}>
+        <button onClick={onVoltarLogin} style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 18 }}>
           <ChevronLeft size={15} /> Voltar para login
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Criar assinatura</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Comece a controlar seu fluxo de caixa hoje</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F9FAFB' }}>Criar assinatura</div>
+          <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Comece a controlar seu fluxo de caixa hoje</div>
         </div>
 
-        <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
+        <div style={{ background: '#1F2937', borderRadius: 16, padding: 24, border: '1px solid #374151', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
           <AuthLabel>CPF do responsável *</AuthLabel>
           <AuthInput value={cpf} onChange={(v) => { setCpf(formatarCpfInput(v)); setErro(''); }} placeholder="000.000.000-00" inputMode="numeric" />
 
@@ -164,9 +164,9 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
                     type="button"
                     onClick={onVoltarLogin}
                     style={{
-                      background: '#16352F',
-                      border: '1px solid #234A42',
-                      color: '#FAF8F3',
+                      background: '#1F2937',
+                      border: '1px solid #374151',
+                      color: '#F9FAFB',
                       fontSize: 11.5,
                       fontWeight: 600,
                       padding: '5px 10px',
@@ -181,14 +181,14 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
             </div>
           )}
 
-          <button onClick={handleCriar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}>
+          <button onClick={handleCriar} disabled={loading} style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#374151' : '#E8A33D', color: loading ? '#9CA3AF' : '#111827', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}>
             {loading ? 'Criando conta e estrutura...' : 'Criar assinatura'}
           </button>
         </div>
-        <div style={{ textAlign: 'center', fontSize: 11, color: '#4A655E', marginTop: 14 }}>
+        <div style={{ textAlign: 'center', fontSize: 11, color: '#6B7280', marginTop: 14 }}>
           * campos obrigatórios. Sua conta começa em período de teste.
         </div>
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#6B7280', fontWeight: 600, letterSpacing: 0.5 }}>
           AMP Flow • Versão 2.5
         </div>
       </div>
@@ -219,18 +219,18 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
-        <button onClick={onVoltarLogin} style={{ background: 'none', border: 'none', color: '#9FBDB5', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 18 }}>
+        <button onClick={onVoltarLogin} style={{ background: 'none', border: 'none', color: '#9CA3AF', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginBottom: 18 }}>
           <ChevronLeft size={15} /> Voltar para login
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Recuperar senha</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Informe o e-mail de acesso da sua assinatura</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F9FAFB' }}>Recuperar senha</div>
+          <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Informe o e-mail de acesso da sua assinatura</div>
         </div>
 
-        <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
+        <div style={{ background: '#1F2937', borderRadius: 16, padding: 24, border: '1px solid #374151', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
           {!enviado ? (
             <>
               <AuthLabel>E-mail cadastrado</AuthLabel>
@@ -245,35 +245,35 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
                 last
               />
 
-              {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
+              {erro && <div style={{ fontSize: 12, color: '#F87171', marginBottom: 12 }}>{erro}</div>}
 
               <button
                 onClick={handleEnviar}
                 disabled={loading}
-                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#374151' : '#E8A33D', color: loading ? '#9CA3AF' : '#111827', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}
               >
                 {loading ? 'Enviando e-mail...' : 'Enviar link de recuperação'}
               </button>
             </>
           ) : (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#1F5C52', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                <Check size={24} color="#9FE0C8" />
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <Check size={24} color="#E8A33D" />
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#FAF8F3', marginBottom: 8 }}>E-mail enviado com sucesso!</div>
-              <div style={{ fontSize: 12.5, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 20 }}>
-                Enviamos um link de redefinição para <strong style={{ color: '#FAF8F3' }}>{email}</strong>. Verifique sua caixa de entrada e spam.
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#F9FAFB', marginBottom: 8 }}>E-mail enviado com sucesso!</div>
+              <div style={{ fontSize: 12.5, color: '#9CA3AF', lineHeight: 1.5, marginBottom: 20 }}>
+                Enviamos um link de redefinição para <strong style={{ color: '#F9FAFB' }}>{email}</strong>. Verifique sua caixa de entrada e spam.
               </div>
               <button
                 onClick={onVoltarLogin}
-                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#111827', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
               >
                 Ir para o Login
               </button>
             </div>
           )}
         </div>
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#6B7280', fontWeight: 600, letterSpacing: 0.5 }}>
           AMP Flow • Versão 2.5
         </div>
       </div>
@@ -303,14 +303,14 @@ export function RedefinirSenhaScreen({ onRedefinir, onVoltarLogin }) {
   }
 
   return (
-    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#0F2B27', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#FAF8F3' }}>Redefinir senha</div>
-          <div style={{ fontSize: 13, color: '#9FBDB5', marginTop: 4 }}>Crie uma nova senha segura para sua conta</div>
+          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F9FAFB' }}>Redefinir senha</div>
+          <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Crie uma nova senha segura para sua conta</div>
         </div>
 
-        <div style={{ background: '#16352F', borderRadius: 16, padding: 24, border: '1px solid #234A42' }}>
+        <div style={{ background: '#1F2937', borderRadius: 16, padding: 24, border: '1px solid #374151', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}>
           {!sucesso ? (
             <>
               <AuthLabel>Nova senha</AuthLabel>
@@ -319,35 +319,35 @@ export function RedefinirSenhaScreen({ onRedefinir, onVoltarLogin }) {
               <AuthLabel>Confirme a nova senha</AuthLabel>
               <AuthInput value={confirmar} onChange={(v) => { setConfirmar(v); setErro(''); }} placeholder="Repita a nova senha" type="password" onKeyDown={(e) => e.key === 'Enter' && handleRedefinir()} last />
 
-              {erro && <div style={{ fontSize: 12, color: '#F0A0A0', marginBottom: 12 }}>{erro}</div>}
+              {erro && <div style={{ fontSize: 12, color: '#F87171', marginBottom: 12 }}>{erro}</div>}
 
               <button
                 onClick={handleRedefinir}
                 disabled={loading}
-                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#2C5048' : '#E8A33D', color: loading ? '#9FBDB5' : '#0F2B27', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: loading ? '#374151' : '#E8A33D', color: loading ? '#9CA3AF' : '#111827', fontSize: 15, fontWeight: 700, cursor: loading ? 'wait' : 'pointer' }}
               >
                 {loading ? 'Salvando nova senha...' : 'Salvar nova senha'}
               </button>
             </>
           ) : (
             <div style={{ textAlign: 'center' }}>
-              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#1F5C52', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
-                <Check size={24} color="#9FE0C8" />
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <Check size={24} color="#E8A33D" />
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#FAF8F3', marginBottom: 8 }}>Senha alterada!</div>
-              <div style={{ fontSize: 12.5, color: '#9FBDB5', lineHeight: 1.5, marginBottom: 20 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#F9FAFB', marginBottom: 8 }}>Senha alterada!</div>
+              <div style={{ fontSize: 12.5, color: '#9CA3AF', lineHeight: 1.5, marginBottom: 20 }}>
                 Sua senha foi redefinida com sucesso. Você já pode acessar a plataforma com sua nova credencial.
               </div>
               <button
                 onClick={onVoltarLogin}
-                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#0F2B27', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
+                style={{ width: '100%', padding: '13px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#111827', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
               >
                 Acessar minha conta
               </button>
             </div>
           )}
         </div>
-        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#4E736A', fontWeight: 600, letterSpacing: 0.5 }}>
+        <div style={{ textAlign: 'center', marginTop: 24, fontSize: 11.5, color: '#6B7280', fontWeight: 600, letterSpacing: 0.5 }}>
           AMP Flow • Versão 2.5
         </div>
       </div>
@@ -356,7 +356,7 @@ export function RedefinirSenhaScreen({ onRedefinir, onVoltarLogin }) {
 }
 
 export function AuthLabel({ children }) {
-  return <label style={{ fontSize: 12, color: '#9FBDB5', display: 'block', marginBottom: 6 }}>{children}</label>;
+  return <label style={{ fontSize: 12, color: '#9CA3AF', display: 'block', marginBottom: 6 }}>{children}</label>;
 }
 
 export function AuthInput({ value, onChange, placeholder, type = 'text', inputMode, last, onKeyDown }) {
@@ -368,7 +368,7 @@ export function AuthInput({ value, onChange, placeholder, type = 'text', inputMo
       onKeyDown={onKeyDown}
       placeholder={placeholder}
       inputMode={inputMode}
-      style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1px solid #2C5048', background: '#0F2B27', color: '#FAF8F3', fontSize: 15, marginBottom: last ? 18 : 14, boxSizing: 'border-box' }}
+      style={{ width: '100%', padding: '11px 12px', borderRadius: 10, border: '1px solid #374151', background: '#111827', color: '#F9FAFB', fontSize: 15, marginBottom: last ? 18 : 14, boxSizing: 'border-box' }}
     />
   );
 }

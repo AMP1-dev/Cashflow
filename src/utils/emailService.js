@@ -216,6 +216,9 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
   const ano = nota?.competenciaAno || new Date().getFullYear();
   const mes = String(nota?.competenciaMes !== undefined ? Number(nota?.competenciaMes) + 1 : new Date().getMonth() + 1).padStart(2, '0');
 
+  // Logotipo oficial AMP em PNG ou customizado pela empresa/admin
+  const logoUrl = config?.logoUrl || empresa?.logo_url || empresa?.logoUrl || 'https://dre.amp.ia.br/logo_completo_amp_azul.png';
+
   // Parágrafos do texto do e-mail
   const paragrafos = corpoTexto
     ? corpoTexto.split('\n\n').map(p => `<p style="margin: 0 0 14px 0; line-height: 1.6; color: #334155; font-size: 14.5px;">${p.replace(/\n/g, '<br>')}</p>`).join('')
@@ -235,33 +238,24 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
         <!-- Container Principal -->
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 620px; background-color: #FFFFFF; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 18px rgba(0,0,0,0.06); border: 1px solid #E2E8F0;">
           
-          <!-- Cabeçalho Topo AMP -->
+          <!-- Linha de Destaque Executiva Superior -->
           <tr>
-            <td style="background: linear-gradient(135deg, #0F2B27 0%, #173E37 100%); padding: 24px 30px; text-align: left;">
+            <td style="height: 4px; background: linear-gradient(90deg, #1E293B 0%, #3B82F6 50%, #E8A33D 100%);"></td>
+          </tr>
+
+          <!-- Cabeçalho Topo AMP com Logo PNG -->
+          <tr>
+            <td style="background-color: #FFFFFF; padding: 22px 30px; text-align: left; border-bottom: 1px solid #E2E8F0;">
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td>
-                    <!-- Logotipo Oficial AMP -->
-                    <table border="0" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td style="vertical-align: middle; padding-right: 14px;">
-                          <div style="width: 38px; height: 38px; border-radius: 50%; border: 2.5px solid #9FE0C8; display: inline-block; text-align: center; line-height: 38px;">
-                            <span style="color: #9FE0C8; font-size: 18px; font-weight: 800; font-family: Arial, sans-serif;">⊕</span>
-                          </div>
-                        </td>
-                        <td style="vertical-align: middle;">
-                          <div style="font-size: 22px; font-weight: 900; letter-spacing: 2px; color: #FAF8F3; font-family: Arial, sans-serif; line-height: 1;">
-                            AMP <span style="font-size: 11px; font-weight: 400; color: #9FE0C8; letter-spacing: 1px;">DO BRASIL</span>
-                          </div>
-                          <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 2px; color: #A7F3D0; margin-top: 3px; font-family: Arial, sans-serif;">
-                            Soluções Administrativas e Tecnológicas
-                          </div>
-                        </td>
-                      </tr>
-                    </table>
+                  <td style="vertical-align: middle;">
+                    <!-- Logotipo Oficial AMP em PNG -->
+                    <a href="https://www.amp.adm.br" target="_blank" style="text-decoration: none; display: inline-block;">
+                      <img src="${logoUrl}" alt="AMP do Brasil" style="max-height: 44px; width: auto; max-width: 220px; display: block; border: 0;" />
+                    </a>
                   </td>
                   <td align="right" style="vertical-align: middle;">
-                    <span style="background-color: rgba(159, 224, 200, 0.18); border: 1px solid #9FE0C8; color: #9FE0C8; font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <span style="background-color: #F1F5F9; border: 1px solid #CBD5E1; color: #334155; font-size: 11.5px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block;">
                       NFS-e Nº ${numero}
                     </span>
                   </td>
@@ -272,7 +266,7 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
 
           <!-- Banner Informativo -->
           <tr>
-            <td style="background-color: #F8FAFC; padding: 14px 30px; border-bottom: 1px solid #E2E8F0;">
+            <td style="background-color: #F8FAFC; padding: 12px 30px; border-bottom: 1px solid #E2E8F0;">
               <span style="font-size: 12px; color: #64748B; font-weight: 500;">
                 Documento Fiscal Oficial emitido via <strong>Padrão Nacional da Receita Federal</strong>
               </span>
@@ -287,8 +281,8 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
               <!-- Card com Resumo da Nota -->
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; margin: 22px 0; overflow: hidden;">
                 <tr>
-                  <td style="padding: 14px 18px; border-bottom: 1px solid #E2E8F0; background-color: #F1F5F9;">
-                    <strong style="color: #0F2B27; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <td style="padding: 12px 18px; border-bottom: 1px solid #E2E8F0; background-color: #F1F5F9;">
+                    <strong style="color: #1E293B; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">
                       Resumo da Operação Fiscal
                     </strong>
                   </td>
@@ -314,7 +308,7 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
                       </tr>
                       <tr>
                         <td style="padding: 4px 0; color: #64748B;">Valor Total do Serviço:</td>
-                        <td style="padding: 4px 0; font-size: 16px; font-weight: 800; color: #0F5132;">${valor}</td>
+                        <td style="padding: 4px 0; font-size: 16px; font-weight: 800; color: #0F172A;">${valor}</td>
                       </tr>
                       ${chave ? `
                       <tr>
@@ -329,16 +323,16 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
               </table>
 
               <!-- Box de Anexos -->
-              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 8px; margin-bottom: 22px;">
+              <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; margin-bottom: 22px;">
                 <tr>
                   <td style="padding: 14px 18px;">
-                    <div style="font-size: 12.5px; font-weight: 700; color: #065F46; margin-bottom: 6px;">
+                    <div style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
                       📎 Arquivos anexados nesta mensagem:
                     </div>
-                    <div style="font-size: 13px; color: #047857; margin-bottom: 4px;">
-                      • <strong>DANFSe_NFe_${numero}.pdf</strong> — Documento Auxiliar Oficial da NFS-e para impressão ou arquivo digital.
+                    <div style="font-size: 13px; color: #334155; margin-bottom: 4px;">
+                      • <strong>DANFSe_NFe_${numero}.pdf</strong> — Documento Auxiliar Oficial da NFS-e para conferência e arquivo digital.
                     </div>
-                    <div style="font-size: 13px; color: #047857;">
+                    <div style="font-size: 13px; color: #334155;">
                       • <strong>NFSe_${numero}.xml</strong> — Arquivo XML com assinatura digital da Receita Federal para contabilidade.
                     </div>
                   </td>
@@ -353,15 +347,15 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
                   <td>
-                    <div style="font-size: 14px; font-weight: 800; color: #0F2B27; letter-spacing: -0.2px;">
+                    <div style="font-size: 14px; font-weight: 800; color: #0F172A; letter-spacing: -0.2px;">
                       MARCO ANTONIO PAVANI
                     </div>
-                    <div style="font-size: 12px; color: #1F5C52; font-weight: 600; margin-top: 2px;">
+                    <div style="font-size: 12px; color: #475569; font-weight: 600; margin-top: 2px;">
                       Diretor Executivo • AMP do Brasil
                     </div>
                     <div style="font-size: 11.5px; color: #64748B; margin-top: 6px; line-height: 1.5;">
-                      📧 <a href="mailto:atendimento@amp.adm.br" style="color: #1F5C52; text-decoration: none;">atendimento@amp.adm.br</a> | 
-                      🌐 <a href="https://www.amp.adm.br" target="_blank" style="color: #1F5C52; text-decoration: none;">www.amp.adm.br</a><br>
+                      📧 <a href="mailto:atendimento@amp.adm.br" style="color: #2563EB; text-decoration: none; font-weight: 500;">atendimento@amp.adm.br</a> | 
+                      🌐 <a href="https://www.amp.adm.br" target="_blank" style="color: #2563EB; text-decoration: none; font-weight: 500;">www.amp.adm.br</a><br>
                       📱 (19) 99448-7795 • Santa Cruz das Palmeiras - SP
                     </div>
                   </td>
