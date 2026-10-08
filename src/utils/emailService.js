@@ -216,8 +216,8 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
   const ano = nota?.competenciaAno || new Date().getFullYear();
   const mes = String(nota?.competenciaMes !== undefined ? Number(nota?.competenciaMes) + 1 : new Date().getMonth() + 1).padStart(2, '0');
 
-  // Logotipo oficial AMP (formato horizontal executivo da assinatura) em PNG ou customizado
-  const logoUrl = config?.logoUrl || empresa?.logo_url || empresa?.logoUrl || 'https://dre.amp.ia.br/logo_assinatura_mp.png';
+  // Logotipo oficial AMP (formato horizontal executivo da assinatura) em alta definição
+  const logoUrl = config?.logoUrl || empresa?.logo_url || empresa?.logoUrl || 'https://dre.amp.ia.br/logo_assinatura_mp.jpg';
 
   // Parágrafos do texto do e-mail
   const paragrafos = corpoTexto
