@@ -1,4 +1,4 @@
-import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText, Camera, Paperclip, FileCheck, ExternalLink, Loader2, Trash2 } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText, Camera, Paperclip, FileCheck, ExternalLink, Loader2, Trash2, CheckCircle2 } from 'lucide-react';
 import { useMemo, useState, useRef } from 'react';
 import { BANCOS, CATEGORIAS, MESES, SUBCATEGORIAS_SUGERIDAS, PLANO_DE_CONTAS_SUGERIDO } from '../utils/constants';
 import { construirSugestoesDescricao, daysInMonth, formatBRL } from '../utils/formatters';
