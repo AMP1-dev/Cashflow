@@ -110,21 +110,21 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
     <ModalShell onClose={onClose} maxWidth={640}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Mail size={22} color="#0F2B27" />
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: '#F1F5F9', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Mail size={22} color="#1E293B" />
           </div>
           <div>
-            <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0F2B27', margin: 0 }}>
+            <h2 style={{ fontSize: 16, fontWeight: 800, color: '#1E293B', margin: 0 }}>
               Enviar NFS-e Nº {nota?.numero} por E-mail
             </h2>
-            <p style={{ fontSize: 12, color: '#6B7280', margin: '2px 0 0' }}>
+            <p style={{ fontSize: 12, color: '#64748B', margin: '2px 0 0' }}>
               {nota?.tomador?.razaoSocial || 'Cliente Tomador'}
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', padding: 4 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', padding: 4 }}
         >
           <X size={20} />
         </button>
@@ -212,18 +212,18 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
         </div>
 
         {/* Pré-visualização da Assinatura e Logo MP */}
-        <div style={{ background: '#FAF9F6', border: '1px solid #E5E0D5', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <img 
-              src="/logo_assinatura_mp.jpg" 
-              alt="MP _ AMPLIANDO SEUS CONHECIMENTOS" 
+              src="/logo_assinatura_mp.png" 
+              alt="MP _ AMPLIANDO SUA TECNOLOGIA" 
               style={{ maxHeight: 28, maxWidth: 160, objectFit: 'contain' }} 
             />
-            <span style={{ fontSize: 11, color: '#4B5563' }}>
+            <span style={{ fontSize: 11, color: '#475569' }}>
               Remetente Oficial: <strong>MARCO ANTONIO PAVANI</strong>
             </span>
           </div>
-          <span style={{ fontSize: 10, background: '#D9EBE6', color: '#0F2B27', fontWeight: 700, padding: '2px 6px', borderRadius: 4 }}>
+          <span style={{ fontSize: 10, background: '#F1F5F9', border: '1px solid #CBD5E1', color: '#334155', fontWeight: 700, padding: '2px 8px', borderRadius: 4 }}>
             Logo Anexado
           </span>
         </div>
@@ -238,7 +238,7 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#1F5C52',
+                color: '#2563EB',
                 fontSize: 11,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -286,7 +286,7 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#1F5C52',
+                color: '#64748B',
                 fontSize: 11.5,
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -328,18 +328,18 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
               onClick={handleEnviarDireto}
               disabled={enviando}
               style={{
-                background: '#1F5C52',
+                background: enviando ? '#9CA3AF' : '#1E293B',
                 border: 'none',
                 borderRadius: 8,
                 padding: '8px 18px',
                 fontSize: 12,
                 fontWeight: 700,
                 color: '#fff',
-                cursor: 'pointer',
+                cursor: enviando ? 'wait' : 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 5,
-                boxShadow: '0 2px 4px rgba(31,92,82,0.3)'
+                boxShadow: '0 2px 4px rgba(30,41,59,0.2)'
               }}
             >
               <Send size={13} />

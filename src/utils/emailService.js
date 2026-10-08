@@ -216,8 +216,8 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
   const ano = nota?.competenciaAno || new Date().getFullYear();
   const mes = String(nota?.competenciaMes !== undefined ? Number(nota?.competenciaMes) + 1 : new Date().getMonth() + 1).padStart(2, '0');
 
-  // Logotipo oficial AMP em PNG ou customizado pela empresa/admin
-  const logoUrl = config?.logoUrl || empresa?.logo_url || empresa?.logoUrl || 'https://dre.amp.ia.br/logo_completo_amp_azul.png';
+  // Logotipo oficial AMP (formato horizontal executivo da assinatura) em PNG ou customizado
+  const logoUrl = config?.logoUrl || empresa?.logo_url || empresa?.logoUrl || 'https://dre.amp.ia.br/logo_assinatura_mp.png';
 
   // Parágrafos do texto do e-mail
   const paragrafos = corpoTexto
@@ -243,15 +243,22 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
             <td style="height: 4px; background: linear-gradient(90deg, #1E293B 0%, #3B82F6 50%, #E8A33D 100%);"></td>
           </tr>
 
-          <!-- Cabeçalho Topo AMP com Logo PNG -->
+          <!-- Cabeçalho Topo AMP com Logo Proporcional Seguro para Outlook -->
           <tr>
-            <td style="background-color: #FFFFFF; padding: 22px 30px; text-align: left; border-bottom: 1px solid #E2E8F0;">
+            <td style="background-color: #FFFFFF; padding: 18px 28px; text-align: left; border-bottom: 1px solid #E2E8F0;">
               <table width="100%" border="0" cellspacing="0" cellpadding="0">
                 <tr>
-                  <td style="vertical-align: middle;">
-                    <!-- Logotipo Oficial AMP em PNG -->
-                    <a href="https://www.amp.adm.br" target="_blank" style="text-decoration: none; display: inline-block;">
-                      <img src="${logoUrl}" alt="AMP do Brasil" style="max-height: 44px; width: auto; max-width: 220px; display: block; border: 0;" />
+                  <td width="200" style="vertical-align: middle; width: 200px;">
+                    <!-- Logotipo Oficial AMP em PNG com dimensões fixas contra distorção no Outlook -->
+                    <a href="https://www.amp.adm.br" target="_blank" style="text-decoration: none; display: block;">
+                      <img 
+                        src="${logoUrl}" 
+                        alt="AMP do Brasil" 
+                        width="190" 
+                        height="39" 
+                        border="0"
+                        style="display: block; width: 190px; max-width: 190px; height: 39px; max-height: 39px; border: 0; outline: none; text-decoration: none;" 
+                      />
                     </a>
                   </td>
                   <td align="right" style="vertical-align: middle;">
