@@ -11,6 +11,7 @@ import { GestaoEquipeModal } from './components/GestaoEquipeModal';
 import { EmitirNfseModal } from './components/EmitirNfseModal';
 import { AvisoVencimentoModal } from './components/AvisoVencimentoModal';
 import { TelaBloqueioContrato } from './components/TelaBloqueioContrato';
+import { VisualizarComprovanteModal } from './components/VisualizarComprovanteModal';
 import { ErrorBoundary } from './components/UIComponents';
 
 import { AdminLoginScreen, AdminPanel } from './screens/AdminScreens';
@@ -31,6 +32,7 @@ function extrairModulosEmpresa(empresa) {
   let modNfse = empresa?.modulo_nfse;
   let modTradutor = empresa?.modulo_tradutor;
   let modAgendamento = empresa?.modulo_agendamento;
+  let modComprovantes = empresa?.modulo_comprovantes;
   let catAgendamento = empresa?.categoria_agendamento;
   let ultimoNum = empresa?.nfse_ultimo_numero;
   let nomeResp = empresa?.nome_responsavel;
@@ -41,6 +43,7 @@ function extrairModulosEmpresa(empresa) {
       if (parsed.modulo_nfse !== undefined && (modNfse === undefined || modNfse === null || parsed.modulo_nfse === true)) modNfse = parsed.modulo_nfse;
       if (parsed.modulo_tradutor !== undefined && (modTradutor === undefined || modTradutor === null || parsed.modulo_tradutor === true)) modTradutor = parsed.modulo_tradutor;
       if (parsed.modulo_agendamento !== undefined && (modAgendamento === undefined || modAgendamento === null || parsed.modulo_agendamento === true)) modAgendamento = parsed.modulo_agendamento;
+      if (parsed.modulo_comprovantes !== undefined && (modComprovantes === undefined || modComprovantes === null || parsed.modulo_comprovantes === true)) modComprovantes = parsed.modulo_comprovantes;
       if (parsed.categoria_agendamento !== undefined && !catAgendamento) catAgendamento = parsed.categoria_agendamento;
       if (parsed.nfse_ultimo_numero !== undefined && !ultimoNum) ultimoNum = parsed.nfse_ultimo_numero;
       if (parsed.nome_responsavel !== undefined && !nomeResp) nomeResp = parsed.nome_responsavel;
@@ -60,6 +63,10 @@ function extrairModulosEmpresa(empresa) {
     const local = localStorage.getItem(`amp_modulo_agendamento_${empresa.id}`);
     if (local !== null) modAgendamento = local === 'true';
   }
+  if (modComprovantes === undefined && empresa?.id) {
+    const local = localStorage.getItem(`amp_modulo_comprovantes_${empresa.id}`);
+    if (local !== null) modComprovantes = local === 'true';
+  }
   if (!catAgendamento && empresa?.id) {
     catAgendamento = localStorage.getItem(`amp_categoria_agendamento_${empresa.id}`) || 'beleza';
   }
@@ -74,6 +81,7 @@ function extrairModulosEmpresa(empresa) {
     modulo_nfse: !!modNfse,
     modulo_tradutor: !!modTradutor,
     modulo_agendamento: !!modAgendamento,
+    modulo_comprovantes: !!modComprovantes,
     categoria_agendamento: catAgendamento || 'beleza',
     nfse_ultimo_numero: ultimoNum || 0,
     nome_responsavel: nomeResp || '',
@@ -114,6 +122,7 @@ export default function CashFlowApp() {
   const [showEquipeModal, setShowEquipeModal] = useState(false);
   const [showNfseModalAvulso, setShowNfseModalAvulso] = useState(false);
   const [dadosIniciaisNfseAvulso, setDadosIniciaisNfseAvulso] = useState(null);
+  const [comprovanteVisualizar, setComprovanteVisualizar] = useState(null);
 
   // Admin state
   const [assinantesAdmin, setAssinantesAdmin] = useState([]);
@@ -340,6 +349,7 @@ export default function CashFlowApp() {
           qtdVendas: l.qtd_vendas,
           banco: l.banco || null,
           meioPagamento: l.meio_pagamento || null,
+          comprovante_url: l.comprovante_url || null,
         };
       });
       setLancamentosGeral(mapeados);
@@ -368,6 +378,7 @@ export default function CashFlowApp() {
             modulo_nfse: modulos.modulo_nfse,
             modulo_tradutor: modulos.modulo_tradutor,
             modulo_agendamento: modulos.modulo_agendamento,
+            modulo_comprovantes: modulos.modulo_comprovantes,
             categoria_agendamento: modulos.categoria_agendamento,
             nfse_ultimo_numero: modulos.nfse_ultimo_numero,
           };
@@ -413,6 +424,7 @@ export default function CashFlowApp() {
         data_competencia: dataCompStr,
         banco: novo.banco || null,
         meio_pagamento: novo.meio_pagamento || null,
+        comprovante_url: novo.comprovante_url || novo.comprovanteUrl || null,
       };
 
       if (tipo === 'receita') {
@@ -431,6 +443,16 @@ export default function CashFlowApp() {
     }
 
     let { data, error } = await supabase.from('lancamentos').insert(payloads);
+
+    if (error && error.message && error.message.includes('comprovante_url')) {
+      const semComp = payloads.map(p => {
+        const copy = { ...p };
+        delete copy.comprovante_url;
+        return copy;
+      });
+      const res = await supabase.from('lancamentos').insert(semComp);
+      error = res.error;
+    }
 
     if (error && error.message && error.message.includes('data_competencia')) {
       const semComp = payloads.map(p => {
@@ -535,7 +557,17 @@ export default function CashFlowApp() {
       payload.qtd_vendas = null;
     }
 
+    if (dados.comprovante_url !== undefined) {
+      payload.comprovante_url = dados.comprovante_url || null;
+    }
+
     let { error } = await supabase.from('lancamentos').update(payload).eq('id', id);
+
+    if (error && error.message && error.message.includes('comprovante_url')) {
+      delete payload.comprovante_url;
+      const res = await supabase.from('lancamentos').update(payload).eq('id', id);
+      error = res.error;
+    }
 
     if (error && error.message && error.message.includes('data_competencia')) {
       delete payload.data_competencia;
@@ -554,6 +586,16 @@ export default function CashFlowApp() {
 
     if (!error) {
       carregarLancamentos(empresaAtualObj.id);
+    }
+  }
+
+  async function removerComprovanteLancamento(id) {
+    if (!id) return;
+    setLancamentosGeral(prev => prev.map(l => l.id === id ? { ...l, comprovante_url: null } : l));
+    try {
+      await supabase.from('lancamentos').update({ comprovante_url: null }).eq('id', id);
+    } catch (e) {
+      console.warn('Erro ao remover comprovante do banco:', e);
     }
   }
 
@@ -847,6 +889,7 @@ export default function CashFlowApp() {
       modulo_nfse: !!dados.modulo_nfse,
       modulo_tradutor: !!dados.modulo_tradutor,
       modulo_agendamento: !!dados.modulo_agendamento,
+      modulo_comprovantes: !!dados.modulo_comprovantes,
       categoria_agendamento: dados.categoria_agendamento || 'beleza',
       nfse_ultimo_numero: dados.nfse_ultimo_numero || 0,
       nome_responsavel: dados.nome_responsavel !== undefined ? dados.nome_responsavel : (planoBase.nome_responsavel || ''),
@@ -877,6 +920,9 @@ export default function CashFlowApp() {
     }
     if (dados.modulo_agendamento !== undefined) {
       localStorage.setItem(`amp_modulo_agendamento_${id}`, dados.modulo_agendamento ? 'true' : 'false');
+    }
+    if (dados.modulo_comprovantes !== undefined) {
+      localStorage.setItem(`amp_modulo_comprovantes_${id}`, dados.modulo_comprovantes ? 'true' : 'false');
     }
     if (dados.categoria_agendamento !== undefined) {
       localStorage.setItem(`amp_categoria_agendamento_${id}`, dados.categoria_agendamento || 'beleza');
@@ -1135,6 +1181,12 @@ export default function CashFlowApp() {
   );
   const moduloTradutorAtivo = !!(empresaAtualObj?.modulo_tradutor || localStorage.getItem(`amp_modulo_tradutor_${empresaAtualObj?.id}`) === 'true');
   const moduloAgendamentoAtivo = !!(empresaAtualObj?.modulo_agendamento || localStorage.getItem(`amp_modulo_agendamento_${empresaAtualObj?.id}`) === 'true');
+  const moduloComprovantesAtivo = !!(
+    empresaAtualObj?.modulo_comprovantes || 
+    empresaAtualObj?.ehAdmin || 
+    sessao?.ehAdmin || 
+    localStorage.getItem(`amp_modulo_comprovantes_${empresaAtualObj?.id}`) === 'true'
+  );
 
   return (
     <div className="app-container" style={{ fontFamily: 'var(--font-sans, system-ui)', background: '#FAF8F3', minHeight: '100vh', position: 'relative', color: '#1C2421', display: 'flex', flexDirection: 'column' }}>
@@ -1198,6 +1250,7 @@ export default function CashFlowApp() {
               onAbrirAgendamento={moduloAgendamentoAtivo ? () => setTela('agendamento') : null}
               onAbrirAdmin={empresaAtualObj?.ehAdmin ? () => { sessionStorage.removeItem('amp_admin_modo_empresa'); sessionStorage.removeItem('amp_admin_empresa_cache'); setSessao({ tipo: 'admin' }); carregarPainelAdmin(); } : null}
               onAbrirEquipe={() => setShowEquipeModal(true)}
+              onVisualizarComprovante={(l) => setComprovanteVisualizar(l)}
               ehDono={ehDono}
               ehAdmin={ehAdmin}
             />
@@ -1211,6 +1264,7 @@ export default function CashFlowApp() {
               onRemove={removeLancamento}
               onEditar={abrirEdicao}
               onAbrirImportacao={() => setShowImportarModal(true)}
+              onVisualizarComprovante={(l) => setComprovanteVisualizar(l)}
             />
           )}
           {tela === 'agendamento' && moduloAgendamentoAtivo && (
@@ -1301,6 +1355,8 @@ export default function CashFlowApp() {
           anoAtual={anoAtual}
           lancamentoEditando={lancamentoEditando}
           historicoCompleto={lancamentosGeral}
+          moduloComprovantesAtivo={moduloComprovantesAtivo}
+          empresaId={empresaAtualObj?.id}
           onClose={fecharModal}
           onSave={(l) => { addLancamento(l); fecharModal(); }}
           onUpdate={(dados) => { updateLancamento(lancamentoEditando.id, dados); fecharModal(); }}
@@ -1366,6 +1422,14 @@ export default function CashFlowApp() {
           diasRestantes={diasAteVencimento}
           dataVencimentoFormatada={dataVencimentoFormatada}
           onFecharLembrar3Dias={handleFecharAvisoLembrar3Dias}
+        />
+      )}
+
+      {comprovanteVisualizar && (
+        <VisualizarComprovanteModal
+          lancamento={comprovanteVisualizar}
+          onClose={() => setComprovanteVisualizar(null)}
+          onRemoverComprovante={ehDono ? removerComprovanteLancamento : null}
         />
       )}
     </div>

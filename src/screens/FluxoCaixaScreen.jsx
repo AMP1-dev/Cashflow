@@ -6,7 +6,7 @@ import { IndicadorCard } from './AnualScreen';
 import { EspelhoDanfseModal } from '../components/EspelhoDanfseModal';
 import { gerarChaveAcessoNfse } from '../utils/nfseService';
 
-export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove, onEditar, onAbrirImportacao }) {
+export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove, onEditar, onAbrirImportacao, onVisualizarComprovante }) {
   const [notaDanfseAtiva, setNotaDanfseAtiva] = useState(null);
 
   function handleAbrirDanfse(l, numNfse) {
@@ -349,6 +349,7 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove,
                   onRemove={onRemove} 
                   onEditar={onEditar} 
                   onAbrirDanfse={handleAbrirDanfse}
+                  onVisualizarComprovante={onVisualizarComprovante}
                 />
               ))}
             </div>
@@ -421,6 +422,7 @@ export function FluxoCaixa({ lancamentos, mesAtual, anoAtual, empresa, onRemove,
                   onRemove={onRemove} 
                   onEditar={onEditar} 
                   onAbrirDanfse={handleAbrirDanfse}
+                  onVisualizarComprovante={onVisualizarComprovante}
                 />
               ))}
             </div>

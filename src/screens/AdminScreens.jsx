@@ -245,6 +245,11 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
                             🗓️ AGENDA
                           </span>
                         )}
+                        {a.modulo_comprovantes && (
+                          <span style={{ fontSize: 9.5, fontWeight: 800, color: '#1E293B', background: '#E2E8F0', padding: '1px 6px', borderRadius: 4, letterSpacing: 0.3 }}>
+                            📁 COFRE DIGITAL
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 11.5, color: '#4B5563', marginTop: 3 }}>
                         {a.nome ? <strong>{a.nome} · </strong> : ''}{a.cpf || 'Sem documento'} · {a.email || 'sem email'} · desde {a.criadoEm || '—'}
@@ -370,6 +375,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
   const [moduloNfse, setModuloNfse] = useState(assinante.modulo_nfse ?? false);
   const [moduloTradutor, setModuloTradutor] = useState(assinante.modulo_tradutor ?? false);
   const [moduloAgendamento, setModuloAgendamento] = useState(assinante.modulo_agendamento ?? false);
+  const [moduloComprovantes, setModuloComprovantes] = useState(assinante.modulo_comprovantes ?? false);
   const [categoriaAgendamento, setCategoriaAgendamento] = useState(assinante.categoria_agendamento || 'beleza');
   const [ultimoNumeroNfse, setUltimoNumeroNfse] = useState(assinante.nfse_ultimo_numero || '');
   const [salvando, setSalvando] = useState(false);
@@ -455,6 +461,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
     localStorage.setItem(`amp_modulo_nfse_${assinante.id}`, moduloNfse ? 'true' : 'false');
     localStorage.setItem(`amp_modulo_tradutor_${assinante.id}`, moduloTradutor ? 'true' : 'false');
     localStorage.setItem(`amp_modulo_agendamento_${assinante.id}`, moduloAgendamento ? 'true' : 'false');
+    localStorage.setItem(`amp_modulo_comprovantes_${assinante.id}`, moduloComprovantes ? 'true' : 'false');
     localStorage.setItem(`amp_categoria_agendamento_${assinante.id}`, categoriaAgendamento);
 
     const resultado = await onAtualizarDados(assinante.id, {
@@ -464,6 +471,7 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
       modulo_nfse: moduloNfse,
       modulo_tradutor: moduloTradutor,
       modulo_agendamento: moduloAgendamento,
+      modulo_comprovantes: moduloComprovantes,
       categoria_agendamento: categoriaAgendamento,
       nfse_ultimo_numero: ultimoNumeroNfse ? parseInt(ultimoNumeroNfse) : 0,
       razao_social: formEmpresa.trim(),
@@ -712,6 +720,27 @@ export function AdminDetalheAssinante({ assinante, onAtualizarDados, onClose, on
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── CHAVE DE ATIVAÇÃO DO MÓDULO COFRE DIGITAL & COMPROVANTES (ADD-ON COBRADO / OU LIBERADO) ── */}
+      <div style={{ background: '#FAF8F3', border: '1.5px solid #64748B', borderRadius: 12, padding: '14px', marginBottom: 20 }}>
+        <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27', display: 'flex', alignItems: 'center', gap: 6 }}>
+              📁 Cofre Digital & Comprovantes Sem Papel
+              <span style={{ fontSize: 9.5, background: '#475569', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>PREMIUM</span>
+            </div>
+            <div style={{ fontSize: 11, color: '#5C5A4F', marginTop: 2 }}>
+              Permite tirar foto ou anexar recibos/boletos diretamente aos lançamentos com compressão inteligente em nuvem
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={moduloComprovantes}
+            onChange={e => setModuloComprovantes(e.target.checked)}
+            style={{ accentColor: '#475569', width: 20, height: 20, cursor: 'pointer' }}
+          />
+        </label>
       </div>
 
       {/* ── SEÇÃO DE CONFIGURAÇÃO DE E-MAIL / PROVEDOR SMTP DO CLIENTE ── */}

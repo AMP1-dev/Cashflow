@@ -1,11 +1,26 @@
-import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText, Camera, Paperclip, FileCheck, ExternalLink, Loader2, Trash2 } from 'lucide-react';
+import { useMemo, useState, useRef } from 'react';
 import { BANCOS, CATEGORIAS, MESES, SUBCATEGORIAS_SUGERIDAS, PLANO_DE_CONTAS_SUGERIDO } from '../utils/constants';
 import { construirSugestoesDescricao, daysInMonth, formatBRL } from '../utils/formatters';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
 import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
+import { uploadComprovanteStorage } from '../utils/comprovanteStorageService';
 
-export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Date().getMonth(), anoAtual = new Date().getFullYear(), lancamentoEditando, historicoCompleto, onClose, onSave, onUpdate, onDelete, onAbrirEmissaoNfse }) {
+export function NovoLancamentoModal({ 
+  tipoInicial, 
+  diasNoMes, 
+  mesAtual = new Date().getMonth(), 
+  anoAtual = new Date().getFullYear(), 
+  lancamentoEditando, 
+  historicoCompleto, 
+  onClose, 
+  onSave, 
+  onUpdate, 
+  onDelete, 
+  onAbrirEmissaoNfse,
+  moduloComprovantesAtivo = false,
+  empresaId = null
+}) {
   const editando = !!lancamentoEditando;
   const [tipo, setTipo] = useState(editando ? lancamentoEditando.tipo : tipoInicial);
   const [descricao, setDescricao] = useState(editando ? lancamentoEditando.descricao : '');
@@ -42,6 +57,41 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
   const [qtdRepeticoes, setQtdRepeticoes] = useState(2);
   const [modalAlertaAberto, setModalAlertaAberto] = useState(false);
   const [alertaJaExibidoNoDia, setAlertaJaExibidoNoDia] = useState(false);
+
+  // Módulo Cofre Digital & Comprovantes Sem Papel
+  const [comprovanteUrl, setComprovanteUrl] = useState(editando ? (lancamentoEditando.comprovante_url || '') : '');
+  const [uploadingComprovante, setUploadingComprovante] = useState(false);
+  const [comprovanteInfo, setComprovanteInfo] = useState(null);
+  const fileCameraRef = useRef(null);
+  const fileUploadRef = useRef(null);
+
+  async function handleArquivoSelecionado(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingComprovante(true);
+    try {
+      const res = await uploadComprovanteStorage({
+        file,
+        empresaId,
+        lancamentoId: editando ? lancamentoEditando.id : null,
+      });
+      if (res && res.url) {
+        setComprovanteUrl(res.url);
+        const kbOriginal = Math.round((res.tamanhoOriginal || 0) / 1024);
+        const kbFinal = Math.round((res.tamanhoFinal || 0) / 1024);
+        setComprovanteInfo({
+          original: kbOriginal,
+          final: kbFinal,
+          economia: kbOriginal > 0 ? Math.round((1 - kbFinal / kbOriginal) * 100) : 0,
+        });
+      }
+    } catch (err) {
+      alert('Erro ao processar comprovante: ' + (err.message || String(err)));
+    } finally {
+      setUploadingComprovante(false);
+      e.target.value = '';
+    }
+  }
 
   const realMesAtual = new Date().getMonth();
   const realAnoAtual = new Date().getFullYear();
@@ -141,6 +191,7 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
       qtdVendas: tipo === 'receita' && qtdVendas ? parseInt(qtdVendas) || null : null,
       banco: banco || null,
       meio_pagamento: meioPagamento || null,
+      comprovante_url: comprovanteUrl || null,
     };
   }
 
@@ -700,6 +751,149 @@ export function NovoLancamentoModal({ tipoInicial, diasNoMes, mesAtual = new Dat
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── SEÇÃO COFRE DIGITAL & COMPROVANTES SEM PAPEL (PREMIUM / HABILITADO) ── */}
+      {moduloComprovantesAtivo && (
+        <div style={{ marginTop: 18, background: '#F8FAFC', border: '1.5px dashed #CBD5E1', borderRadius: 12, padding: '12px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Paperclip size={15} color="#475569" />
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#1E293B' }}>
+                Cofre Digital • Anexar Comprovante
+              </span>
+            </div>
+            <span style={{ fontSize: 9.5, fontWeight: 700, background: '#E2E8F0', color: '#334155', padding: '1px 6px', borderRadius: 4 }}>
+              SEM PAPEL
+            </span>
+          </div>
+
+          <p style={{ fontSize: 11, color: '#64748B', margin: '0 0 10px 0', lineHeight: 1.35 }}>
+            Tire foto do cupom pelo celular ou anexe PDF/imagem. As fotos são compactadas automaticamente (~80KB) para não consumir seu armazenamento.
+          </p>
+
+          {/* Input oculto para Captura Direta da Câmera no Celular */}
+          <input
+            ref={fileCameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleArquivoSelecionado}
+            style={{ display: 'none' }}
+          />
+
+          {/* Input oculto para Upload de Arquivo do Disco / PDF */}
+          <input
+            ref={fileUploadRef}
+            type="file"
+            accept="image/*,application/pdf"
+            onChange={handleArquivoSelecionado}
+            style={{ display: 'none' }}
+          />
+
+          {uploadingComprovante ? (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#2563EB', fontSize: 12, fontWeight: 600 }}>
+              <Loader2 size={16} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
+              <span>Compactando e arquivando na nuvem...</span>
+            </div>
+          ) : comprovanteUrl ? (
+            <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, overflow: 'hidden' }}>
+                {comprovanteUrl.toLowerCase().includes('.pdf') ? (
+                  <div style={{ width: 34, height: 34, borderRadius: 6, background: '#FEE2E2', border: '1px solid #FECACA', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={18} color="#DC2626" />
+                  </div>
+                ) : (
+                  <img
+                    src={comprovanteUrl}
+                    alt="Miniatura"
+                    style={{ width: 34, height: 34, borderRadius: 6, objectFit: 'cover', border: '1px solid #CBD5E1', flexShrink: 0 }}
+                  />
+                )}
+                <div style={{ overflow: 'hidden' }}>
+                  <div style={{ fontSize: 11.5, fontWeight: 600, color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Documento Anexado com Sucesso
+                  </div>
+                  <div style={{ fontSize: 10, color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <CheckCircle2 size={11} /> 
+                    {comprovanteInfo ? `Reduzido de ${comprovanteInfo.original}KB para ${comprovanteInfo.final}KB (-${comprovanteInfo.economia}%)` : 'Otimizado em WebP'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                <a
+                  href={comprovanteUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ background: '#F1F5F9', border: '1px solid #CBD5E1', borderRadius: 6, padding: '5px 8px', fontSize: 11, fontWeight: 600, color: '#1E293B', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                >
+                  <ExternalLink size={12} />
+                  <span>Ver</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setComprovanteUrl('');
+                    setComprovanteInfo(null);
+                  }}
+                  style={{ background: '#FFF1F2', border: '1px solid #FECDD3', borderRadius: 6, padding: '5px 8px', fontSize: 11, fontWeight: 600, color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                  title="Remover este comprovante"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button
+                type="button"
+                onClick={() => fileCameraRef.current?.click()}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: 8,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#1E293B',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                }}
+              >
+                <Camera size={15} color="#0F172A" />
+                <span>📷 Tirar Foto</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => fileUploadRef.current?.click()}
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: 8,
+                  padding: '9px 12px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#1E293B',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                }}
+              >
+                <Paperclip size={15} color="#0F172A" />
+                <span>📎 Anexar Arquivo</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 

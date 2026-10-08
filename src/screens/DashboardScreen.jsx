@@ -27,6 +27,7 @@ export function Dashboard({
   onAbrirAgendamento,
   onAbrirAdmin,
   onAbrirEquipe,
+  onVisualizarComprovante,
   ehAdmin 
 }) {
   const ehDono = papel !== 'funcionario';
@@ -674,6 +675,7 @@ export function Dashboard({
               l={l} 
               onEditar={onEditar} 
               onAbrirDanfse={handleAbrirDanfse}
+              onVisualizarComprovante={onVisualizarComprovante}
               corPorCategoria={false} 
             />
           ))}
@@ -716,7 +718,7 @@ export function Dashboard({
   );
 }
 
-export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, corPorCategoria = true }) {
+export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, onVisualizarComprovante, corPorCategoria = true }) {
   const cat = l.categoria ? CATEGORIAS[l.categoria] : null;
   const corDespesa = corPorCategoria && cat ? cat.color : '#B05A2E';
 
@@ -757,7 +759,7 @@ export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, corPorCate
             </span>
           )}
         </div>
-        <div style={{ fontSize: 11.5, color: '#9C9A8F', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+        <div style={{ fontSize: 11.5, color: '#9C9A8F', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' }}>
           <span>Dia {l.dia}{cat ? ` · ${cat.short}` : (l.formaRecebimento ? ` · ${l.formaRecebimento}` : '')}</span>
           {numNfse && onAbrirDanfse && (
             <button
@@ -782,6 +784,31 @@ export function LancamentoRow({ l, onRemove, onEditar, onAbrirDanfse, corPorCate
               }}
             >
               📄 DANFSe
+            </button>
+          )}
+          {l.comprovante_url && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onVisualizarComprovante) onVisualizarComprovante(l);
+              }}
+              title="Visualizar comprovante fiscal / recibo arquivado"
+              style={{
+                background: '#F1F5F9',
+                color: '#1E293B',
+                border: '1px solid #CBD5E1',
+                borderRadius: 4,
+                padding: '2px 6px',
+                fontSize: 10,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 3,
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+            >
+              📎 Comprovante
             </button>
           )}
         </div>
