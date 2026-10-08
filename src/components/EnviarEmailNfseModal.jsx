@@ -258,18 +258,21 @@ export function EnviarEmailNfseModal({ nota, empresa, onClose, onAbrirConfigSmtp
           />
         </div>
 
-        {/* Anexos inclusos: DANFSe PDF e XML */}
+        {/* Anexos inclusos: Nota Fiscal PDF, DANFSe PDF e XML */}
         <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '9px 12px' }}>
           <div style={{ fontSize: 11.5, fontWeight: 700, color: '#334155', display: 'flex', alignItems: 'center', gap: 6 }}>
             <Paperclip size={14} color="#64748B" />
-            <span>Documentos oficiais capturados e anexados automaticamente:</span>
+            <span>3 Documentos oficiais anexados automaticamente nesta mensagem:</span>
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 11, background: '#E2E8F0', color: '#1E293B', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
-              📄 DANFSe_NFe_{nota?.numero}.pdf (Documento Oficial)
+              📑 NotaFiscal_NFSe_{nota?.numero}.pdf (Nota Fiscal em PDF)
             </span>
             <span style={{ fontSize: 11, background: '#E2E8F0', color: '#1E293B', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
-              ⚙️ NFSe_{nota?.numero}_Assinada.xml (Padrão Nacional)
+              📄 DANFSe_NFe_{nota?.numero}.pdf (Documento Auxiliar)
+            </span>
+            <span style={{ fontSize: 11, background: '#E2E8F0', color: '#1E293B', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
+              ⚙️ NFSe_{nota?.numero}_Assinada.xml (Arquivo XML Receita)
             </span>
           </div>
         </div>

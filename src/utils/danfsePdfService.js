@@ -261,3 +261,214 @@ export function gerarDanfsePdfBase64(nota = {}, empresa = {}) {
   const dataUri = doc.output('datauristring');
   return dataUri.split(',')[1];
 }
+
+// ── Gerador da NOTA FISCAL DE SERVIÇOS ELETRÔNICA (NFS-e em PDF - Modelo Municipal/Empresarial) ──
+// Formato clássico e direto para departamentos financeiros e contábeis que exigem a Nota Fiscal em PDF
+export function gerarNotaFiscalPdfBase64(nota = {}, empresa = {}) {
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 10;
+  const contentWidth = pageWidth - (margin * 2); // 190mm
+
+  let y = margin;
+
+  const emissor = nota.emissor || empresa || {};
+  const tomador = nota.tomador || {};
+  const servico = nota.servico || {};
+
+  const dataObj = nota.dataEmissao ? new Date(nota.dataEmissao) : new Date();
+  const dataFormatada = dataObj.toLocaleString('pt-BR');
+  const mesCompetencia = String((nota.competenciaMes !== undefined ? Number(nota.competenciaMes) + 1 : dataObj.getMonth() + 1)).padStart(2, '0');
+  const anoCompetencia = nota.competenciaAno || dataObj.getFullYear();
+  const codigoVerificacao = nota.codigoVerificacao || `${String(nota.numero || '1').padStart(4, '0')}-AMP-${anoCompetencia}`;
+
+  function desenharCaixa(titulo, x, topoY, w, h, corFundo = [248, 250, 252]) {
+    doc.setFillColor(corFundo[0], corFundo[1], corFundo[2]);
+    doc.setDrawColor(30, 41, 59);
+    doc.setLineWidth(0.3);
+    doc.rect(x, topoY, w, 5, 'FD');
+    doc.rect(x, topoY + 5, w, h - 5, 'D');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(15, 23, 42);
+    doc.text(titulo, x + 2.5, topoY + 3.6);
+  }
+
+  // 1. CABEÇALHO OFICIAL DA NOTA FISCAL
+  doc.setDrawColor(30, 41, 59);
+  doc.setLineWidth(0.5);
+  doc.rect(margin, y, contentWidth, 26);
+
+  // Lado Esquerdo: Identificação Pública
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text('PREFEITURA MUNICIPAL DE SANTA CRUZ DAS PALMEIRAS', margin + 3, y + 6);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(71, 85, 105);
+  doc.text('ESTADO DE SÃO PAULO • SECRETARIA DE FINANÇAS', margin + 3, y + 10);
+  doc.text('SISTEMA TRIBUTÁRIO MUNICIPAL E NACIONAL DE EMISSÃO ELETRÔNICA', margin + 3, y + 14);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(15, 23, 42);
+  doc.text('NOTA FISCAL DE SERVIÇOS ELETRÔNICA — NFS-e', margin + 3, y + 21);
+
+  // Lado Direito: Caixa com dados da Nota Fiscal
+  const boxDirW = 68;
+  const boxDirX = margin + contentWidth - boxDirW;
+  doc.setFillColor(241, 245, 249);
+  doc.rect(boxDirX, y, boxDirW, 26, 'FD');
+  doc.setDrawColor(30, 41, 59);
+  doc.line(boxDirX, y, boxDirX, y + 26);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`NÚMERO DA NOTA: ${nota.numero || '1'}`, boxDirX + 3, y + 6);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(51, 65, 85);
+  doc.text(`Data/Hora: ${dataFormatada}`, boxDirX + 3, y + 11);
+  doc.text(`Competência: ${mesCompetencia}/${anoCompetencia}`, boxDirX + 3, y + 15.5);
+  doc.text(`Cód. Verificação: ${codigoVerificacao}`, boxDirX + 3, y + 20);
+  doc.text(`Série: ${nota.serie || '1'} / DPS: ${nota.dpsNumero || nota.numero || '1'}`, boxDirX + 3, y + 24);
+
+  y += 28;
+
+  // 2. PRESTADOR DE SERVIÇOS
+  const prestadorNome = emissor.razaoSocial || emissor.nomeFantasia || 'AMP DO BRASIL SOLUÇÕES ADMINISTRATIVAS E TECNOLÓGICAS LTDA';
+  const prestadorCnpj = formatarCpfCnpj(emissor.cnpj || '10682233000175');
+  const prestadorEnd = emissor.endereco || 'RUA CONSTANTE BIAZOTTO, 46 - CENTRO';
+  const prestadorCidade = `${emissor.municipio || 'SANTA CRUZ DAS PALMEIRAS'} - ${emissor.uf || 'SP'}`;
+  const prestadorEmail = emissor.email || 'atendimento@amp.adm.br';
+  const prestadorTel = emissor.telefone || '(19) 99448-7795';
+
+  desenharCaixa('DADOS DO PRESTADOR DE SERVIÇOS', margin, y, contentWidth, 23);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(prestadorNome, margin + 3, y + 9);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.text(`CNPJ: ${prestadorCnpj}`, margin + 3, y + 13.5);
+  doc.text(`Inscrição Municipal: ${emissor.inscricaoMunicipal || '10682'}`, margin + 80, y + 13.5);
+  doc.text(`Telefone: ${prestadorTel}`, margin + 135, y + 13.5);
+
+  doc.text(`Endereço: ${prestadorEnd}`, margin + 3, y + 18);
+  doc.text(`Município/UF: ${prestadorCidade}`, margin + 80, y + 18);
+  doc.text(`E-mail: ${prestadorEmail}`, margin + 135, y + 18);
+
+  y += 25;
+
+  // 3. TOMADOR DE SERVIÇOS
+  const tomadorNome = tomador.razaoSocial || tomador.nomeFantasia || 'Cliente Tomador';
+  const tomadorDoc = formatarCpfCnpj(tomador.cpfCnpj || tomador.cnpj || tomador.cpf || '');
+  const tomadorEnd = tomador.endereco || '-';
+  const tomadorCidade = `${tomador.municipio || '-'} - ${tomador.uf || ''}`;
+  const tomadorEmail = tomador.email || '-';
+
+  desenharCaixa('DADOS DO TOMADOR DE SERVIÇOS (CLIENTE)', margin, y, contentWidth, 23);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(15, 23, 42);
+  doc.text(tomadorNome, margin + 3, y + 9);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.text(`CPF / CNPJ: ${tomadorDoc}`, margin + 3, y + 13.5);
+  doc.text(`Inscrição Municipal: ${tomador.inscricaoMunicipal || 'Isento'}`, margin + 80, y + 13.5);
+  doc.text(`Telefone: ${tomador.telefone || '-'}`, margin + 135, y + 13.5);
+
+  doc.text(`Endereço: ${tomadorEnd}`, margin + 3, y + 18);
+  doc.text(`Município/UF: ${tomadorCidade}`, margin + 80, y + 18);
+  doc.text(`E-mail: ${tomadorEmail}`, margin + 135, y + 18);
+
+  y += 25;
+
+  // 4. DISCRIMINAÇÃO DOS SERVIÇOS
+  const descTexto = servico.discriminacao || nota.discriminacao || 'Prestação de serviços administrativos e tecnológicos de consultoria e gestão empresarial.';
+  const linhasDesc = doc.splitTextToSize(descTexto, contentWidth - 6);
+  const alturaCaixaDesc = Math.max(34, 10 + (linhasDesc.length * 4.2));
+
+  desenharCaixa('DISCRIMINAÇÃO DOS SERVIÇOS PRESTADOS', margin, y, contentWidth, alturaCaixaDesc);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(30, 41, 59);
+  doc.text(linhasDesc, margin + 3, y + 9.5);
+
+  y += alturaCaixaDesc + 2;
+
+  // 5. CÓDIGO DO SERVIÇO / LC 116
+  desenharCaixa('CLASSIFICAÇÃO FISCAL E TRIBUTAÇÃO DO SERVIÇO', margin, y, contentWidth, 14);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  const codTrib = servico.codigoTributacaoNacional || '17.01.01';
+  const itemLc = servico.itemListaServico || '17.01 - Assessoria ou consultoria de qualquer natureza';
+  doc.text(`Item LC 116/2003: ${itemLc}`, margin + 3, y + 9);
+  doc.text(`Código Nacional / NBS: ${codTrib}`, margin + 120, y + 9);
+  doc.text(`Regime Especial de Tributação: Microempresa Municipal (Simples Nacional)`, margin + 3, y + 12.5);
+  doc.text(`Exigibilidade do ISS: Exigível no Município`, margin + 120, y + 12.5);
+
+  y += 16;
+
+  // 6. VALORES, RETENÇÕES E TOTAIS
+  const valorTotal = servico.valorTotal || nota.valor || 0;
+  const aliquota = servico.aliquotaIss || 2.01;
+  const valorIss = servico.valorIss || (valorTotal * (aliquota / 100));
+  const valorLiquido = servico.valorLiquido || valorTotal;
+
+  desenharCaixa('VALORES, TRIBUTOS E RETENÇÕES FEDERAIS', margin, y, contentWidth, 27);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.text(`PIS: ${formatarMoeda(servico.pis || 0)}`, margin + 3, y + 9);
+  doc.text(`COFINS: ${formatarMoeda(servico.cofins || 0)}`, margin + 40, y + 9);
+  doc.text(`INSS: ${formatarMoeda(servico.inss || 0)}`, margin + 80, y + 9);
+  doc.text(`IR: ${formatarMoeda(servico.ir || 0)}`, margin + 120, y + 9);
+  doc.text(`CSLL: ${formatarMoeda(servico.csll || 0)}`, margin + 155, y + 9);
+
+  doc.text(`Base de Cálculo: ${formatarMoeda(valorTotal)}`, margin + 3, y + 14);
+  doc.text(`Alíquota ISS: ${Number(aliquota).toFixed(2)}%`, margin + 65, y + 14);
+  doc.text(`Valor ISS: ${formatarMoeda(valorIss)}`, margin + 120, y + 14);
+
+  // Linha de Destaque: VALOR TOTAL DA NOTA FISCAL
+  doc.setFillColor(241, 245, 249);
+  doc.rect(margin + 1, y + 18, contentWidth - 2, 7, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(15, 23, 42);
+  doc.text(`VALOR TOTAL DA NOTA: ${formatarMoeda(valorTotal)}`, margin + 3, y + 23);
+  doc.text(`VALOR LÍQUIDO A RECEBER: ${formatarMoeda(valorLiquido)}`, margin + 105, y + 23);
+
+  y += 29;
+
+  // 7. OBSERVAÇÕES E REGIME TRIBUTÁRIO
+  if (y < pageHeight - 20) {
+    desenharCaixa('INFORMAÇÕES COMPLEMENTARES', margin, y, contentWidth, pageHeight - margin - y - 6);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(71, 85, 105);
+    doc.text('• Documento emitido por ME ou EPP optante pelo Simples Nacional nos termos da Lei Complementar nº 123/2006.', margin + 3, y + 9);
+    doc.text('• Não gera direito a crédito fiscal de IPI ou ICMS.', margin + 3, y + 13);
+    doc.text(`• Chave de Acesso Oficial da Receita Federal: ${nota.chaveAcesso || 'Emitida via Sistema Nacional NFS-e'}`, margin + 3, y + 17);
+  }
+
+  // Rodapé
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.setTextColor(148, 163, 184);
+  doc.text(`AMP Flow • Plataforma Financeira e Gestão Fiscal • Emitido em ${dataFormatada}`, margin, pageHeight - 3);
+
+  const dataUri = doc.output('datauristring');
+  return dataUri.split(',')[1];
+}

@@ -5,7 +5,7 @@
 
 import { formatBRL, somenteDigitos } from './formatters';
 import { supabase } from '../lib/supabase';
-import { gerarDanfsePdfBase64 } from './danfsePdfService';
+import { gerarDanfsePdfBase64, gerarNotaFiscalPdfBase64 } from './danfsePdfService';
 
 const STORAGE_SMTP_KEY = 'amp_flow_smtp_config_v1';
 
@@ -329,12 +329,15 @@ export function montarHtmlEmailNfse(nota, empresa, corpoTexto = '', config = {})
                 </tr>
               </table>
 
-              <!-- Box de Anexos -->
+              <!-- Box de Anexos (3 Documentos Fiscais) -->
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; margin-bottom: 22px;">
                 <tr>
                   <td style="padding: 14px 18px;">
                     <div style="font-size: 12.5px; font-weight: 700; color: #1E293B; margin-bottom: 6px;">
-                      📎 Arquivos anexados nesta mensagem:
+                      📎 Arquivos anexados nesta mensagem (3 documentos fiscais):
+                    </div>
+                    <div style="font-size: 13px; color: #334155; margin-bottom: 4px;">
+                      • <strong>NotaFiscal_NFSe_${numero}.pdf</strong> — Nota Fiscal de Serviços Eletrônica completa em formato PDF.
                     </div>
                     <div style="font-size: 13px; color: #334155; margin-bottom: 4px;">
                       • <strong>DANFSe_NFe_${numero}.pdf</strong> — Documento Auxiliar Oficial da NFS-e para conferência e arquivo digital.
@@ -397,16 +400,31 @@ export function gerarLinkMailto(destinatario, assunto, corpo, copia = '') {
 export async function dispararEmailNfse({ empresaId, destinatario, copia, assunto, corpo, nota, empresa }) {
   const config = await carregarConfigSmtpNuvem(empresaId);
 
-  // Payload com anexos PDF (DANFSe) e XML
+  // Payload com os 3 anexos oficiais: Nota Fiscal (PDF), DANFSe (PDF) e XML Receita Federal
   const anexos = [];
 
-  // 1. Gera e anexa o DANFSe Oficial em PDF
+  // 1. Gera e anexa a Nota Fiscal de Serviços em formato PDF (layout oficial para compras e financeiro)
   try {
-    const pdfBase64 = gerarDanfsePdfBase64(nota, empresa);
-    if (pdfBase64) {
+    const nfPdfBase64 = gerarNotaFiscalPdfBase64(nota, empresa);
+    if (nfPdfBase64) {
+      anexos.push({
+        filename: `NotaFiscal_NFSe_${nota?.numero || '1'}.pdf`,
+        content: nfPdfBase64,
+        encoding: 'base64',
+        contentType: 'application/pdf'
+      });
+    }
+  } catch (eNfPdf) {
+    console.error('Falha ao gerar PDF da Nota Fiscal para anexo:', eNfPdf);
+  }
+
+  // 2. Gera e anexa o DANFSe Oficial em PDF (layout padrão nacional Receita Federal)
+  try {
+    const danfsePdfBase64 = gerarDanfsePdfBase64(nota, empresa);
+    if (danfsePdfBase64) {
       anexos.push({
         filename: `DANFSe_NFe_${nota?.numero || '1'}.pdf`,
-        content: pdfBase64,
+        content: danfsePdfBase64,
         encoding: 'base64',
         contentType: 'application/pdf'
       });
@@ -415,7 +433,7 @@ export async function dispararEmailNfse({ empresaId, destinatario, copia, assunt
     console.error('Falha ao gerar PDF DANFSe para anexo de e-mail:', ePdf);
   }
 
-  // 2. Anexa o Arquivo Fiscal XML da Receita
+  // 3. Anexa o Arquivo Fiscal XML da Receita Federal
   if (nota?.xmlGerado) {
     try {
       anexos.push({
