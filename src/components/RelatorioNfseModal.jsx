@@ -167,22 +167,22 @@ export function RelatorioNfseModal({ notas = [], empresa, onClose }) {
       }}>
         {/* Cabeçalho do Modal */}
         <div style={{
-          background: 'linear-gradient(135deg, #0F2B27 0%, #173E38 100%)',
+          background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)',
           color: '#FAF8F3',
           padding: '16px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid rgba(255,255,255,0.1)'
+          borderBottom: '1px solid rgba(255,255,255,0.08)'
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FileSpreadsheet size={20} color="#9FE0C8" />
-              <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, fontFamily: 'Georgia, serif' }}>
+              <FileSpreadsheet size={20} color="#E8A33D" />
+              <h2 style={{ fontSize: 17, fontWeight: 700, margin: 0, fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                 Relatório Fiscal de NFS-e • {nomeEmpresa}
               </h2>
             </div>
-            <div style={{ fontSize: 11.5, color: '#9FBDB5', marginTop: 3 }}>
+            <div style={{ fontSize: 11.5, color: '#C5BBDC', marginTop: 3 }}>
               Demonstrativo completo de notas emitidas, tributação (ISS, IBS, CBS) e chaves oficiais de acesso
             </div>
           </div>

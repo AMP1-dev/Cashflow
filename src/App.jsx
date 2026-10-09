@@ -125,14 +125,14 @@ class GlobalErrorBoundary extends React.Component {
               height: 56,
               borderRadius: 16,
               background: '#E8A33D',
-              color: '#0F2B27',
+              color: '#171222',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 26,
-              fontWeight: 700,
+              fontWeight: 800,
               margin: '0 auto 16px',
-              fontFamily: 'Georgia, serif'
+              fontFamily: 'var(--font-display, "Outfit", sans-serif)'
             }}>
               R$
             </div>

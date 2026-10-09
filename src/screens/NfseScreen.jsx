@@ -329,12 +329,13 @@ export function NfseScreen({
 
       {/* ── CARD PRINCIPAL: TOTAL DE NOTAS DO MÊS & AÇÕES RÁPIDAS ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #0F2B27 0%, #173E38 100%)',
+        background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)',
         borderRadius: 16,
         padding: '18px 20px',
         color: '#FAF8F3',
         marginBottom: 16,
-        boxShadow: '0 4px 14px rgba(15,43,39,0.15)',
+        boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+        border: '1px solid rgba(255,255,255,0.06)',
         display: 'flex',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
@@ -342,13 +343,13 @@ export function NfseScreen({
         gap: 14
       }}>
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: '#9FBDB5', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#C5BBDC', textTransform: 'uppercase', letterSpacing: 0.8 }}>
             Total Faturado em NFS-e ({MESES[mesAtual]} / {anoAtual})
           </div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 700, color: '#9FE0C8', marginTop: 2 }}>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 28, fontWeight: 800, color: '#34D399', marginTop: 2 }}>
             {formatBRL(totalMes)}
           </div>
-          <div style={{ fontSize: 11.5, color: '#D9EBE6', marginTop: 4 }}>
+          <div style={{ fontSize: 11.5, color: '#C5BBDC', marginTop: 4 }}>
             {notas.length} nota(s) registrada(s) na base • Chaves salvas com segurança
           </div>
           {certInfo?.hasCert && (
@@ -753,7 +754,7 @@ export function NfseScreen({
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
                         <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: 17, fontWeight: 800, color: '#0F2B27', fontFamily: 'Georgia, serif' }}>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: '#1C2421', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                             {formatBRL(n.servico?.valorTotal || 0)}
                           </div>
                           <div style={{ fontSize: 10.5, color: '#6B7280', marginTop: 2 }}>
@@ -1120,7 +1121,7 @@ export function NfseScreen({
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontSize: 14, fontWeight: 800, color: '#0F2B27', fontFamily: 'Georgia, serif' }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#1C2421', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                         {formatBRL(r.valor)}
                       </div>
                     </div>

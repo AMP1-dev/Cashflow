@@ -23,8 +23,8 @@ export function LoginScreen({ onLogin, onIrParaAssinatura, onIrParaRecuperar, on
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#E8A33D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontFamily: 'Georgia, serif', fontSize: 26, color: '#111827', fontWeight: 700, boxShadow: '0 8px 24px rgba(232, 163, 61, 0.25)' }}>R$</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, color: '#F9FAFB', letterSpacing: 0.2 }}>AMP flow</div>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#E8A33D', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 26, color: '#111827', fontWeight: 800, boxShadow: '0 8px 24px rgba(232, 163, 61, 0.25)' }}>R$</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 25, fontWeight: 700, color: '#F9FAFB', letterSpacing: -0.3 }}>AMP flow</div>
           <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Fluxo de caixa e DRE sem mistério</div>
         </div>
 
@@ -117,7 +117,7 @@ export function AssinaturaScreen({ onCriar, onVoltarLogin }) {
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F9FAFB' }}>Criar assinatura</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 22, fontWeight: 700, color: '#F9FAFB' }}>Criar assinatura</div>
           <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Comece a controlar seu fluxo de caixa hoje</div>
         </div>
 
@@ -226,7 +226,7 @@ export function RecuperarSenhaScreen({ onEnviar, onVoltarLogin }) {
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F9FAFB' }}>Recuperar senha</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 22, fontWeight: 700, color: '#F9FAFB' }}>Recuperar senha</div>
           <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Informe o e-mail de acesso da sua assinatura</div>
         </div>
 
@@ -306,7 +306,7 @@ export function RedefinirSenhaScreen({ onRedefinir, onVoltarLogin }) {
     <div style={{ fontFamily: 'var(--font-sans, system-ui)', minHeight: '100vh', background: '#111827', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ width: '100%', maxWidth: 380 }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F9FAFB' }}>Redefinir senha</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 22, fontWeight: 700, color: '#F9FAFB' }}>Redefinir senha</div>
           <div style={{ fontSize: 13, color: '#9CA3AF', marginTop: 4 }}>Crie uma nova senha segura para sua conta</div>
         </div>
 

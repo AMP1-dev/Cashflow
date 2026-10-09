@@ -296,7 +296,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
         {/* Linha 1: Título + Subtítulo + Botão de Guia Conceitual */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <div>
-            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1C2421', margin: 0, fontFamily: 'Georgia, serif' }}>Formação de Preço</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1C2421', margin: 0, fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>Formação de Preço</h2>
             <div style={{ fontSize: 12, color: '#747266', marginTop: 2 }}>Descubra se o preço que o mercado aceita ainda deixa lucro</div>
           </div>
 
@@ -563,7 +563,7 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
                 {positivo ? 'Esse preço dá lucro' : 'Esse preço dá prejuízo'}
               </span>
             </div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: 30, color: positivo ? '#1F5C52' : '#7A2E3D', marginBottom: 4 }}>
+            <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontWeight: 800, fontSize: 30, color: positivo ? '#1F5C52' : '#7A2E3D', marginBottom: 4 }}>
               {formatBRL(lucro)} <span style={{ fontSize: 16 }}>({lucroPct.toFixed(1)}%)</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 14, fontSize: 12, color: '#5C5A4F' }}>
@@ -770,14 +770,14 @@ export function FormacaoPrecoScreen({ lancamentos, empresaId, mesAtual, anoAtual
               </div>
 
               {/* Result Box */}
-              <div style={{ background: '#0F2B27', color: '#FAF8F3', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: '#9FBDB5' }}>
+              <div style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', color: '#FAF8F3', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, border: '1px solid rgba(255,255,255,0.06)' }}>
+                <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, color: '#C5BBDC' }}>
                   Custo de Depreciação & ROI por Hora de Uso
                 </div>
-                <div style={{ fontSize: 28, fontWeight: 800, color: '#9FE0C8', fontFamily: 'Georgia, serif' }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#34D399', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                   {formatBRL(custoHoraMaquina)} / hora
                 </div>
-                <div style={{ fontSize: 11, color: '#9FBDB5', lineHeight: 1.4 }}>
+                <div style={{ fontSize: 11, color: '#C5BBDC', lineHeight: 1.4 }}>
                   Fórmula de Retorno: {formatBRL(maquinaValorNum)} ÷ {maquinaVidaHorasNum.toLocaleString('pt-BR')}h de uso = <strong>{formatBRL(custoHoraMaquina)}/h</strong> embutidos para quitar o ROI.
                 </div>
               </div>

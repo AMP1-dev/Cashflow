@@ -181,7 +181,7 @@ function FracionamentoWizard({ valorTotal, descricaoOriginal = '', subcategoriaO
             <span style={{ fontSize: 11, color: '#7A7868', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 600 }}>Valor total da nota / recibo</span>
             {descricaoOriginal && <div style={{ fontSize: 12, color: '#5C5A4F', marginTop: 1, fontWeight: 500 }}>{descricaoOriginal}</div>}
           </div>
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#1C2421', fontFamily: 'Georgia, serif' }}>{formatBRL(valorTotal)}</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: '#1C2421', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>{formatBRL(valorTotal)}</span>
         </div>
       </div>
 
@@ -613,7 +613,7 @@ export function ClassificacaoWizard({
           <div style={{ background: cat.bg, borderRadius: 14, padding: 18, textAlign: 'center', marginBottom: 16 }}>
             <Check size={28} color={cat.color} style={{ marginBottom: 8 }} />
             <div style={{ fontSize: 12, color: cat.color }}>Esta despesa é</div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: 20, color: cat.color, marginTop: 2 }}>{cat.label}</div>
+            <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontWeight: 700, fontSize: 20, color: cat.color, marginTop: 2 }}>{cat.label}</div>
             {valorTotal > 0 && (
               <div style={{ fontSize: 14, fontWeight: 700, color: cat.color, marginTop: 6 }}>
                 {formatBRL(valorTotal)}
@@ -673,7 +673,7 @@ export function ClassificacaoWizard({
         <div style={{ background: cat.bg, borderRadius: 14, padding: 18, textAlign: 'center', marginBottom: 16 }}>
           <Check size={28} color={cat.color} style={{ marginBottom: 8 }} />
           <div style={{ fontSize: 12, color: cat.color }}>Esta despesa é</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 20, color: cat.color, marginTop: 2 }}>{cat.label}</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontWeight: 700, fontSize: 20, color: cat.color, marginTop: 2 }}>{cat.label}</div>
         </div>
 
         <FieldLabel>Que tal detalhar com uma subcategoria? (opcional)</FieldLabel>

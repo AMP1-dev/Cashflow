@@ -511,7 +511,7 @@ export function AgendamentoScreen({
 
       {/* ── NAVEGADOR DO MÊS / ANO DA AGENDA ── */}
       <div style={{
-        background: '#0F2B27',
+        background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)',
         color: '#FAF8F3',
         borderRadius: 14,
         padding: '12px 16px',
@@ -519,7 +519,8 @@ export function AgendamentoScreen({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        boxShadow: '0 4px 12px rgba(15,43,39,0.12)'
+        boxShadow: '0 4px 14px rgba(0,0,0,0.18)',
+        border: '1px solid rgba(255,255,255,0.06)'
       }}>
         <button
           onClick={() => navegarMes(-1)}
@@ -530,10 +531,10 @@ export function AgendamentoScreen({
         </button>
 
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: '#9FE0C8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>
+          <div style={{ fontSize: 11, color: '#E8A33D', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>
             Planejamento Mensal de Agendamentos
           </div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 18, fontWeight: 600 }}>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 18, fontWeight: 700 }}>
             {MESES[mesAgenda]} de {anoAgenda}
           </div>
         </div>

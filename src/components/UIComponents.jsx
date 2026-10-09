@@ -3,10 +3,10 @@ import { X } from 'lucide-react';
 
 export function ModalShell({ children, onClose, titulo }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,43,39,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 12 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(24, 20, 36, 0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 12 }}>
       <div style={{ width: '100%', maxWidth: 480, background: '#FAF8F3', borderRadius: 16, padding: '16px 18px', maxHeight: '90vh', overflowY: 'auto', boxSizing: 'border-box', boxShadow: '0 10px 35px rgba(0,0,0,0.18)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 17.5, fontWeight: 600, color: '#1C2421' }}>{titulo}</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 18, fontWeight: 700, color: '#1C2421' }}>{titulo}</div>
           <button onClick={onClose} aria-label="Fechar" style={{ background: '#EFEBE0', border: 'none', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#5C5A4F' }}>
             <X size={14} />
           </button>

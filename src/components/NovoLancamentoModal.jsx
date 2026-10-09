@@ -726,13 +726,13 @@ export function NovoLancamentoModal({
 
       {/* Modal / Alerta de Concentração (Exibido após escolha do dia) */}
       {modalAlertaAberto && alertaConcentracao && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 43, 39, 0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(24, 20, 36, 0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 16 }}>
           <div style={{ background: '#fff', borderRadius: 16, padding: '20px 22px', maxWidth: 380, width: '100%', boxShadow: '0 12px 36px rgba(0,0,0,0.24)', border: '1px solid #E8A33D' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
               <div style={{ background: '#FFF8E7', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#E8A33D', flexShrink: 0 }}>
                 <AlertTriangle size={22} />
               </div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#1C2421', fontFamily: 'Georgia, serif' }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#1C2421', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>
                 Alerta de Concentração
               </div>
             </div>

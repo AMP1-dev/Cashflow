@@ -43,7 +43,7 @@ export function RelatorioBancosModal({ lancamentosMes, mesLabel, ano, onClose })
         <div id="print-area" style={{ padding: 32, overflowY: 'auto', flex: 1, backgroundColor: '#fff' }}>
           
           <div style={{ textAlign: 'center', marginBottom: 24, borderBottom: '2px solid #1C2421', paddingBottom: 16 }}>
-            <h1 style={{ margin: 0, fontSize: 24, fontFamily: 'Georgia, serif', color: '#1C2421' }}>Relatório Analítico de Bancos e Contas</h1>
+            <h1 style={{ margin: 0, fontSize: 24, fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontWeight: 700, color: '#1C2421' }}>Relatório Analítico de Bancos e Contas</h1>
             <h2 style={{ margin: '8px 0 0 0', fontSize: 16, color: '#5C5A4F', fontWeight: 500 }}>Período: {mesLabel} de {ano}</h2>
           </div>
 

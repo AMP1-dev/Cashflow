@@ -426,16 +426,16 @@ export function CalculadoraRH({ mesAtual, anoAtual, empresaId, onClose }) {
             </div>
 
             {/* Dark Card: Custo Hora Técnica */}
-            <div style={{ background: '#0F2B27', borderRadius: 12, overflow: 'hidden', color: '#FAF8F3', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+            <div style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', borderRadius: 12, overflow: 'hidden', color: '#FAF8F3', boxShadow: '0 4px 14px rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
               <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <div>
-                  <div style={{ fontSize: 12, color: '#9FBDB5', textTransform: 'uppercase' }}>Custo Total por Dia</div>
-                  <div style={{ fontSize: 24, fontWeight: 700, color: '#CFEEE2' }}>{formatBRL(calc.custoDia)}</div>
+                  <div style={{ fontSize: 12, color: '#C5BBDC', textTransform: 'uppercase' }}>Custo Total por Dia</div>
+                  <div style={{ fontSize: 24, fontWeight: 700, color: '#FAF8F3' }}>{formatBRL(calc.custoDia)}</div>
                 </div>
                 <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 14 }}>
-                  <div style={{ fontSize: 13, color: '#9FBDB5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Custo da Hora Técnica</div>
-                  <div style={{ fontSize: 36, fontWeight: 700, color: '#9FE0C8', fontFamily: 'Georgia, serif' }}>{formatBRL(calc.custoHora)}</div>
-                  <div style={{ fontSize: 11, color: '#9FBDB5', marginTop: 4 }}>Esse valor agora pode ser usado nas suas Fichas Técnicas.</div>
+                  <div style={{ fontSize: 13, color: '#C5BBDC', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Custo da Hora Técnica</div>
+                  <div style={{ fontSize: 36, fontWeight: 800, color: '#34D399', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>{formatBRL(calc.custoHora)}</div>
+                  <div style={{ fontSize: 11, color: '#C5BBDC', marginTop: 4 }}>Esse valor agora pode ser usado nas suas Fichas Técnicas.</div>
                 </div>
               </div>
             </div>

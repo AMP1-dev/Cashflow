@@ -234,16 +234,25 @@ export function Dashboard({
 
   return (
     <div style={{ padding: 16 }}>
-      {/* ── CARD PRINCIPAL: SALDO DO CAIXA (COMPACTO & ELEGANTE) ── */}
-      <div style={{ background: '#0F2B27', borderRadius: 16, padding: '18px 16px 16px', color: '#FAF8F3', marginBottom: botoesModulos.length > 0 ? 10 : 14, boxShadow: '0 4px 14px rgba(15,43,39,0.15)', textAlign: 'center' }}>
-        <div style={{ fontSize: 11, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3 }}>
+      {/* ── CARD PRINCIPAL: SALDO DO CAIXA (COMPACTO & ELEGANTE NO TOM BERINJELA AMP) ── */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', 
+        borderRadius: 16, 
+        padding: '18px 16px 16px', 
+        color: '#FAF8F3', 
+        marginBottom: botoesModulos.length > 0 ? 10 : 14, 
+        boxShadow: '0 6px 22px rgba(24, 18, 38, 0.32)', 
+        border: '1px solid rgba(232, 163, 61, 0.22)',
+        textAlign: 'center' 
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: '#C5BBDC', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 3, fontFamily: 'var(--font-sans)' }}>
           Resultado Financeiro do Mês (Sobra de Caixa)
         </div>
         
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: saldoCaixa >= 0 ? '#9FE0C8' : '#EF4444', margin: '2px 0 2px' }}>
+        <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 34, fontWeight: 800, color: saldoCaixa >= 0 ? '#34D399' : '#EF4444', margin: '2px 0 2px', letterSpacing: -0.5 }}>
           {formatBRL(saldoCaixa)}
         </div>
-        <div style={{ fontSize: 11, color: '#7EA299', marginBottom: 8 }}>
+        <div style={{ fontSize: 11, color: '#A99BC2', marginBottom: 8, fontFamily: 'var(--font-sans)' }}>
           Entradas Pagas (−) Saídas Pagas no Mês
         </div>
 
@@ -256,7 +265,8 @@ export function Dashboard({
               color: '#FCD34D', 
               background: 'rgba(232, 163, 61, 0.16)', 
               border: '1px solid rgba(232, 163, 61, 0.38)', 
-              padding: '2px 10px', borderRadius: 20 
+              padding: '2px 10px', borderRadius: 20,
+              fontFamily: 'var(--font-sans)'
             }}>
               <span>DRE Econômica: {formatBRL(peCalculo.resultadoDRE)} ({peCalculo.resultadoDRE >= 0 ? 'Lucro' : 'Prejuízo Operacional'})</span>
             </div>
@@ -266,19 +276,19 @@ export function Dashboard({
         {/* Bloco: Receitas vs Despesas Pagas */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, borderTop: '1px solid rgba(255, 255, 255, 0.1)', paddingTop: 10 }}>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 10.5, color: '#9FE0C8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 2 }}>
+            <div style={{ fontSize: 10.5, color: '#34D399', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 2, fontWeight: 600 }}>
               <ArrowUpCircle size={12} /> Receitas
             </div>
-            <div style={{ fontSize: 14.5, fontWeight: 600, color: '#CFEEE2' }}>{formatBRL(totalReceita)}</div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#E0F2FE', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>{formatBRL(totalReceita)}</div>
           </div>
 
           <div style={{ width: 1, height: 26, background: 'rgba(255, 255, 255, 0.15)' }} />
 
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: 10.5, color: '#F0BE94', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 2 }}>
+            <div style={{ fontSize: 10.5, color: '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginBottom: 2, fontWeight: 600 }}>
               <ArrowDownCircle size={12} /> Despesas Pagas
             </div>
-            <div style={{ fontSize: 14.5, fontWeight: 600, color: '#F5D5B8' }}>{formatBRL(totalDespesa)}</div>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FEF3C7', fontFamily: 'var(--font-display, "Outfit", sans-serif)' }}>{formatBRL(totalDespesa)}</div>
           </div>
         </div>
       </div>
@@ -286,7 +296,7 @@ export function Dashboard({
       {/* ── BANNER DE LIMPEZA DE TRANSFERÊNCIAS / NÃO-OPERACIONAIS ── */}
       {transferenciasDetectadas.length > 0 && onOcultarTransferencias && (
         <div style={{
-          background: 'linear-gradient(135deg, #1C332D 0%, #152622 100%)',
+          background: 'linear-gradient(135deg, #241A35 0%, #1A1326 100%)',
           border: '1px solid #E8A33D',
           borderRadius: 14,
           padding: '12px 14px',
@@ -295,13 +305,13 @@ export function Dashboard({
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: 12,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+          boxShadow: '0 4px 14px rgba(0,0,0,0.25)'
         }}>
           <div>
             <div style={{ fontSize: 12, fontWeight: 700, color: '#FCD34D', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
               <span>⚡ {transferenciasDetectadas.length} Movimentações Internas Detectadas</span>
             </div>
-            <div style={{ fontSize: 11, color: '#C8DBD5' }}>
+            <div style={{ fontSize: 11, color: '#C5BBDC' }}>
               Resgates RDB, empréstimos e transferências que inflavam a DRE deste mês.
             </div>
           </div>
@@ -314,7 +324,7 @@ export function Dashboard({
             style={{
               padding: '7px 12px',
               background: '#E8A33D',
-              color: '#0F2B27',
+              color: '#181324',
               fontWeight: 700,
               fontSize: 11.5,
               borderRadius: 8,
@@ -424,7 +434,7 @@ export function Dashboard({
               <Target size={15} color={!peCalculo.temCustos ? '#1F5C52' : !peCalculo.mcPositiva ? '#D97706' : (peCalculo.atingiu ? '#1F5C52' : '#DC2626')} />
             </div>
             <div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2B27' }}>Ponto de Equilíbrio</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>Ponto de Equilíbrio</span>
               {peCalculo.temCustos && (
                 <span style={{ fontSize: 11, color: '#5C5A4F', marginLeft: 6 }}>
                   {peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0
@@ -527,9 +537,9 @@ export function Dashboard({
                   e.stopPropagation();
                   setShowTradutorModal(true);
                 }} 
-                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #10B981', background: 'linear-gradient(135deg, #0F2B27 0%, #1A4740 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#FAF8F3', fontSize: 12, fontWeight: 700, boxShadow: '0 2px 6px rgba(15,43,39,0.15)' }}
+                style={{ width: '100%', padding: '10px 12px', borderRadius: 8, border: '1px solid #7C3AED', background: 'linear-gradient(135deg, #221833 0%, #2E1F47 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#FAF8F3', fontSize: 12, fontWeight: 700, boxShadow: '0 2px 8px rgba(34,24,51,0.25)' }}
               >
-                <Sparkles size={14} color="#10B981" />
+                <Sparkles size={14} color="#C4B5FD" />
                 <span>Traduzir Diagnóstico (Linguagem Humana)</span>
                 <span style={{ fontSize: 9.5, background: '#25D366', color: '#fff', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>WhatsApp</span>
               </button>
@@ -561,23 +571,23 @@ export function Dashboard({
           style={{ 
             padding: '14px 14px', 
             borderRadius: 14, 
-            border: 'none',
-            background: 'linear-gradient(135deg, #134E43 0%, #1F5C52 100%)', 
+            border: '1px solid rgba(52, 211, 153, 0.35)',
+            background: 'linear-gradient(135deg, #1C1628 0%, #281D3C 100%)', 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between', 
             cursor: 'pointer', 
             textAlign: 'left', 
-            boxShadow: '0 4px 14px rgba(19, 78, 67, 0.25)', 
+            boxShadow: '0 4px 14px rgba(28, 22, 40, 0.25)', 
             minHeight: 82, 
             transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+            <div style={{ background: 'rgba(52, 211, 153, 0.18)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34D399' }}>
               <ArrowUpCircle size={20} />
             </div>
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#0F2B27', background: '#9FE0C8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#064E3B', background: '#A7F3D0', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
               + ENTRADA
             </span>
           </div>
@@ -585,7 +595,7 @@ export function Dashboard({
             <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
               Lançar Receita
             </div>
-            <div style={{ fontSize: 11, color: '#CFEEE2', marginTop: 1, fontWeight: 500 }}>
+            <div style={{ fontSize: 11, color: '#C5BBDC', marginTop: 1, fontWeight: 500 }}>
               Venda / Entrada
             </div>
           </div>
@@ -597,23 +607,23 @@ export function Dashboard({
           style={{ 
             padding: '14px 14px', 
             borderRadius: 14, 
-            border: 'none',
-            background: 'linear-gradient(135deg, #9C3814 0%, #B05A2E 100%)', 
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            background: 'linear-gradient(135deg, #261622 0%, #381C2C 100%)', 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between', 
             cursor: 'pointer', 
             textAlign: 'left', 
-            boxShadow: '0 4px 14px rgba(176, 90, 46, 0.25)', 
+            boxShadow: '0 4px 14px rgba(38, 22, 34, 0.25)', 
             minHeight: 82, 
             transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ background: 'rgba(255, 255, 255, 0.2)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF' }}>
+            <div style={{ background: 'rgba(239, 68, 68, 0.18)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F87171' }}>
               <ArrowDownCircle size={20} />
             </div>
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#4A1D0B', background: '#FDD1B8', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#7F1D1D', background: '#FECACA', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
               - SAÍDA
             </span>
           </div>
@@ -621,7 +631,7 @@ export function Dashboard({
             <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
               Lançar Despesa
             </div>
-            <div style={{ fontSize: 11, color: '#FDE8DC', marginTop: 1, fontWeight: 500 }}>
+            <div style={{ fontSize: 11, color: '#E2CBD5', marginTop: 1, fontWeight: 500 }}>
               Conta / Pagamento
             </div>
           </div>

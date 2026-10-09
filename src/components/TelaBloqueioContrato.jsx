@@ -55,7 +55,7 @@ export function TelaBloqueioContrato({
           fontWeight: 800,
           color: '#111827',
           margin: '0 0 8px',
-          fontFamily: 'Georgia, serif'
+          fontFamily: 'var(--font-display, "Outfit", sans-serif)'
         }}>
           Acesso Temporariamente Suspenso
         </h1>

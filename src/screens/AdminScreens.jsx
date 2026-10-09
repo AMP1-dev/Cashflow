@@ -35,7 +35,7 @@ export function AdminLoginScreen({ onLogin, onVoltar }) {
         </button>
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, color: '#F2F3F5' }}>Acesso administrativo</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 22, fontWeight: 700, color: '#F2F3F5' }}>Acesso administrativo</div>
           <div style={{ fontSize: 13, color: '#9298A3', marginTop: 4 }}>Gestão de assinantes — AMP Flow</div>
         </div>
 
@@ -157,7 +157,7 @@ export function AdminPanel({ assinantes, onAtualizarDados, onSair, onRecuperarSe
       <div style={{ background: '#1A1D21', color: '#F2F3F5', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <div style={{ fontSize: 11, color: '#9298A3' }}>Painel administrativo</div>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 17 }}>Assinantes — AMP Flow</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 17, fontWeight: 700 }}>Assinantes — AMP Flow</div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {onVoltarEmpresa && (

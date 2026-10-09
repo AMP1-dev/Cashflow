@@ -467,7 +467,7 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
           </button>
         )}
 
-        <div style={{ fontFamily: 'Georgia, serif', fontSize: 21, color: '#1C2421', marginBottom: 2 }}>Diagnóstico do Negócio</div>
+        <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 22, fontWeight: 700, color: '#1C2421', marginBottom: 2 }}>Diagnóstico do Negócio</div>
         <div style={{ fontSize: 12.5, color: '#7A7868', marginBottom: 16 }}>
           Avalie a maturidade financeira da {empresaNome ? <strong>{empresaNome}</strong> : 'sua empresa'}
         </div>
@@ -672,10 +672,10 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
       <div style={{ marginBottom: 14 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#1F5C52', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: 0.5 }}>
               Diagnóstico de Gestão Financeira
             </div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: 20, color: '#1C2421' }}>
+            <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 20, fontWeight: 700, color: '#1C2421' }}>
               {usuarioNome ? `${usuarioNome}` : 'Avaliação da Empresa'} {empresaNome && `· ${empresaNome}`}
             </div>
           </div>
@@ -691,7 +691,7 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
             <div style={{ fontSize: 10.5, color: '#9C9A8F', marginBottom: 2 }}>Pontuação Geral de Maturidade</div>
-            <div style={{ fontFamily: 'Georgia, serif', fontSize: 28, fontWeight: 700, color: '#1C2421' }}>
+            <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 28, fontWeight: 800, color: '#1C2421' }}>
               {scoreTotal}<span style={{ fontSize: 14, color: '#9C9A8F' }}>/{maxTotal} pts ({(pctTotal * 100).toFixed(0)}%)</span>
             </div>
           </div>
@@ -712,20 +712,20 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
       </div>
 
       {/* ── CARD CHAMADA DE CURIOSIDADE: CONSULTORIA DA IA EM MODAL ── */}
-      <div style={{ background: '#0F2B27', borderRadius: 14, padding: '16px', color: '#FAF8F3', marginBottom: 16, boxShadow: '0 4px 14px rgba(15,43,39,0.12)' }}>
+      <div style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', borderRadius: 14, padding: '16px', color: '#FAF8F3', marginBottom: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(159, 224, 200, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Bot size={18} color="#9FE0C8" />
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: 'rgba(232, 163, 61, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Bot size={18} color="#E8A33D" />
           </div>
           <div>
-            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#9FE0C8' }}>Quer que a IA avalie esses pontos para você?</div>
-            <div style={{ fontSize: 11, color: '#9FBDB5' }}>Consultoria tática e plano de ação para {segmentoObj.label}</div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: '#FAF8F3' }}>Quer que a IA avalie esses pontos para você?</div>
+            <div style={{ fontSize: 11, color: '#C5BBDC' }}>Consultoria tática e plano de ação para {segmentoObj.label}</div>
           </div>
         </div>
 
         <button
           onClick={() => setShowIAModal(true)}
-          style={{ width: '100%', padding: '11px 14px', marginTop: 10, borderRadius: 10, border: 'none', background: '#9FE0C8', color: '#0F2B27', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s ease' }}
+          style={{ width: '100%', padding: '11px 14px', marginTop: 10, borderRadius: 10, border: 'none', background: '#E8A33D', color: '#181324', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s ease', boxShadow: '0 2px 8px rgba(232,163,61,0.25)' }}
         >
           <Sparkles size={15} />
           <span>Ver Parecer da IA & Plano de Ação Personalizado</span>
@@ -734,7 +734,7 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
       </div>
 
       {/* Detalhamento por Área */}
-      <div style={{ fontFamily: 'Georgia, serif', fontSize: 16, color: '#1C2421', marginBottom: 10 }}>Detalhamento por Área</div>
+      <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 16, fontWeight: 700, color: '#1C2421', marginBottom: 10 }}>Detalhamento por Área</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
         {AREAS.map((area, i) => {
           const sc = scores[i];
@@ -772,20 +772,20 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
 
       {/* ── MODAL: PARECER COMPLETO DA IA CONSULTORA ── */}
       {showIAModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          <div style={{ background: '#0F2B27', borderRadius: 18, color: '#FAF8F3', width: '100%', maxWidth: 440, maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.36)', border: '1px solid #234A42', overflow: 'hidden' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999, background: 'rgba(24,20,36,0.7)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#1C1628', borderRadius: 18, color: '#FAF8F3', width: '100%', maxWidth: 440, maxHeight: '88vh', display: 'flex', flexDirection: 'column', boxShadow: '0 8px 32px rgba(0,0,0,0.4)', border: '1px solid #382B50', overflow: 'hidden' }}>
             {/* Header Modal */}
-            <div style={{ padding: '16px 18px', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(159, 224, 200, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Bot size={17} color="#9FE0C8" />
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: 'rgba(232, 163, 61, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Bot size={17} color="#E8A33D" />
                 </div>
                 <div>
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#9FE0C8' }}>Parecer da IA Consultora</div>
-                  <div style={{ fontSize: 10.5, color: '#9FBDB5' }}>Plano tático para {usuarioNome ? `${usuarioNome} · ` : ''}{segmentoObj.label}</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: '#FAF8F3' }}>Parecer da IA Consultora</div>
+                  <div style={{ fontSize: 10.5, color: '#C5BBDC' }}>Plano tático para {usuarioNome ? `${usuarioNome} · ` : ''}{segmentoObj.label}</div>
                 </div>
               </div>
-              <button onClick={() => setShowIAModal(false)} style={{ background: 'none', border: 'none', color: '#9FBDB5', cursor: 'pointer', padding: 4 }}>
+              <button onClick={() => setShowIAModal(false)} style={{ background: 'none', border: 'none', color: '#C5BBDC', cursor: 'pointer', padding: 4 }}>
                 <X size={18} />
               </button>
             </div>
@@ -831,10 +831,10 @@ export function DiagnosticoScreen({ usuarioNome, empresaNome, onVoltar }) {
             </div>
 
             {/* Footer Modal */}
-            <div style={{ padding: '12px 18px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)' }}>
+            <div style={{ padding: '12px 18px', borderTop: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)' }}>
               <button
                 onClick={() => setShowIAModal(false)}
-                style={{ width: '100%', padding: '11px', borderRadius: 10, border: 'none', background: '#9FE0C8', color: '#0F2B27', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                style={{ width: '100%', padding: '11px', borderRadius: 10, border: 'none', background: '#E8A33D', color: '#181324', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
               >
                 Concluir Leitura do Parecer
               </button>

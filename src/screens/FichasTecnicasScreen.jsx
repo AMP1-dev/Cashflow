@@ -371,7 +371,7 @@ function FichaTecnicaForm({ ficha, empresaId, onSalvarEContinuar, onSalvarEFecha
                         <ChevronLeft size={15} /> Voltar para fichas técnicas
                     </button>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                        <span style={{ fontFamily: 'Georgia, serif', fontSize: 19 }}>{editando ? 'Editar ficha técnica' : 'Nova ficha técnica'}</span>
+                        <span style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 19, fontWeight: 700 }}>{editando ? 'Editar ficha técnica' : 'Nova ficha técnica'}</span>
                         <button
                             onClick={() => setIsAjudaFichaOpen(true)}
                             style={{ background: '#E6F4F1', border: '1px solid #B8E0D7', borderRadius: 8, padding: '3px 8px', color: '#1F5C52', fontSize: 11, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}

@@ -345,7 +345,7 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
 
         {/* Cabeçalho */}
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 24, fontWeight: 700, color: '#1C2421' }}>Gestão à Vista</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 24, fontWeight: 700, color: '#1C2421' }}>Gestão à Vista</div>
           <div style={{ fontSize: 12.5, color: '#7A7868', marginTop: 1 }}>{MESES[mesAtual]} de {anoAtual}</div>
         </div>
 
@@ -354,21 +354,21 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
           
           {/* Coluna 1: Meta Diária e Saldo com Ponto de Equilíbrio Embutido */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ background: '#0F2B27', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,43,39,0.1)' }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>
+            <div style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#C5BBDC', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>
                 Meta Diária de Vendas
               </div>
-              <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: '#9FE0C8', margin: '4px 0' }}>
+              <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 32, fontWeight: 800, color: '#FAF8F3', margin: '4px 0' }}>
                 {formatBRL(metaDiaria)}
               </div>
-              <div style={{ fontSize: 12, color: '#CFEEE2' }}>/ {diasNoMes} dias</div>
+              <div style={{ fontSize: 12, color: '#C5BBDC' }}>/ {diasNoMes} dias</div>
             </div>
 
-            <div style={{ background: '#0F2B27', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', boxShadow: '0 2px 8px rgba(15,43,39,0.1)' }}>
-              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 }}>
+            <div style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontSize: 11.5, fontWeight: 700, color: '#C5BBDC', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 }}>
                 Saldo do Caixa (Financeiro)
               </div>
-              <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: saldo >= 0 ? '#9FE0C8' : '#EF4444', margin: '2px 0 6px' }}>
+              <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 32, fontWeight: 800, color: saldo >= 0 ? '#34D399' : '#EF4444', margin: '2px 0 6px' }}>
                 {formatBRL(saldo)}
               </div>
               <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
@@ -575,7 +575,7 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
         
         {/* Cabeçalho */}
         <div style={{ textAlign: 'center', marginBottom: 2 }}>
-          <div style={{ fontFamily: 'Georgia, serif', fontSize: 22, fontWeight: 700, color: '#1C2421' }}>Gestão à Vista</div>
+          <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 22, fontWeight: 700, color: '#1C2421' }}>Gestão à Vista</div>
           <div style={{ fontSize: 12, color: '#7A7868', marginTop: 1 }}>{MESES[mesAtual]} de {anoAtual}</div>
         </div>
 
@@ -584,22 +584,22 @@ export function GestaoAVistaScreen({ lancamentosAno = [], mesAtual = new Date().
           
           {/* Coluna 1: Hero Escuros */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, height: '100%' }}>
-            <div className="print-card" style={{ background: '#0F2B27', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 120, boxSizing: 'border-box', flex: 1 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>
+            <div className="print-card" style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 120, boxSizing: 'border-box', flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#C5BBDC', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 4 }}>
                 Meta Diária de Vendas
               </div>
-              <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: '#9FE0C8', margin: '4px 0' }}>
+              <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 32, fontWeight: 800, color: '#FAF8F3', margin: '4px 0' }}>
                 {formatBRL(metaDiaria)}
               </div>
-              <div style={{ fontSize: 12, color: '#CFEEE2', marginTop: 2 }}>/ {diasNoMes} dias</div>
+              <div style={{ fontSize: 12, color: '#C5BBDC', marginTop: 2 }}>/ {diasNoMes} dias</div>
             </div>
 
-            <div className="print-card" style={{ background: '#0F2B27', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 120, boxSizing: 'border-box', flex: 1 }}>
+            <div className="print-card" style={{ background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)', borderRadius: 14, padding: '16px', color: '#FAF8F3', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 120, boxSizing: 'border-box', flex: 1 }}>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', flex: 1, paddingBottom: 6 }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#9FBDB5', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#C5BBDC', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 2 }}>
                   Saldo do Caixa (Financeiro)
                 </div>
-                <div style={{ fontFamily: 'Georgia, serif', fontSize: 32, fontWeight: 700, color: saldo >= 0 ? '#9FE0C8' : '#EF4444', margin: '2px 0 6px' }}>
+                <div style={{ fontFamily: 'var(--font-display, "Outfit", sans-serif)', fontSize: 32, fontWeight: 800, color: saldo >= 0 ? '#34D399' : '#EF4444', margin: '2px 0 6px' }}>
                   {formatBRL(saldo)}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 2 }}>
