@@ -248,7 +248,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
           onClick={() => setRegime('caixa')}
           style={{
             flex: 1, padding: '8px 12px', borderRadius: 9, border: 'none',
-            background: regime === 'caixa' ? '#0F2B27' : 'transparent',
+            background: regime === 'caixa' ? '#1C1628' : 'transparent',
             color: regime === 'caixa' ? '#FAF8F3' : '#5C5A4F',
             fontWeight: regime === 'caixa' ? 700 : 500,
             fontSize: 12, cursor: 'pointer', transition: 'all 0.15s'
@@ -260,7 +260,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
           onClick={() => setRegime('competencia')}
           style={{
             flex: 1, padding: '8px 12px', borderRadius: 9, border: 'none',
-            background: regime === 'competencia' ? '#0F2B27' : 'transparent',
+            background: regime === 'competencia' ? '#1C1628' : 'transparent',
             color: regime === 'competencia' ? '#FAF8F3' : '#5C5A4F',
             fontWeight: regime === 'competencia' ? 700 : 500,
             fontSize: 12, cursor: 'pointer', transition: 'all 0.15s'
@@ -277,9 +277,9 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
         <button 
           onClick={() => alternarProvisao(!provisaoAtiva)}
           style={{
-            background: provisaoAtiva ? '#D9EBE6' : '#F0EDE3',
-            color: provisaoAtiva ? '#1F5C52' : '#5C5A4F',
-            border: `1px solid ${provisaoAtiva ? '#1F5C52' : '#D1CFC7'}`,
+            background: provisaoAtiva ? '#FFFBEB' : '#F0EDE3',
+            color: provisaoAtiva ? '#92400E' : '#5C5A4F',
+            border: `1px solid ${provisaoAtiva ? '#F59E0B' : '#D1CFC7'}`,
             padding: '3px 8px', borderRadius: 8, fontSize: 10.5, fontWeight: 600, cursor: 'pointer'
           }}
         >
@@ -305,27 +305,27 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
                 width: '100%',
                 padding: '12px 14px',
                 borderRadius: 14,
-                border: '1px solid #10B981',
-                background: 'linear-gradient(135deg, #0F2B27 0%, #173E38 100%)',
+                border: '1px solid #7C3AED',
+                background: 'linear-gradient(135deg, #1C1628 0%, #291F3B 100%)',
                 color: '#FAF8F3',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 cursor: 'pointer',
                 marginBottom: 4,
-                boxShadow: '0 4px 12px rgba(15, 43, 39, 0.15)',
+                boxShadow: '0 4px 14px rgba(28, 22, 40, 0.25)',
                 transition: 'transform 0.15s ease'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
-                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  background: 'linear-gradient(135deg, #E8A33D 0%, #D97706 100%)',
                   padding: '6px 8px',
                   borderRadius: 8,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(16,185,129,0.3)'
+                  boxShadow: '0 2px 6px rgba(232,163,61,0.3)'
                 }}>
                   <Sparkles size={16} color="#fff" />
                 </div>
@@ -334,12 +334,12 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
                     Traduzir Diagnóstico (Linguagem Humana)
                     <span style={{ fontSize: 10, background: '#25D366', color: '#fff', padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>WhatsApp</span>
                   </div>
-                  <div style={{ fontSize: 11, color: '#9FE0C8' }}>
+                  <div style={{ fontSize: 11, color: '#C5BBDC' }}>
                     Explicação do Ponto de Equilíbrio, DRE vs Caixa e comparativo
                   </div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#9FE0C8', fontSize: 12, fontWeight: 600 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: '#E8A33D', fontSize: 12, fontWeight: 600 }}>
                 <span>Abrir</span>
                 <ChevronRight size={15} />
               </div>
@@ -348,7 +348,7 @@ export function DREScreen({ lancamentos, lancamentosAno, mesAtual, anoAtual, emp
 
           {/* Botões de ação */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <button onClick={() => setModalEstoqueAberto(true)} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #1F5C52', background: '#D9EBE6', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#1F5C52' }}>
+            <button onClick={() => setModalEstoqueAberto(true)} style={{ flex: 1, padding: '11px', borderRadius: 12, border: '1px solid #F59E0B', background: '#FFFBEB', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#92400E' }}>
               <PackageCheck size={16} />
               <span style={{ fontSize: 12.5, fontWeight: 600 }}>Apurar por Estoque</span>
             </button>

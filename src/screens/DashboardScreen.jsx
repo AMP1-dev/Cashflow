@@ -155,8 +155,17 @@ export function Dashboard({
     
     const atingiu = faturamento >= pontoEquilibrio && pontoEquilibrio > 0;
     const falta = Math.max(0, pontoEquilibrio - faturamento);
-    const pctAtingido = pontoEquilibrio > 0 ? Math.round((faturamento / pontoEquilibrio) * 100) : (faturamento > 0 ? 100 : 0);
-    const progressoPct = Math.min(100, pctAtingido);
+    
+    // Percentual rumo ao Ponto de Equilíbrio com teto em 100% (atingiu a meta de cobrir a estrutura fixa)
+    const progressoPct = pontoEquilibrio > 0 
+      ? Math.min(100, Math.round((faturamento / pontoEquilibrio) * 100)) 
+      : (faturamento > 0 ? 100 : 0);
+    
+    // Inteligência de custos mínimos: empresas ativas costumam ter custos fixos de ao menos 10% do faturamento
+    const custosMinimosEsperados = faturamento * 0.10;
+    const baseParcial = custosFixos > 0 && faturamento > 0 && custosFixos < custosMinimosEsperados;
+    const pctFixosSobreFat = faturamento > 0 ? ((custosFixos / faturamento) * 100).toFixed(1) : 0;
+    
     const margemSeguranca = faturamento - pontoEquilibrio;
 
     return {
@@ -172,8 +181,10 @@ export function Dashboard({
       resultadoDRE,
       atingiu,
       falta,
-      pctAtingido,
+      pctAtingido: progressoPct,
       progressoPct,
+      baseParcial,
+      pctFixosSobreFat,
       margemSeguranca,
       temCustos: custosFixos > 0
     };
@@ -213,9 +224,9 @@ export function Dashboard({
         label: 'NFS-e',
         icon: FileText,
         onClick: onAbrirNfse,
-        color: '#1F5C52',
-        border: '1px solid rgba(31, 92, 82, 0.35)',
-        bg: '#F2FAF7',
+        color: '#4B5563',
+        border: '1px solid #E5E7EB',
+        bg: '#FFFFFF',
       });
     }
     if (ehDono && onAbrirEquipe) {
@@ -391,17 +402,11 @@ export function Dashboard({
       {ehDono && (
         <div style={{ 
           background: '#fff', 
-          border: `1px solid ${
-            !peCalculo.temCustos 
-              ? '#D8D4C8' 
-              : !peCalculo.mcPositiva 
-              ? '#FDE68A' 
-              : (peCalculo.atingiu ? '#CFEAD9' : '#FCA5A5')
-          }`, 
+          border: '1px solid #E5E7EB', 
           borderRadius: 14, 
           marginBottom: 14, 
           overflow: 'hidden', 
-          boxShadow: '0 2px 8px rgba(15, 43, 39, 0.06)' 
+          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)' 
         }}>
         {/* Cabeçalho Clicável */}
         <div 
@@ -412,11 +417,7 @@ export function Dashboard({
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center', 
-            background: !peCalculo.temCustos 
-              ? '#FFFFFF' 
-              : !peCalculo.mcPositiva 
-              ? '#FFFDF5' 
-              : (peCalculo.atingiu ? '#F5FAF7' : '#FEF2F2'),
+            background: '#FFFFFF',
             transition: 'background 0.15s ease'
           }}
         >
@@ -425,20 +426,20 @@ export function Dashboard({
               width: 28,
               height: 28,
               borderRadius: '50%',
-              background: !peCalculo.temCustos ? '#F0ECE1' : !peCalculo.mcPositiva ? '#FEF3C7' : (peCalculo.atingiu ? '#E6F4EA' : '#FEE2E2'),
+              background: !peCalculo.temCustos ? '#F3F4F6' : !peCalculo.mcPositiva ? '#FEF3C7' : (peCalculo.atingiu ? '#D1FAE5' : '#FEE2E2'),
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              <Target size={15} color={!peCalculo.temCustos ? '#1F5C52' : !peCalculo.mcPositiva ? '#D97706' : (peCalculo.atingiu ? '#1F5C52' : '#DC2626')} />
+              <Target size={15} color={!peCalculo.temCustos ? '#9CA3AF' : !peCalculo.mcPositiva ? '#D97706' : (peCalculo.atingiu ? '#059669' : '#DC2626')} />
             </div>
             <div>
               <span style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>Ponto de Equilíbrio</span>
               {peCalculo.temCustos && (
-                <span style={{ fontSize: 11, color: '#5C5A4F', marginLeft: 6 }}>
+                <span style={{ fontSize: 11, color: '#6B7280', marginLeft: 6 }}>
                   {peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0
-                    ? `(${peCalculo.pctAtingido}% alcançado)`
+                    ? (peCalculo.atingiu ? `(100% coberto${peCalculo.baseParcial ? ' preliminar' : ''})` : `(${peCalculo.progressoPct}% alcançado)`)
                     : `(Custos Fixos: ${formatBRL(peCalculo.custosFixos)})`
                   }
                 </span>
@@ -448,37 +449,37 @@ export function Dashboard({
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             {!peCalculo.temCustos ? (
-              <span style={{ fontSize: 11, fontWeight: 500, color: '#5C5A4F', background: '#F5F3ED', padding: '3px 9px', borderRadius: 6, border: '1px solid #E5E0D5' }}>Sem custos fixos</span>
+              <span style={{ fontSize: 11, fontWeight: 500, color: '#6B7280', background: '#F3F4F6', padding: '3px 9px', borderRadius: 6, border: '1px solid #E5E7EB' }}>Sem custos fixos</span>
             ) : !peCalculo.mcPositiva ? (
               <span style={{ fontSize: 10.5, fontWeight: 700, color: '#92400E', background: '#FEF3C7', border: '1px solid #FDE68A', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <AlertTriangle size={12} /> Margem Negativa
               </span>
             ) : peCalculo.atingiu ? (
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#1F5C52', background: '#CFEAD9', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                <CheckCircle2 size={12} /> Atingido!
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#065F46', background: '#D1FAE5', border: '1px solid #A7F3D0', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <CheckCircle2 size={12} /> {peCalculo.baseParcial ? '100% Coberto*' : '100% Coberto!'}
               </span>
             ) : (
               <span style={{ fontSize: 10.5, fontWeight: 700, color: '#DC2626', background: '#FEE2E2', border: '1px solid #FECACA', padding: '2px 8px', borderRadius: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                 <AlertTriangle size={12} /> Faltam {formatBRL(peCalculo.falta)}
               </span>
             )}
-            <ChevronDown size={16} color="#5C5A4F" style={{ transform: peExpandido ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+            <ChevronDown size={16} color="#6B7280" style={{ transform: peExpandido ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
           </div>
         </div>
 
         {/* Micro Barra de Progresso quando fechado (somente se margem for positiva) */}
         {!peExpandido && peCalculo.temCustos && peCalculo.mcPositiva && peCalculo.pontoEquilibrio > 0 && (
-          <div style={{ height: 3, background: '#F0EDE3' }}>
-            <div style={{ height: '100%', width: `${peCalculo.progressoPct}%`, background: peCalculo.atingiu ? '#1F5C52' : '#DC2626' }} />
+          <div style={{ height: 3, background: '#F3F4F6' }}>
+            <div style={{ height: '100%', width: `${peCalculo.progressoPct}%`, background: peCalculo.atingiu ? '#10B981' : '#DC2626' }} />
           </div>
         )}
 
         {/* Conteúdo Detalhado ao Expandir */}
         {peExpandido && (
-          <div style={{ padding: '14px 14px 16px', background: '#fff', borderTop: '1px solid #EFEBE0' }}>
+          <div style={{ padding: '14px 14px 16px', background: '#fff', borderTop: '1px solid #F3F4F6' }}>
             {!peCalculo.temCustos ? (
-              <div style={{ fontSize: 12, color: '#7A7868', padding: '6px 0 10px', lineHeight: 1.4 }}>
-                Cadastre suas despesas fixas (aluguel, salários, etc.) para o sistema calcular automaticamente a receita mínima necessária para cobrir a operação.
+              <div style={{ fontSize: 12, color: '#6B7280', padding: '6px 0 10px', lineHeight: 1.4 }}>
+                Cadastre suas despesas fixas (aluguel, salários, contador, etc.) para o sistema calcular automaticamente a receita mínima necessária para cobrir a operação.
               </div>
             ) : !peCalculo.mcPositiva ? (
               <div style={{ background: '#FFFDF5', border: '1px solid #FDE68A', borderRadius: 10, padding: '12px 14px', marginBottom: 12, fontSize: 12, color: '#78350F', lineHeight: 1.5 }}>
@@ -496,29 +497,29 @@ export function Dashboard({
               <>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
                   <div>
-                    <span style={{ fontSize: 11, color: '#7A7868' }}>Meta Mínima: </span>
+                    <span style={{ fontSize: 11, color: '#6B7280' }}>Meta Mínima: </span>
                     <strong style={{ fontSize: 15, color: '#1C2421' }}>{formatBRL(peCalculo.pontoEquilibrio)}</strong>
                   </div>
-                  <div style={{ fontSize: 12, color: '#5C5A4F' }}>
+                  <div style={{ fontSize: 12, color: '#4B5563' }}>
                     Vendido: <strong>{formatBRL(totalReceita)}</strong>
                   </div>
                 </div>
 
-                <div style={{ height: 7, background: '#F0EDE3', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
+                <div style={{ height: 7, background: '#F3F4F6', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
                   <div 
                     style={{ 
                       height: '100%', 
                       width: `${peCalculo.progressoPct}%`, 
-                      background: peCalculo.atingiu ? '#1F5C52' : '#DC2626', 
+                      background: peCalculo.atingiu ? '#10B981' : '#DC2626', 
                       borderRadius: 4
                     }} 
                   />
                 </div>
 
-                <div style={{ fontSize: 11.5, lineHeight: 1.45, padding: '10px 12px', borderRadius: 8, background: peCalculo.atingiu ? '#EAF4F0' : '#FEF2F2', border: `1px solid ${peCalculo.atingiu ? '#CFEAD9' : '#FECACA'}`, color: peCalculo.atingiu ? '#1F5C52' : '#991B1B', marginBottom: 12 }}>
+                <div style={{ fontSize: 11.5, lineHeight: 1.45, padding: '10px 12px', borderRadius: 8, background: peCalculo.atingiu ? '#ECFDF5' : '#FEF2F2', border: `1px solid ${peCalculo.atingiu ? '#A7F3D0' : '#FECACA'}`, color: peCalculo.atingiu ? '#065F46' : '#991B1B', marginBottom: peCalculo.baseParcial ? 8 : 12 }}>
                   {peCalculo.atingiu ? (
                     <span>
-                      🎉 <strong>Zona de Lucro Real!</strong> Sua empresa já cobriu todos os <strong>{formatBRL(peCalculo.custosFixos)}</strong> de custos fixos do mês. Cada nova venda agora gera lucro líquido direto (Margem de Segurança: <strong>+{formatBRL(peCalculo.margemSeguranca)}</strong>).
+                      🎉 <strong>Zona de Lucro Real!</strong> Sua empresa já cobriu todos os <strong>{formatBRL(peCalculo.custosFixos)}</strong> de custos fixos lançados no mês. Cada nova venda agora gera lucro líquido direto (Margem de Segurança: <strong>+{formatBRL(peCalculo.margemSeguranca)}</strong>).
                     </span>
                   ) : (
                     <span>
@@ -526,6 +527,12 @@ export function Dashboard({
                     </span>
                   )}
                 </div>
+
+                {peCalculo.baseParcial && (
+                  <div style={{ marginBottom: 12, padding: '9px 12px', borderRadius: 8, background: '#FFFBEB', border: '1px solid #FDE68A', fontSize: 11.5, color: '#92400E', lineHeight: 1.45 }}>
+                    💡 <strong>Custos fixos lançados ({formatBRL(peCalculo.custosFixos)} / {peCalculo.pctFixosSobreFat}% do faturamento):</strong> O ponto de equilíbrio foi 100% atingido para essa base inicial. Como empresas costumam ter ao menos 10% a 20% em despesas fixas operacionais (contador, aluguel, pró-labore, taxas), lance suas contas fixas completas do mês para a consolidação definitiva.
+                  </div>
+                )}
               </>
             )}
 
@@ -552,7 +559,7 @@ export function Dashboard({
                 e.stopPropagation();
                 if (onIrGestaoAVista) onIrGestaoAVista();
               }} 
-              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #CFEAD9', background: '#F5FAF7', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#1F5C52', fontSize: 12, fontWeight: 600 }}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid #E5E7EB', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', color: '#374151', fontSize: 12, fontWeight: 600 }}
             >
               <Presentation size={14} />
               <span>Ver Quadro de Metas & Gestão à Vista Completo</span>
@@ -563,75 +570,75 @@ export function Dashboard({
       </div>
       )}
 
-      {/* ── BOTÕES DE AÇÃO COM MÁXIMA ÊNFASE VISUAL (PROTAGONISTAS DO DASHBOARD) ── */}
+      {/* ── BOTÕES DE AÇÃO: CARDS CLAROS, ELEGANTES E DIFERENCIADOS ── */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-        {/* Botão + Receita com Alta Visibilidade */}
+        {/* Botão + Receita com Alta Visibilidade e Leveza */}
         <button 
           onClick={() => onNovo('receita')} 
           style={{ 
             padding: '14px 14px', 
             borderRadius: 14, 
-            border: '1px solid rgba(52, 211, 153, 0.35)',
-            background: 'linear-gradient(135deg, #1C1628 0%, #281D3C 100%)', 
+            border: '1.5px solid #10B981',
+            background: '#FFFFFF', 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between', 
             cursor: 'pointer', 
             textAlign: 'left', 
-            boxShadow: '0 4px 14px rgba(28, 22, 40, 0.25)', 
+            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.08)', 
             minHeight: 82, 
             transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ background: 'rgba(52, 211, 153, 0.18)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34D399' }}>
+            <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#059669' }}>
               <ArrowUpCircle size={20} />
             </div>
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#064E3B', background: '#A7F3D0', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#065F46', background: '#D1FAE5', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
               + ENTRADA
             </span>
           </div>
           <div style={{ marginTop: 8 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1C2421', letterSpacing: -0.2 }}>
               Lançar Receita
             </div>
-            <div style={{ fontSize: 11, color: '#C5BBDC', marginTop: 1, fontWeight: 500 }}>
+            <div style={{ fontSize: 11, color: '#059669', marginTop: 1, fontWeight: 600 }}>
               Venda / Entrada
             </div>
           </div>
         </button>
 
-        {/* Botão - Despesa com Alta Visibilidade */}
+        {/* Botão - Despesa com Alta Visibilidade e Leveza */}
         <button 
           onClick={() => onNovo('despesa')} 
           style={{ 
             padding: '14px 14px', 
             borderRadius: 14, 
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            background: 'linear-gradient(135deg, #261622 0%, #381C2C 100%)', 
+            border: '1.5px solid #F87171',
+            background: '#FFFFFF', 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between', 
             cursor: 'pointer', 
             textAlign: 'left', 
-            boxShadow: '0 4px 14px rgba(38, 22, 34, 0.25)', 
+            boxShadow: '0 2px 10px rgba(239, 68, 68, 0.08)', 
             minHeight: 82, 
             transition: 'transform 0.15s ease, box-shadow 0.15s ease' 
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-            <div style={{ background: 'rgba(239, 68, 68, 0.18)', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F87171' }}>
+            <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626' }}>
               <ArrowDownCircle size={20} />
             </div>
-            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#7F1D1D', background: '#FECACA', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 9.5, fontWeight: 800, color: '#991B1B', background: '#FEE2E2', padding: '2px 7px', borderRadius: 6, letterSpacing: 0.5 }}>
               - SAÍDA
             </span>
           </div>
           <div style={{ marginTop: 8 }}>
-            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#FFFFFF', letterSpacing: -0.2 }}>
+            <div style={{ fontSize: 14.5, fontWeight: 700, color: '#1C2421', letterSpacing: -0.2 }}>
               Lançar Despesa
             </div>
-            <div style={{ fontSize: 11, color: '#E2CBD5', marginTop: 1, fontWeight: 500 }}>
+            <div style={{ fontSize: 11, color: '#DC2626', marginTop: 1, fontWeight: 600 }}>
               Conta / Pagamento
             </div>
           </div>
@@ -647,7 +654,7 @@ export function Dashboard({
         >
           <span style={{ fontSize: 13, fontWeight: 700, color: '#1C2421' }}>Lançamentos recentes</span>
           {recentes.length > 0 && (
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#1F5C52', background: '#D9EBE6', padding: '1px 7px', borderRadius: 10 }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#4B5563', background: '#F3F4F6', padding: '1px 7px', borderRadius: 10 }}>
               {recentes.length}
             </span>
           )}
@@ -660,7 +667,7 @@ export function Dashboard({
           {onAbrirImportacao && (
             <button 
               onClick={onAbrirImportacao}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: '#D9EBE6', border: '1px solid #1F5C52', borderRadius: 8, fontSize: 11.5, fontWeight: 600, color: '#1F5C52', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 10px', background: '#fff', border: '1px solid #D1CFC7', borderRadius: 8, fontSize: 11.5, fontWeight: 600, color: '#1C2421', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}
             >
               <UploadCloud size={13} /> Importar
             </button>
