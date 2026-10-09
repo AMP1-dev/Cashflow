@@ -1,10 +1,11 @@
-import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText, Camera, Paperclip, FileCheck, ExternalLink, Loader2, Trash2, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, HelpCircle, Mic, AlertCircle, BookOpen, ChevronDown, ChevronUp, Check, Scissors, FileText, Camera, Paperclip, FileCheck, ExternalLink, Loader2, Trash2, CheckCircle2, Sparkles, RotateCw, ScanLine } from 'lucide-react';
 import { useMemo, useState, useRef } from 'react';
 import { BANCOS, CATEGORIAS, MESES, SUBCATEGORIAS_SUGERIDAS, PLANO_DE_CONTAS_SUGERIDO } from '../utils/constants';
 import { construirSugestoesDescricao, daysInMonth, formatBRL } from '../utils/formatters';
 import { ClassificacaoWizard } from './ClassificacaoWizard';
 import { FieldLabel, inputStyle, ModalShell, ToggleTipo } from './UIComponents';
 import { uploadComprovanteStorage } from '../utils/comprovanteStorageService';
+import { extrairTextoComprovante } from '../services/ocrReceiptService';
 
 export function NovoLancamentoModal({ 
   tipoInicial, 
@@ -58,39 +59,162 @@ export function NovoLancamentoModal({
   const [modalAlertaAberto, setModalAlertaAberto] = useState(false);
   const [alertaJaExibidoNoDia, setAlertaJaExibidoNoDia] = useState(false);
 
-  // Módulo Cofre Digital & Comprovantes Sem Papel
+  // Módulo Cofre Digital, Leitor OCR & Comprovantes Sem Papel
   const [comprovanteUrl, setComprovanteUrl] = useState(editando ? (lancamentoEditando.comprovante_url || '') : '');
   const [uploadingComprovante, setUploadingComprovante] = useState(false);
   const [comprovanteInfo, setComprovanteInfo] = useState(null);
+  const [ocrLendo, setOcrLendo] = useState(false);
+  const [ocrProgresso, setOcrProgresso] = useState(0);
+  const [ocrStatus, setOcrStatus] = useState('');
+  const [ocrResultado, setOcrResultado] = useState(null);
+  const [mostrarTextoOcr, setMostrarTextoOcr] = useState(false);
   const fileCameraRef = useRef(null);
   const fileUploadRef = useRef(null);
 
-  async function handleArquivoSelecionado(e) {
-    const file = e.target.files?.[0];
+  async function processarArquivoEExecutarOcr(file) {
     if (!file) return;
+    const isImage = file.type?.startsWith('image/') || /\.(jpe?g|png|webp|bmp)$/i.test(file.name || '');
+
     setUploadingComprovante(true);
+    if (isImage) {
+      setOcrLendo(true);
+      setOcrProgresso(15);
+      setOcrStatus('Otimizando imagem para leitura fiscal...');
+    }
+
     try {
-      const res = await uploadComprovanteStorage({
+      // 1. Upload e compactação automática para o Supabase Storage (~80KB WebP)
+      const uploadPromise = uploadComprovanteStorage({
         file,
         empresaId,
         lancamentoId: editando ? lancamentoEditando.id : null,
+      }).catch(err => {
+        console.warn('Erro ao salvar no storage:', err);
+        return null;
       });
-      if (res && res.url) {
-        setComprovanteUrl(res.url);
-        const kbOriginal = Math.round((res.tamanhoOriginal || 0) / 1024);
-        const kbFinal = Math.round((res.tamanhoFinal || 0) / 1024);
+
+      // 2. Extração OCR se for imagem
+      const ocrPromise = isImage 
+        ? extrairTextoComprovante(file, ({ status, pct }) => {
+            setOcrStatus(status);
+            setOcrProgresso(pct);
+          })
+        : Promise.resolve(null);
+
+      const [resUpload, resOcr] = await Promise.all([uploadPromise, ocrPromise]);
+
+      if (resUpload && resUpload.url) {
+        setComprovanteUrl(resUpload.url);
+        const kbOriginal = Math.round((resUpload.tamanhoOriginal || 0) / 1024);
+        const kbFinal = Math.round((resUpload.tamanhoFinal || 0) / 1024);
         setComprovanteInfo({
           original: kbOriginal,
           final: kbFinal,
           economia: kbOriginal > 0 ? Math.round((1 - kbFinal / kbOriginal) * 100) : 0,
         });
       }
+
+      if (resOcr && resOcr.sucesso) {
+        setOcrResultado(resOcr);
+
+        // Preenchimento inteligente dos campos do lançamento
+        if (resOcr.valorFormatado) {
+          setValor(resOcr.valorFormatado);
+        }
+
+        if (resOcr.descricaoSugerida) {
+          setDescricao(resOcr.descricaoSugerida);
+          setSugestaoEscolhidaManualmente(true);
+        } else if (resOcr.fornecedor) {
+          setDescricao(resOcr.fornecedor);
+          setSugestaoEscolhidaManualmente(true);
+        }
+
+        if (resOcr.dia) {
+          const diaNum = parseInt(resOcr.dia, 10);
+          if (diaNum >= 1 && diaNum <= 31) {
+            setDia(diaNum);
+          }
+        }
+
+        if (resOcr.mes !== null && resOcr.mes !== undefined) {
+          const mesIdx = resOcr.mes - 1;
+          if (mesIdx >= 0 && mesIdx <= 11) {
+            setMes(mesIdx);
+          }
+        }
+
+        if (resOcr.tipo) {
+          setTipo(resOcr.tipo);
+        }
+
+        if (resOcr.categoriaSugerida) {
+          setCategoria(resOcr.categoriaSugerida);
+        }
+
+        if (resOcr.subcategoriaSugerida) {
+          setSubcategoria(resOcr.subcategoriaSugerida);
+          setSugestaoEscolhidaManualmente(true);
+        }
+
+        if (resOcr.formaPagamento) {
+          const fp = resOcr.formaPagamento.toLowerCase();
+          if (fp.includes('pix')) setMeioPagamento('PIX');
+          else if (fp.includes('crédito') || fp.includes('credito') || fp.includes('débito') || fp.includes('debito') || fp.includes('cartão') || fp.includes('cartao')) setMeioPagamento('Cartão');
+          else if (fp.includes('boleto')) setMeioPagamento('Boleto');
+          else if (fp.includes('dinheiro')) setMeioPagamento('Dinheiro');
+          else if (fp.includes('transferência') || fp.includes('transferencia') || fp.includes('ted') || fp.includes('doc')) setMeioPagamento('Transferência');
+        }
+      } else if (resOcr && !resOcr.sucesso) {
+        console.warn('OCR não obteve sucesso:', resOcr.erro);
+      }
     } catch (err) {
       alert('Erro ao processar comprovante: ' + (err.message || String(err)));
     } finally {
       setUploadingComprovante(false);
-      e.target.value = '';
+      setOcrLendo(false);
     }
+  }
+
+  async function handleReexecutarOcr(url) {
+    if (!url) return;
+    setOcrLendo(true);
+    setOcrProgresso(15);
+    setOcrStatus('Re-analisando documento com motor OCR...');
+    try {
+      const resOcr = await extrairTextoComprovante(url, ({ status, pct }) => {
+        setOcrStatus(status);
+        setOcrProgresso(pct);
+      });
+      if (resOcr && resOcr.sucesso) {
+        setOcrResultado(resOcr);
+        if (resOcr.valorFormatado) setValor(resOcr.valorFormatado);
+        if (resOcr.descricaoSugerida) {
+          setDescricao(resOcr.descricaoSugerida);
+          setSugestaoEscolhidaManualmente(true);
+        }
+        if (resOcr.dia) setDia(parseInt(resOcr.dia, 10));
+        if (resOcr.mes !== null && resOcr.mes !== undefined) setMes(resOcr.mes - 1);
+        if (resOcr.categoriaSugerida) setCategoria(resOcr.categoriaSugerida);
+        if (resOcr.subcategoriaSugerida) {
+          setSubcategoria(resOcr.subcategoriaSugerida);
+          setSugestaoEscolhidaManualmente(true);
+        }
+      } else {
+        alert('Não foi possível identificar dados fiscais claros nesta imagem.');
+      }
+    } catch (err) {
+      alert('Erro na releitura OCR: ' + (err.message || String(err)));
+    } finally {
+      setOcrLendo(false);
+    }
+  }
+
+  function handleArquivoSelecionado(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processarArquivoEExecutarOcr(file);
+    e.target.value = '';
   }
 
   const realMesAtual = new Date().getMonth();
@@ -235,10 +359,149 @@ export function NovoLancamentoModal({
 
   return (
     <ModalShell onClose={onClose} titulo={editando ? 'Editar lançamento' : (tipo === 'despesa' ? 'Nova despesa' : 'Nova receita')}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+      {/* Inputs ocultos de Câmera e Arquivo (sempre disponíveis) */}
+      <input
+        ref={fileCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleArquivoSelecionado}
+        style={{ display: 'none' }}
+      />
+      <input
+        ref={fileUploadRef}
+        type="file"
+        accept="image/*,application/pdf"
+        onChange={handleArquivoSelecionado}
+        style={{ display: 'none' }}
+      />
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         <ToggleTipo label="Despesa" active={tipo === 'despesa'} color="#B05A2E" onClick={() => { setTipo('despesa'); }} />
         <ToggleTipo label="Receita" active={tipo === 'receita'} color="#1F5C52" onClick={() => setTipo('receita')} />
       </div>
+
+      {/* ── BOTÃO DE DESTAQUE: ESCANEAR CUPOM / FOTO COM OCR IA ── */}
+      <div style={{ marginBottom: 14 }}>
+        <button
+          type="button"
+          onClick={() => fileCameraRef.current?.click()}
+          disabled={ocrLendo || uploadingComprovante}
+          style={{
+            width: '100%',
+            padding: '10px 14px',
+            borderRadius: 12,
+            border: '1.5px solid #10B981',
+            background: 'linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 100%)',
+            color: '#065F46',
+            cursor: ocrLendo || uploadingComprovante ? 'wait' : 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 2px 6px rgba(16, 185, 129, 0.12)',
+            transition: 'all 0.18s ease',
+            opacity: ocrLendo || uploadingComprovante ? 0.75 : 1,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+            <div style={{ width: 34, height: 34, borderRadius: 8, background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', flexShrink: 0, boxShadow: '0 2px 4px rgba(16, 185, 129, 0.3)' }}>
+              <Camera size={18} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#064E3B', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span>📸 Escanear Cupom / Foto da Nota</span>
+                <span style={{ fontSize: 9.5, fontWeight: 800, background: '#059669', color: '#fff', padding: '1px 6px', borderRadius: 4, letterSpacing: '0.4px' }}>
+                  OCR IA
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: '#047857' }}>
+                Tire foto da despesa e preencha valor, fornecedor e categoria
+              </div>
+            </div>
+          </div>
+          <span style={{ fontSize: 11.5, fontWeight: 700, color: '#059669', padding: '4px 8px', borderRadius: 6, background: '#D1FAE5', flexShrink: 0 }}>
+            Tirar Foto
+          </span>
+        </button>
+      </div>
+
+      {/* ── STATUS E PROGRESSO DO OCR AO VIVO ── */}
+      {ocrLendo && (
+        <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 10, background: '#F0FDF4', border: '1.5px solid #10B981', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Loader2 size={16} className="spin" style={{ animation: 'spin 1s linear infinite', color: '#059669' }} />
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#065F46' }}>
+                Lendo Comprovante com IA...
+              </span>
+            </div>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#059669' }}>
+              {ocrProgresso}%
+            </span>
+          </div>
+          <div style={{ width: '100%', height: 6, background: '#D1FAE5', borderRadius: 99, overflow: 'hidden' }}>
+            <div style={{ width: `${ocrProgresso}%`, height: '100%', background: '#10B981', borderRadius: 99, transition: 'width 0.25s ease' }} />
+          </div>
+          <p style={{ fontSize: 11, color: '#047857', margin: '6px 0 0 0' }}>
+            {ocrStatus || 'Processando caracteres fiscais...'}
+          </p>
+        </div>
+      )}
+
+      {/* ── FEEDBACK DE CAMPOS EXTRAÍDOS PELO OCR ── */}
+      {ocrResultado && !ocrLendo && (
+        <div style={{ marginBottom: 14, padding: '12px 14px', borderRadius: 10, background: '#F0FDF4', border: '1.5px solid #34D399', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Sparkles size={16} color="#059669" />
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: '#065F46' }}>
+                Leitura Concluída • Campos Preenchidos
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setMostrarTextoOcr(!mostrarTextoOcr)}
+              style={{ fontSize: 11, fontWeight: 600, color: '#059669', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+            >
+              {mostrarTextoOcr ? 'Ocultar texto' : 'Ver texto da nota'}
+            </button>
+          </div>
+
+          <div style={{ fontSize: 11.5, color: '#047857', display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {ocrResultado.valorFormatado && (
+              <span style={{ background: '#D1FAE5', padding: '2px 7px', borderRadius: 6, fontWeight: 700 }}>
+                💰 R$ {ocrResultado.valorFormatado}
+              </span>
+            )}
+            {ocrResultado.fornecedor && (
+              <span style={{ background: '#D1FAE5', padding: '2px 7px', borderRadius: 6, fontWeight: 600 }}>
+                🏢 {ocrResultado.fornecedor}
+              </span>
+            )}
+            {ocrResultado.dia && (
+              <span style={{ background: '#D1FAE5', padding: '2px 7px', borderRadius: 6, fontWeight: 600 }}>
+                📅 Dia {ocrResultado.dia}
+              </span>
+            )}
+            {ocrResultado.formaPagamento && ocrResultado.formaPagamento !== 'Outros' && (
+              <span style={{ background: '#D1FAE5', padding: '2px 7px', borderRadius: 6, fontWeight: 600 }}>
+                💳 {ocrResultado.formaPagamento}
+              </span>
+            )}
+            {ocrResultado.subcategoriaSugerida && (
+              <span style={{ background: '#D1FAE5', padding: '2px 7px', borderRadius: 6, fontWeight: 600 }}>
+                🏷️ {ocrResultado.subcategoriaSugerida}
+              </span>
+            )}
+          </div>
+
+          {mostrarTextoOcr && ocrResultado.textoBruto && (
+            <div style={{ marginTop: 4, maxHeight: 110, overflowY: 'auto', background: '#FFFFFF', border: '1px solid #A7F3D0', borderRadius: 6, padding: '8px', fontSize: 10.5, fontFamily: 'monospace', color: '#334155', whiteSpace: 'pre-wrap' }}>
+              {ocrResultado.textoBruto}
+            </div>
+          )}
+        </div>
+      )}
 
       {ehMesDiferente && (
         <div style={{ marginBottom: 12, padding: '8px 10px', borderRadius: 8, background: '#FFF8E7', border: '1px solid #E8A33D', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -773,29 +1036,10 @@ export function NovoLancamentoModal({
             Tire foto do cupom pelo celular ou anexe PDF/imagem. As fotos são compactadas automaticamente (~80KB) para não consumir seu armazenamento.
           </p>
 
-          {/* Input oculto para Captura Direta da Câmera no Celular */}
-          <input
-            ref={fileCameraRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleArquivoSelecionado}
-            style={{ display: 'none' }}
-          />
-
-          {/* Input oculto para Upload de Arquivo do Disco / PDF */}
-          <input
-            ref={fileUploadRef}
-            type="file"
-            accept="image/*,application/pdf"
-            onChange={handleArquivoSelecionado}
-            style={{ display: 'none' }}
-          />
-
-          {uploadingComprovante ? (
-            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#2563EB', fontSize: 12, fontWeight: 600 }}>
+          {uploadingComprovante || ocrLendo ? (
+            <div style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: '#059669', fontSize: 12, fontWeight: 600 }}>
               <Loader2 size={16} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-              <span>Compactando e arquivando na nuvem...</span>
+              <span>{ocrLendo ? `Lendo cupom com IA (${ocrProgresso}%)...` : 'Compactando e arquivando na nuvem...'}</span>
             </div>
           ) : comprovanteUrl ? (
             <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -823,6 +1067,18 @@ export function NovoLancamentoModal({
               </div>
 
               <div style={{ display: 'flex', gap: 6, flexShrink: 0, marginLeft: 8 }}>
+                {!comprovanteUrl.toLowerCase().includes('.pdf') && (
+                  <button
+                    type="button"
+                    onClick={() => handleReexecutarOcr(comprovanteUrl)}
+                    disabled={ocrLendo}
+                    style={{ background: '#F0FDF4', border: '1px solid #A7F3D0', borderRadius: 6, padding: '5px 8px', fontSize: 11, fontWeight: 600, color: '#059669', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    title="Re-escanear comprovante com OCR"
+                  >
+                    <RotateCw size={12} className={ocrLendo ? 'spin' : ''} />
+                    <span>Re-ler</span>
+                  </button>
+                )}
                 <a
                   href={comprovanteUrl}
                   target="_blank"
@@ -837,6 +1093,7 @@ export function NovoLancamentoModal({
                   onClick={() => {
                     setComprovanteUrl('');
                     setComprovanteInfo(null);
+                    setOcrResultado(null);
                   }}
                   style={{ background: '#FFF1F2', border: '1px solid #FECDD3', borderRadius: 6, padding: '5px 8px', fontSize: 11, fontWeight: 600, color: '#E11D48', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                   title="Remover este comprovante"
